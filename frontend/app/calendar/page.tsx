@@ -124,29 +124,31 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Calendar className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Nutrition Calendar</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">Nutrition Calendar</h1>
                 <p className="text-muted-foreground">Track your nutrition journey over time</p>
               </div>
             </div>
-            <Link href="/">
-              <Button variant="outline">Back to Dashboard</Button>
+            <Link href="/" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto bg-transparent">
+                Back to Dashboard
+              </Button>
             </Link>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
           {/* Calendar */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-2">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <CardTitle className="text-lg sm:text-xl">
                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -163,8 +165,12 @@ export default function CalendarPage() {
                 {/* Day headers */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
                   {dayNames.map((day) => (
-                    <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
-                      {day}
+                    <div
+                      key={day}
+                      className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-muted-foreground"
+                    >
+                      <span className="hidden sm:inline">{day}</span>
+                      <span className="sm:hidden">{day.slice(0, 1)}</span>
                     </div>
                   ))}
                 </div>
@@ -173,7 +179,7 @@ export default function CalendarPage() {
                 <div className="grid grid-cols-7 gap-1">
                   {days.map((day, index) => {
                     if (day === null) {
-                      return <div key={index} className="p-2 h-20"></div>
+                      return <div key={index} className="p-1 sm:p-2 h-16 sm:h-20"></div>
                     }
 
                     const dateKey = formatDateKey(currentDate.getFullYear(), currentDate.getMonth(), day)
@@ -184,17 +190,19 @@ export default function CalendarPage() {
                     return (
                       <div
                         key={day}
-                        className={`p-2 h-20 border border-border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
+                        className={`p-1 sm:p-2 h-16 sm:h-20 border border-border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
                           isSelected ? "ring-2 ring-primary" : ""
                         } ${isToday ? "bg-primary/5" : ""}`}
                         onClick={() => setSelectedDate(dateKey)}
                       >
                         <div className="flex flex-col h-full">
                           <div className="flex items-center justify-between mb-1">
-                            <span className={`text-sm font-medium ${isToday ? "text-primary" : "text-foreground"}`}>
+                            <span
+                              className={`text-xs sm:text-sm font-medium ${isToday ? "text-primary" : "text-foreground"}`}
+                            >
                               {day}
                             </span>
-                            {isToday && <div className="w-2 h-2 bg-primary rounded-full"></div>}
+                            {isToday && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>}
                           </div>
 
                           {dayData && (
@@ -204,7 +212,8 @@ export default function CalendarPage() {
                                   getCalorieStatus(dayData.calories),
                                 )}`}
                               >
-                                {dayData.calories}
+                                <span className="hidden sm:inline">{dayData.calories}</span>
+                                <span className="sm:hidden">{Math.round(dayData.calories / 100)}k</span>
                               </div>
                               <div className="flex justify-center mt-1">
                                 {Array.from({ length: dayData.goalsMet }, (_, i) => (
@@ -224,10 +233,10 @@ export default function CalendarPage() {
             {/* Legend */}
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle className="text-lg">Legend</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Legend</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-primary rounded"></div>
                     <span className="text-sm">Optimal (90-110%)</span>
@@ -253,12 +262,12 @@ export default function CalendarPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Selected Day Details */}
             {selectedData ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>
+                  <CardTitle className="text-base sm:text-lg">
                     {new Date(selectedDate!).toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
@@ -268,30 +277,30 @@ export default function CalendarPage() {
                   <CardDescription>Nutrition summary</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-primary/5 rounded-lg">
-                      <div className="text-lg font-bold text-primary">{selectedData.calories}</div>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="text-center p-2 sm:p-3 bg-primary/5 rounded-lg">
+                      <div className="text-base sm:text-lg font-bold text-primary">{selectedData.calories}</div>
                       <div className="text-xs text-muted-foreground">Calories</div>
                       <div className="text-xs text-muted-foreground">
                         {Math.round((selectedData.calories / nutritionGoals.calories) * 100)}% of goal
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-accent/5 rounded-lg">
-                      <div className="text-lg font-bold text-accent">{selectedData.protein}g</div>
+                    <div className="text-center p-2 sm:p-3 bg-accent/5 rounded-lg">
+                      <div className="text-base sm:text-lg font-bold text-accent">{selectedData.protein}g</div>
                       <div className="text-xs text-muted-foreground">Protein</div>
                       <div className="text-xs text-muted-foreground">
                         {Math.round((selectedData.protein / nutritionGoals.protein) * 100)}% of goal
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-chart-3/5 rounded-lg">
-                      <div className="text-lg font-bold text-chart-3">{selectedData.carbs}g</div>
+                    <div className="text-center p-2 sm:p-3 bg-chart-3/5 rounded-lg">
+                      <div className="text-base sm:text-lg font-bold text-chart-3">{selectedData.carbs}g</div>
                       <div className="text-xs text-muted-foreground">Carbs</div>
                       <div className="text-xs text-muted-foreground">
                         {Math.round((selectedData.carbs / nutritionGoals.carbs) * 100)}% of goal
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-chart-5/5 rounded-lg">
-                      <div className="text-lg font-bold text-chart-5">{selectedData.fats}g</div>
+                    <div className="text-center p-2 sm:p-3 bg-chart-5/5 rounded-lg">
+                      <div className="text-base sm:text-lg font-bold text-chart-5">{selectedData.fats}g</div>
                       <div className="text-xs text-muted-foreground">Fats</div>
                       <div className="text-xs text-muted-foreground">
                         {Math.round((selectedData.fats / nutritionGoals.fats) * 100)}% of goal
@@ -314,13 +323,15 @@ export default function CalendarPage() {
             ) : (
               <Card>
                 <CardHeader>
-                  <CardTitle>Select a Date</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Select a Date</CardTitle>
                   <CardDescription>Click on a calendar date to view nutrition details</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Choose a date from the calendar to see your nutrition summary</p>
+                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                    <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-sm sm:text-base">
+                      Choose a date from the calendar to see your nutrition summary
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -329,8 +340,8 @@ export default function CalendarPage() {
             {/* Monthly Stats */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   Monthly Stats
                 </CardTitle>
               </CardHeader>
@@ -357,7 +368,7 @@ export default function CalendarPage() {
             {/* Quick Actions */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Link href="/meals/add">

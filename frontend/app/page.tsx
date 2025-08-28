@@ -14,12 +14,12 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">Welcome back!</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Welcome back!</h2>
           <p className="text-muted-foreground">Track your nutrition and reach your fitness goals</p>
         </div>
 
         {/* Daily Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Calories</CardTitle>
@@ -66,7 +66,7 @@ export default function HomePage() {
         </div>
 
         {/* Main Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {/* Create New Recipe */}
           <Link href="/recipes/create">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -140,7 +140,7 @@ export default function HomePage() {
         {/* Favorites Section */}
         <Card className="mb-8">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Heart className="h-6 w-6 text-primary" />
                 <div>
@@ -149,14 +149,14 @@ export default function HomePage() {
                 </div>
               </div>
               <Link href="/favorites">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                   View All Favorites
                 </Button>
               </Link>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Sample favorite recipes */}
               <Link href="/recipes/1">
                 <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
@@ -207,7 +207,7 @@ export default function HomePage() {
         </Card>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -260,7 +260,7 @@ export default function HomePage() {
         <div className="mt-8">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <Target className="h-6 w-6 text-primary" />
                   <div>
@@ -269,20 +269,22 @@ export default function HomePage() {
                   </div>
                 </div>
                 <Link href="/meals">
-                  <Button variant="outline">View Full Tracking</Button>
+                  <Button variant="outline" className="w-full sm:w-auto bg-transparent">
+                    View Full Tracking
+                  </Button>
                 </Link>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4">
-                <Link href="/meals/add">
-                  <Button size="sm">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Link href="/meals/add" className="w-full sm:w-auto">
+                  <Button size="sm" className="w-full sm:w-auto">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Meal
                   </Button>
                 </Link>
-                <Link href="/recipes">
-                  <Button variant="outline" size="sm">
+                <Link href="/recipes" className="w-full sm:w-auto">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto bg-transparent">
                     Browse Recipes
                   </Button>
                 </Link>
