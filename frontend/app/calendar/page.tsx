@@ -1,10 +1,23 @@
 "use client"
 
+import Navigation from "@/components/navigation"
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, ChevronLeft, ChevronRight, Target, TrendingUp } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar, ChevronLeft, ChevronRight, Target, TrendingUp, Plus } from "lucide-react"
 import Link from "next/link"
 
 // Sample nutrition data for calendar
@@ -50,9 +63,25 @@ const monthNames = [
 
 const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
+const customEvents = {
+  "2024-01-03": [{ id: 1, title: "Morning Workout", type: "workout", time: "7:00 AM" }],
+  "2024-01-05": [{ id: 2, title: "Doctor Appointment", type: "appointment", time: "2:30 PM" }],
+  "2024-01-08": [{ id: 3, title: "Meal Prep Sunday", type: "reminder", time: "10:00 AM" }],
+  "2024-01-12": [{ id: 4, title: "Gym Session", type: "workout", time: "6:00 PM" }],
+  "2024-01-15": [{ id: 5, title: "Grocery Shopping", type: "other", time: "11:00 AM" }],
+}
+
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 0, 15)) // January 15, 2024
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    type: "",
+    time: "",
+    description: "",
+    date: "",
+  })
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -116,11 +145,24 @@ export default function CalendarPage() {
     })
   }
 
+  const handleCreateEvent = () => {
+    if (newEvent.title && newEvent.type && newEvent.date) {
+      console.log("Creating event:", newEvent)
+      // Here you would typically save to database
+      setIsEventDialogOpen(false)
+      setNewEvent({ title: "", type: "", time: "", description: "", date: "" })
+    }
+  }
+
   const days = getDaysInMonth(currentDate)
   const selectedData = selectedDate ? nutritionData[selectedDate] : null
+  const selectedEvents = selectedDate ? customEvents[selectedDate] || [] : []
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <Navigation />
+
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -132,11 +174,83 @@ export default function CalendarPage() {
                 <p className="text-muted-foreground">Track your nutrition journey over time</p>
               </div>
             </div>
-            <Link href="/" className="w-full sm:w-auto">
-              <Button variant="outline" className="w-full sm:w-auto bg-transparent">
-                Back to Dashboard
-              </Button>
-            </Link>
+            {/* Add Event button */}
+            <div className="flex gap-2">
+              <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Event
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Custom Event</DialogTitle>
+                    <DialogDescription>Add a personal event to your calendar</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="event-title">Event Title</Label>
+                      <Input
+                        id="event-title"
+                        value={newEvent.title}
+                        onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                        placeholder="Enter event title"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="event-type">Event Type</Label>
+                        <Select
+                          value={newEvent.type}
+                          onValueChange={(value) => setNewEvent({ ...newEvent, type: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="workout">Workout</SelectItem>
+                            <SelectItem value="appointment">Appointment</SelectItem>
+                            <SelectItem value="reminder">Reminder</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="event-time">Time</Label>
+                        <Input
+                          id="event-time"
+                          type="time"
+                          value={newEvent.time}
+                          onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="event-date">Date</Label>
+                      <Input
+                        id="event-date"
+                        type="date"
+                        value={newEvent.date}
+                        onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="event-description">Description (Optional)</Label>
+                      <Textarea
+                        id="event-description"
+                        value={newEvent.description}
+                        onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                        placeholder="Add event details"
+                      />
+                    </div>
+                    <Button onClick={handleCreateEvent} className="w-full">
+                      Create Event
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
       </div>
@@ -184,6 +298,7 @@ export default function CalendarPage() {
 
                     const dateKey = formatDateKey(currentDate.getFullYear(), currentDate.getMonth(), day)
                     const dayData = nutritionData[dateKey]
+                    const dayEvents = customEvents[dateKey] || []
                     const isSelected = selectedDate === dateKey
                     const isToday = dateKey === "2024-01-15" // Current day for demo
 
@@ -222,6 +337,29 @@ export default function CalendarPage() {
                               </div>
                             </div>
                           )}
+
+                          {/* Custom event indicators */}
+                          {dayEvents.length > 0 && (
+                            <div className="flex justify-center mt-1">
+                              {dayEvents.slice(0, 2).map((event, i) => (
+                                <div
+                                  key={i}
+                                  className={`w-1.5 h-1.5 rounded-full mx-0.5 ${
+                                    event.type === "workout"
+                                      ? "bg-chart-3"
+                                      : event.type === "appointment"
+                                        ? "bg-chart-5"
+                                        : event.type === "reminder"
+                                          ? "bg-accent"
+                                          : "bg-muted-foreground"
+                                  }`}
+                                ></div>
+                              ))}
+                              {dayEvents.length > 2 && (
+                                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full mx-0.5"></div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
@@ -236,22 +374,49 @@ export default function CalendarPage() {
                 <CardTitle className="text-base sm:text-lg">Legend</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-primary rounded"></div>
-                    <span className="text-sm">Optimal (90-110%)</span>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Nutrition Status</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-primary rounded"></div>
+                        <span className="text-sm">Optimal (90-110%)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-accent rounded"></div>
+                        <span className="text-sm">Good (80-120%)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-destructive/20 border border-destructive rounded"></div>
+                        <span className="text-sm">Under Goal</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-chart-5/20 border border-chart-5 rounded"></div>
+                        <span className="text-sm">Over Goal</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-accent rounded"></div>
-                    <span className="text-sm">Good (80-120%)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-destructive/20 border border-destructive rounded"></div>
-                    <span className="text-sm">Under Goal</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-chart-5/20 border border-chart-5 rounded"></div>
-                    <span className="text-sm">Over Goal</span>
+                  {/* Event Types */}
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Event Types</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-chart-3 rounded-full"></div>
+                        <span className="text-sm">Workout</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-chart-5 rounded-full"></div>
+                        <span className="text-sm">Appointment</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-accent rounded-full"></div>
+                        <span className="text-sm">Reminder</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-muted-foreground rounded-full"></div>
+                        <span className="text-sm">Other</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="mt-4 text-sm text-muted-foreground">
@@ -264,7 +429,7 @@ export default function CalendarPage() {
           {/* Sidebar */}
           <div className="space-y-4 sm:space-y-6">
             {/* Selected Day Details */}
-            {selectedData ? (
+            {selectedData || selectedEvents.length > 0 ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base sm:text-lg">
@@ -274,68 +439,123 @@ export default function CalendarPage() {
                       day: "numeric",
                     })}
                   </CardTitle>
-                  <CardDescription>Nutrition summary</CardDescription>
+                  <CardDescription>Daily summary</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                    <div className="text-center p-2 sm:p-3 bg-primary/5 rounded-lg">
-                      <div className="text-base sm:text-lg font-bold text-primary">{selectedData.calories}</div>
-                      <div className="text-xs text-muted-foreground">Calories</div>
-                      <div className="text-xs text-muted-foreground">
-                        {Math.round((selectedData.calories / nutritionGoals.calories) * 100)}% of goal
+                  {/* Custom events display */}
+                  {selectedEvents.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Events</h4>
+                      <div className="space-y-2">
+                        {selectedEvents.map((event) => (
+                          <div key={event.id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                event.type === "workout"
+                                  ? "bg-chart-3"
+                                  : event.type === "appointment"
+                                    ? "bg-chart-5"
+                                    : event.type === "reminder"
+                                      ? "bg-accent"
+                                      : "bg-muted-foreground"
+                              }`}
+                            ></div>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">{event.title}</div>
+                              <div className="text-xs text-muted-foreground">{event.time}</div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <div className="text-center p-2 sm:p-3 bg-accent/5 rounded-lg">
-                      <div className="text-base sm:text-lg font-bold text-accent">{selectedData.protein}g</div>
-                      <div className="text-xs text-muted-foreground">Protein</div>
-                      <div className="text-xs text-muted-foreground">
-                        {Math.round((selectedData.protein / nutritionGoals.protein) * 100)}% of goal
-                      </div>
-                    </div>
-                    <div className="text-center p-2 sm:p-3 bg-chart-3/5 rounded-lg">
-                      <div className="text-base sm:text-lg font-bold text-chart-3">{selectedData.carbs}g</div>
-                      <div className="text-xs text-muted-foreground">Carbs</div>
-                      <div className="text-xs text-muted-foreground">
-                        {Math.round((selectedData.carbs / nutritionGoals.carbs) * 100)}% of goal
-                      </div>
-                    </div>
-                    <div className="text-center p-2 sm:p-3 bg-chart-5/5 rounded-lg">
-                      <div className="text-base sm:text-lg font-bold text-chart-5">{selectedData.fats}g</div>
-                      <div className="text-xs text-muted-foreground">Fats</div>
-                      <div className="text-xs text-muted-foreground">
-                        {Math.round((selectedData.fats / nutritionGoals.fats) * 100)}% of goal
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="flex items-center justify-between pt-3 border-t border-border">
-                    <span className="text-sm text-muted-foreground">Goals Met</span>
-                    <Badge variant="outline">{selectedData.goalsMet}/4</Badge>
-                  </div>
+                  {selectedData && (
+                    <>
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                        <div className="text-center p-2 sm:p-3 bg-primary/5 rounded-lg">
+                          <div className="text-base sm:text-lg font-bold text-primary">{selectedData.calories}</div>
+                          <div className="text-xs text-muted-foreground">Calories</div>
+                          <div className="text-xs text-muted-foreground">
+                            {Math.round((selectedData.calories / nutritionGoals.calories) * 100)}% of goal
+                          </div>
+                        </div>
+                        <div className="text-center p-2 sm:p-3 bg-accent/5 rounded-lg">
+                          <div className="text-base sm:text-lg font-bold text-accent">{selectedData.protein}g</div>
+                          <div className="text-xs text-muted-foreground">Protein</div>
+                          <div className="text-xs text-muted-foreground">
+                            {Math.round((selectedData.protein / nutritionGoals.protein) * 100)}% of goal
+                          </div>
+                        </div>
+                        <div className="text-center p-2 sm:p-3 bg-chart-3/5 rounded-lg">
+                          <div className="text-base sm:text-lg font-bold text-chart-3">{selectedData.carbs}g</div>
+                          <div className="text-xs text-muted-foreground">Carbs</div>
+                          <div className="text-xs text-muted-foreground">
+                            {Math.round((selectedData.carbs / nutritionGoals.carbs) * 100)}% of goal
+                          </div>
+                        </div>
+                        <div className="text-center p-2 sm:p-3 bg-chart-5/5 rounded-lg">
+                          <div className="text-base sm:text-lg font-bold text-chart-5">{selectedData.fats}g</div>
+                          <div className="text-xs text-muted-foreground">Fats</div>
+                          <div className="text-xs text-muted-foreground">
+                            {Math.round((selectedData.fats / nutritionGoals.fats) * 100)}% of goal
+                          </div>
+                        </div>
+                      </div>
 
-                  <Link href="/meals">
-                    <Button className="w-full" size="sm">
-                      View Meals for This Day
-                    </Button>
-                  </Link>
+                      <div className="flex items-center justify-between pt-3 border-t border-border">
+                        <span className="text-sm text-muted-foreground">Goals Met</span>
+                        <Badge variant="outline">{selectedData.goalsMet}/4</Badge>
+                      </div>
+
+                      <Link href="/meals">
+                        <Button className="w-full" size="sm">
+                          View Meals for This Day
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             ) : (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base sm:text-lg">Select a Date</CardTitle>
-                  <CardDescription>Click on a calendar date to view nutrition details</CardDescription>
+                  <CardDescription>Click on a calendar date to view details</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-6 sm:py-8 text-muted-foreground">
                     <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
                     <p className="text-sm sm:text-base">
-                      Choose a date from the calendar to see your nutrition summary
+                      Choose a date from the calendar to see your nutrition summary and events
                     </p>
                   </div>
                 </CardContent>
               </Card>
             )}
+
+            {/* Upcoming Events */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base sm:text-lg">Upcoming Events</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                  <div className="w-2 h-2 bg-chart-3 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Gym Session</div>
+                    <div className="text-xs text-muted-foreground">Jan 12, 6:00 PM</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Grocery Shopping</div>
+                    <div className="text-xs text-muted-foreground">Today, 11:00 AM</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Monthly Stats */}
             <Card>

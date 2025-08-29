@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Heart, Search, Clock, Users, Plus, Trash2 } from "lucide-react"
 import Link from "next/link"
+import Navigation from "@/components/navigation"
 
 // Sample favorite recipes data
 const favoriteRecipes = [
@@ -165,6 +166,9 @@ export default function FavoritesPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <Navigation />
+
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
