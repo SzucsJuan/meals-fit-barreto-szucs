@@ -2,11 +2,81 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { ChefHat, Plus, Calendar, Heart, Target, TrendingUp } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { ChefHat, Plus, Calendar, Heart, Target, TrendingUp, Trophy, Award, Star, Flame, Share2 } from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/navigation"
 
 export default function HomePage() {
+  const achievements = [
+    {
+      id: 1,
+      title: "First Steps",
+      description: "Log your first meal",
+      icon: Target,
+      unlocked: true,
+      unlockedDate: "2024-01-15",
+      category: "Getting Started",
+    },
+    {
+      id: 2,
+      title: "Recipe Creator",
+      description: "Create your first custom recipe",
+      icon: ChefHat,
+      unlocked: true,
+      unlockedDate: "2024-01-18",
+      category: "Creativity",
+    },
+    {
+      id: 3,
+      title: "Protein Champion",
+      description: "Hit your protein goal for 7 consecutive days",
+      icon: Award,
+      unlocked: true,
+      unlockedDate: "2024-01-25",
+      category: "Nutrition Goals",
+    },
+    {
+      id: 4,
+      title: "Streak Master",
+      description: "Log meals for 30 consecutive days",
+      icon: Flame,
+      unlocked: false,
+      progress: 23,
+      total: 30,
+      category: "Consistency",
+    },
+    {
+      id: 5,
+      title: "Recipe Collector",
+      description: "Create 10 different recipes",
+      icon: Star,
+      unlocked: false,
+      progress: 6,
+      total: 10,
+      category: "Creativity",
+    },
+    {
+      id: 6,
+      title: "Macro Master",
+      description: "Hit all macro goals in a single day",
+      icon: Trophy,
+      unlocked: true,
+      unlockedDate: "2024-01-20",
+      category: "Nutrition Goals",
+    },
+  ]
+
+  const unlockedCount = achievements.filter((a) => a.unlocked).length
+  const totalCount = achievements.length
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -14,8 +84,132 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Welcome back!</h2>
-          <p className="text-muted-foreground">Track your nutrition and reach your fitness goals</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Welcome back!</h2>
+              <p className="text-muted-foreground">Track your nutrition and reach your fitness goals</p>
+            </div>
+            {/* Achievements Button */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 hover:from-yellow-100 hover:to-orange-100"
+                >
+                  <Trophy className="h-4 w-4 text-yellow-600" />
+                  <span className="text-yellow-700">Achievements</span>
+                  <Badge variant="secondary" className="ml-1 bg-yellow-100 text-yellow-800">
+                    {unlockedCount}/{totalCount}
+                  </Badge>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl lg:max-w-4xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
+                <DialogHeader className="pb-4">
+                  <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+                    <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+                    Your Achievements
+                  </DialogTitle>
+                  <DialogDescription className="text-sm sm:text-base">
+                    You've unlocked {unlockedCount} out of {totalCount} achievements. Keep going to earn more trophies!
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="mt-4 sm:mt-6 space-y-6 sm:space-y-8">
+                  {["Getting Started", "Nutrition Goals", "Creativity", "Consistency"].map((category) => {
+                    const categoryAchievements = achievements.filter((a) => a.category === category)
+                    return (
+                      <div key={category} className="space-y-3 sm:space-y-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground">{category}</h3>
+                        <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                          {categoryAchievements.map((achievement) => {
+                            const IconComponent = achievement.icon
+                            return (
+                              <Card
+                                key={achievement.id}
+                                className={`${achievement.unlocked ? "bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200" : "opacity-60"}`}
+                              >
+                                <CardContent className="p-3 sm:p-4">
+                                  <div className="flex items-start gap-3">
+                                    <div
+                                      className={`p-2 rounded-lg flex-shrink-0 ${achievement.unlocked ? "bg-yellow-100" : "bg-muted"}`}
+                                    >
+                                      <IconComponent
+                                        className={`h-5 w-5 sm:h-6 sm:w-6 ${achievement.unlocked ? "text-yellow-600" : "text-muted-foreground"}`}
+                                      />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between mb-1 gap-2">
+                                        <h4 className="font-semibold text-sm sm:text-base text-foreground truncate">
+                                          {achievement.title}
+                                        </h4>
+                                        {achievement.unlocked && (
+                                          <Badge
+                                            variant="secondary"
+                                            className="bg-yellow-100 text-yellow-800 text-xs flex-shrink-0"
+                                          >
+                                            Unlocked
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-2">
+                                        {achievement.description}
+                                      </p>
+
+                                      {achievement.unlocked ? (
+                                        <div className="flex items-center justify-between gap-2">
+                                          <span className="text-xs text-muted-foreground truncate">
+                                            Unlocked {new Date(achievement.unlockedDate).toLocaleDateString()}
+                                          </span>
+                                          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs flex-shrink-0">
+                                            <Share2 className="h-3 w-3 mr-1" />
+                                            Share
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        achievement.progress !== undefined && (
+                                          <div className="space-y-1">
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                              <span>Progress</span>
+                                              <span>
+                                                {achievement.progress}/{achievement.total}
+                                              </span>
+                                            </div>
+                                            <Progress
+                                              value={(achievement.progress / achievement.total) * 100}
+                                              className="h-2"
+                                            />
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-6 pt-4 sm:pt-6 border-t border-border">
+                  <div className="flex flex-col gap-3 sm:gap-4">
+                    <div className="text-center sm:text-left">
+                      <h4 className="font-semibold text-sm sm:text-base text-foreground">Share Your Progress</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Let the community know about your achievements!
+                      </p>
+                    </div>
+                    <Button className="w-full sm:w-auto sm:self-start">
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share with Community
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Daily Overview */}
