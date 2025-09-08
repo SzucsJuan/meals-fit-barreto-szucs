@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image";
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -112,7 +113,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
-            <Apple className="h-8 w-8 text-primary" />
+            <Image src="/icon/logo.png" alt="MealsFit Logo" width={32} height={32} />
             <h1 className="text-xl font-bold text-foreground">Meals&amp;Fit</h1>
           </Link>
 

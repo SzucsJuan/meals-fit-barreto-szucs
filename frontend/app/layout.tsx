@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MealsFit ",
   description: "MealsFit Team",
+  icons: {
+    icon: "/icon/favicon.png", 
+  },
 };
 
 export default function RootLayout({
