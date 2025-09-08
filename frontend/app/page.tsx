@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { ChefHat, Plus, Calendar, Heart, Target, TrendingUp, Trophy, Award, Star, Flame, Share2 } from "lucide-react"
+import { Home, ChefHat, Plus, Calendar, Heart, Target, TrendingUp, Trophy, Award, Star, Flame, Share2, Apple  } from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/navigation"
 
@@ -85,9 +85,12 @@ export default function HomePage() {
         {/* Welcome Section */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Welcome back!</h2>
-              <p className="text-muted-foreground">Track your nutrition and reach your fitness goals</p>
+            <div className="flex items-center gap-3">
+              <Home className="h-8 w-8" style={{ color: "#FF9800" }} />
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">Welcome back!</h1>
+                <p className="text-muted-foreground">Track your nutrition and reach your fitness goals</p>
+              </div>
             </div>
             {/* Achievements Button */}
             <Dialog>
@@ -266,8 +269,8 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <ChefHat className="h-6 w-6 text-primary" />
+                  <div className="p-2">
+                    <ChefHat className="h-6 w-6" style={{ color: "#FF9800" }} />
                   </div>
                   <div>
                     <CardTitle className="text-lg">Create New Recipe</CardTitle>
@@ -289,8 +292,8 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-accent/10 rounded-lg">
-                    <Target className="h-6 w-6 text-accent" />
+                  <div className="p-2">
+                    <Target className="h-6 w-6" style={{ color: "#FF9800" }} />
                   </div>
                   <div>
                     <CardTitle className="text-lg">Add Meals</CardTitle>
@@ -299,7 +302,7 @@ export default function HomePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Button variant="secondary" className="w-full">
+                <Button variant="outline" className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Log Meal
                 </Button>
@@ -312,8 +315,8 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-chart-3/10 rounded-lg">
-                    <Calendar className="h-6 w-6 text-chart-3" />
+                  <div className="p-2">
+                    <Calendar className="h-6 w-6" style={{ color: "#FF9800" }} />
                   </div>
                   <div>
                     <CardTitle className="text-lg">Calendar</CardTitle>
@@ -336,7 +339,7 @@ export default function HomePage() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <Heart className="h-6 w-6 text-primary" />
+                <Heart className="h-6 w-6" style={{ color: "#FF9800" }} />
                 <div>
                   <CardTitle>Favorite Recipes</CardTitle>
                   <CardDescription>Your most loved meal recipes</CardDescription>
@@ -405,7 +408,7 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
+                <TrendingUp className="h-6 w-6" style={{ color: "#FF9800" }} />
                 Weekly Progress
               </CardTitle>
             </CardHeader>
@@ -456,7 +459,7 @@ export default function HomePage() {
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <Target className="h-6 w-6 text-primary" />
+                  <Apple className="h-6 w-6" style={{ color: "#FF9800" }} />
                   <div>
                     <CardTitle>Today's Nutrition</CardTitle>
                     <CardDescription>Quick access to your meal tracking</CardDescription>

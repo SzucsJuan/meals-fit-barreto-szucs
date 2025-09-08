@@ -83,18 +83,18 @@ export default function MealsPage() {
       <Navigation />
 
       {/* Header */}
-      <div className="border-b border-border bg-card">
+      <div className="border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Target className="h-8 w-8 text-primary" />
+              <Target className="h-8 w-8" style={{ color: "#FF9800" }} />
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Meal Tracking</h1>
                 <p className="text-muted-foreground">Monitor your daily nutrition intake</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex bg-muted rounded-lg p-1">
+              <div className="flex p-1">
                 <Button
                   variant={selectedView === "today" ? "default" : "ghost"}
                   size="sm"

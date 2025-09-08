@@ -76,11 +76,11 @@ export default function RecipesPage() {
       <Navigation />
 
       {/* Header */}
-      <div className="border-b border-border bg-card">
+      <div className="border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <ChefHat className="h-8 w-8 text-primary" />
+              <ChefHat className="h-8 w-8" style={{ color: "#FF9800" }} />
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground">Recipe Collection</h1>
                 <p className="text-muted-foreground">Discover and create healthy recipes</p>
@@ -109,7 +109,7 @@ export default function RecipesPage() {
         <div className="flex flex-col gap-4 mb-8">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search recipes..." className="pl-10" />
+            <Input placeholder="Search recipes..."   className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/50 pl-10" />
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm">

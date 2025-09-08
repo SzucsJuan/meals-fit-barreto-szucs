@@ -7,17 +7,17 @@
   /* Updated color tokens for nutrition/fitness theme */
   --background: #ffffff;
   --foreground: #475569;
-  --card: #fdf2f8;
-  --card-foreground: #475569;
+  --card: #FAF9F6;
+  --card-foreground: #2C3E50;
   --popover: #ffffff;
   --popover-foreground: #475569;
-  --primary: #be123c;
+  --primary: #4CAF50;
   --primary-foreground: #ffffff;
   --secondary: #fdf2f8;
-  --secondary-foreground: #475569;
+  --secondary-foreground: #153868;
   --muted: #f8fafc;
-  --muted-foreground: #6b7280;
-  --accent: #ec4899;
+  --muted-foreground: #475569;
+  --accent: #F7D86C;
   --accent-foreground: #ffffff;
   --destructive: #c62828;
   --destructive-foreground: #ffffff;
@@ -124,4 +124,7 @@
   body {
     @apply bg-background text-foreground;
   }
+  button, a, select {
+  cursor: pointer;
+}
 }

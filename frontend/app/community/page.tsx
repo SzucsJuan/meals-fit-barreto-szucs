@@ -88,7 +88,7 @@ export default function CommunityPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Users className="h-8 w-8 text-primary" />
+            <Users className="h-8 w-8" style={{ color: "#FF9800" }} />
             <h1 className="text-2xl font-bold text-foreground">Community</h1>
           </div>
           <p className="text-muted-foreground">Connect, share, and get inspired by fellow nutrition enthusiasts</p>

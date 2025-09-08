@@ -103,7 +103,7 @@ export default function ChatPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <MessageCircle className="h-8 w-8 text-primary" />
+            <MessageCircle className="h-8 w-8" style={{ color: "#FF9800" }} />
             <h1 className="text-2xl font-bold text-foreground">Chat & Support</h1>
           </div>
           <p className="text-muted-foreground">Get nutrition advice and connect with the community</p>
