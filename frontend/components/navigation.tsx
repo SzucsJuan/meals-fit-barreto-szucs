@@ -84,7 +84,7 @@ export default function Navigation() {
           Chat
         </Button>
       </Link>
-      <Link href="/index" onClick={onLinkClick}>
+      {/* <Link href="/index" onClick={onLinkClick}>
         <Button
           variant={isActive("/index") ? "default" : "ghost"}
           size="sm"
@@ -93,7 +93,7 @@ export default function Navigation() {
           <Home className="h-4 w-4" />
           Index
         </Button>
-      </Link>
+      </Link> */}
       <Link href="/community" onClick={onLinkClick}>
         <Button
           variant={isActive("/community") ? "default" : "ghost"}

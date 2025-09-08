@@ -195,7 +195,7 @@ export default function MealsPage() {
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value) => [`${value}g`, ""]} />
+                        <Tooltip formatter={(value) => `${value}g`} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>

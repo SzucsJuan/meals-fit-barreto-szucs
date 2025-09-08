@@ -21,22 +21,30 @@ import { Calendar, ChevronLeft, ChevronRight, Target, TrendingUp, Plus } from "l
 import Link from "next/link"
 
 // Sample nutrition data for calendar
-const nutritionData = {
-  "2024-01-01": { calories: 2150, protein: 165, carbs: 270, fats: 72, goalsMet: 4 },
-  "2024-01-02": { calories: 1980, protein: 145, carbs: 245, fats: 68, goalsMet: 3 },
-  "2024-01-03": { calories: 2300, protein: 175, carbs: 285, fats: 78, goalsMet: 4 },
-  "2024-01-04": { calories: 2050, protein: 160, carbs: 255, fats: 70, goalsMet: 4 },
-  "2024-01-05": { calories: 1850, protein: 135, carbs: 220, fats: 62, goalsMet: 2 },
-  "2024-01-06": { calories: 2200, protein: 170, carbs: 275, fats: 75, goalsMet: 4 },
-  "2024-01-07": { calories: 2100, protein: 155, carbs: 265, fats: 71, goalsMet: 3 },
-  "2024-01-08": { calories: 2250, protein: 180, carbs: 280, fats: 76, goalsMet: 4 },
-  "2024-01-09": { calories: 1950, protein: 150, carbs: 240, fats: 65, goalsMet: 3 },
-  "2024-01-10": { calories: 2180, protein: 165, carbs: 270, fats: 73, goalsMet: 4 },
-  "2024-01-11": { calories: 2050, protein: 160, carbs: 255, fats: 69, goalsMet: 4 },
-  "2024-01-12": { calories: 1900, protein: 140, carbs: 230, fats: 64, goalsMet: 2 },
-  "2024-01-13": { calories: 2300, protein: 175, carbs: 290, fats: 78, goalsMet: 4 },
-  "2024-01-14": { calories: 2150, protein: 170, carbs: 265, fats: 72, goalsMet: 4 },
-  "2024-01-15": { calories: 2000, protein: 155, carbs: 250, fats: 67, goalsMet: 3 },
+type NutritionDay = {
+  calories: number
+  protein: number
+  carbs: number
+  fats: number
+  goalsMet: number
+}
+
+const nutritionData: { [key: string]: NutritionDay } = {
+  "2025-01-01": { calories: 2150, protein: 165, carbs: 270, fats: 72, goalsMet: 4 },
+  "2025-01-02": { calories: 1980, protein: 145, carbs: 245, fats: 68, goalsMet: 3 },
+  "2025-01-03": { calories: 2300, protein: 175, carbs: 285, fats: 78, goalsMet: 4 },
+  "2025-01-04": { calories: 2050, protein: 160, carbs: 255, fats: 70, goalsMet: 4 },
+  "2025-01-05": { calories: 1850, protein: 135, carbs: 220, fats: 62, goalsMet: 2 },
+  "2025-01-06": { calories: 2200, protein: 170, carbs: 275, fats: 75, goalsMet: 4 },
+  "2025-01-07": { calories: 2100, protein: 155, carbs: 265, fats: 71, goalsMet: 3 },
+  "2025-01-08": { calories: 2250, protein: 180, carbs: 280, fats: 76, goalsMet: 4 },
+  "2025-01-09": { calories: 1950, protein: 150, carbs: 240, fats: 65, goalsMet: 3 },
+  "2025-01-10": { calories: 2180, protein: 165, carbs: 270, fats: 73, goalsMet: 4 },
+  "2025-01-11": { calories: 2050, protein: 160, carbs: 255, fats: 69, goalsMet: 4 },
+  "2025-01-12": { calories: 1900, protein: 140, carbs: 230, fats: 64, goalsMet: 2 },
+  "2025-01-13": { calories: 2300, protein: 175, carbs: 290, fats: 78, goalsMet: 4 },
+  "2025-01-14": { calories: 2150, protein: 170, carbs: 265, fats: 72, goalsMet: 4 },
+  "2025-01-15": { calories: 2000, protein: 155, carbs: 250, fats: 67, goalsMet: 3 },
 }
 
 const nutritionGoals = {
@@ -63,16 +71,24 @@ const monthNames = [
 
 const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-const customEvents = {
-  "2024-01-03": [{ id: 1, title: "Morning Workout", type: "workout", time: "7:00 AM" }],
-  "2024-01-05": [{ id: 2, title: "Doctor Appointment", type: "appointment", time: "2:30 PM" }],
-  "2024-01-08": [{ id: 3, title: "Meal Prep Sunday", type: "reminder", time: "10:00 AM" }],
-  "2024-01-12": [{ id: 4, title: "Gym Session", type: "workout", time: "6:00 PM" }],
-  "2024-01-15": [{ id: 5, title: "Grocery Shopping", type: "other", time: "11:00 AM" }],
+type CustomEvent = {
+  id: number
+  title: string
+  type: string
+  time: string
+}
+
+const customEvents: { [key: string]: CustomEvent[] } = {
+  "2025-01-03": [{ id: 1, title: "Morning Workout", type: "workout", time: "7:00 AM" }],
+  "2025-01-05": [{ id: 2, title: "Doctor Appointment", type: "appointment", time: "2:30 PM" }],
+  "2025-01-08": [{ id: 3, title: "Meal Prep Sunday", type: "reminder", time: "10:00 AM" }],
+  "2025-01-12": [{ id: 4, title: "Gym Session", type: "workout", time: "6:00 PM" }],
+  "2025-01-15": [{ id: 5, title: "Grocery Shopping", type: "other", time: "11:00 AM" }],
 }
 
 export default function CalendarPage() {
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 0, 15)) // January 15, 2024
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
   const [newEvent, setNewEvent] = useState({
@@ -300,7 +316,7 @@ export default function CalendarPage() {
                     const dayData = nutritionData[dateKey]
                     const dayEvents = customEvents[dateKey] || []
                     const isSelected = selectedDate === dateKey
-                    const isToday = dateKey === "2024-01-15" // Current day for demo
+                    const isToday = dateKey === "2025-09-07" 
 
                     return (
                       <div
@@ -420,7 +436,7 @@ export default function CalendarPage() {
                   </div>
                 </div>
                 <div className="mt-4 text-sm text-muted-foreground">
-                  Dots below calories indicate nutrition goals met (max 4: calories, protein, carbs, fats)
+                  {/* Dots below calories indicate nutrition goals met (max 4: calories, protein, carbs, fats) */}
                 </div>
               </CardContent>
             </Card>
@@ -566,10 +582,6 @@ export default function CalendarPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Days Logged</span>
-                  <span className="font-medium">15/31</span>
-                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Avg Daily Calories</span>
                   <span className="font-medium">2,107</span>
