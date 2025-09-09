@@ -60,8 +60,8 @@ const totals = todaysMeals.reduce(
 )
 
 const macroData = [
-  { name: "Protein", value: totals.protein, color: "#ec4899" },
-  { name: "Carbs", value: totals.carbs, color: "#be123c" },
+  { name: "Protein", value: totals.protein, color: "#F74800" },
+  { name: "Carbs", value: totals.carbs, color: "#629178" },
   { name: "Fats", value: totals.fats, color: "#475569" },
 ]
 
@@ -94,11 +94,12 @@ export default function MealsPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex p-1">
+              <div className="flex p-2">
                 <Button
                   variant={selectedView === "today" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setSelectedView("today")}
+                  className="mr-1"
                 >
                   Today
                 </Button>
@@ -324,7 +325,7 @@ export default function MealsPage() {
                       <XAxis dataKey="day" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="calories" fill="#ec4899" name="Calories" />
+                      <Bar dataKey="calories" fill="#FC9A0E" name="Calories" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

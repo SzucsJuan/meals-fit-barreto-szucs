@@ -212,6 +212,7 @@ export default function CalendarPage() {
                         value={newEvent.title}
                         onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                         placeholder="Enter event title"
+                        className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#F7D86C]/50"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -239,6 +240,7 @@ export default function CalendarPage() {
                           type="time"
                           value={newEvent.time}
                           onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                          className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#F7D86C]/50"
                         />
                       </div>
                     </div>
@@ -249,6 +251,7 @@ export default function CalendarPage() {
                         type="date"
                         value={newEvent.date}
                         onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                        className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#F7D86C]/50"
                       />
                     </div>
                     <div className="space-y-2">
@@ -258,6 +261,7 @@ export default function CalendarPage() {
                         value={newEvent.description}
                         onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                         placeholder="Add event details"
+                        className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#F7D86C]/50"
                       />
                     </div>
                     <Button onClick={handleCreateEvent} className="w-full">
