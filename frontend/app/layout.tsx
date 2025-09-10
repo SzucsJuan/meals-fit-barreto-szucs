@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MealsFit ",
+  title: "Meals&Fit ",
   description: "MealsFit Team",
   icons: {
     icon: "/icon/favicon.png", 
