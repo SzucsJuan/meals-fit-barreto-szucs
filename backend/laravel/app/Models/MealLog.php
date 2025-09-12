@@ -13,7 +13,11 @@ class MealLog extends Model
 
     protected $fillable = [
         'user_id',
-        'date'
+        'date',
+        'total_calories',
+        'total_protein',
+        'total_carbohydrates',
+        'total_fats',
     ];
 
     public function user()

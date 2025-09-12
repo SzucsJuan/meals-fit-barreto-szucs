@@ -14,10 +14,10 @@ class CreateMealLogsTable extends Migration
     public function up()
     {
         Schema::create('meal_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->date('date');
-            $table->timestamps();
+            $table->integer('total_calories')->default(0);
+            $table->integer('total_protein')->default(0);
+            $table->integer('total_carbohydrates')->default(0);
+            $table->integer('total_fats')->default(0);
         });
     }
 
@@ -28,6 +28,6 @@ class CreateMealLogsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('meal-logs');
+        Schema::dropIfExists('meal_logs');
     }
 }

@@ -15,7 +15,7 @@ class CreateMealDetailsTable extends Migration
     {
         Schema::create('meal_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('meal_log_id')->constrained('meal-logs')->onDelete('cascade');
+            $table->foreignId('meal_log_id')->constrained('meal_logs')->onDelete('cascade');
             $table->string('meal_type'); 
             $table->string('food_name');
             $table->decimal('calories', 8, 2);
