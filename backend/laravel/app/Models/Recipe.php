@@ -13,11 +13,18 @@ class Recipe extends Model
         'user_id',
         'title',
         'description',
-        'type',
         'category',
         'status',
+        'prep_time',
+        'cook_time',
+        'servings',
+        'calories',
+        'proteins',
+        'carbs',
+        'fats',
         'image',
-        'creation_date'
+        'instructions',
+        'creation_date',
     ];
 
     public function user()
