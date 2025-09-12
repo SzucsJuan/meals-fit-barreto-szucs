@@ -21,6 +21,13 @@ class MealLog extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function recipes()
+    {
+    return $this->belongsToMany(Recipe::class, 'meal_log_recipes')
+                    ->withPivot('servings')
+                    ->withTimestamps();
+    }
+
     public function details()
     {
         return $this->hasMany(MealDetail::class);

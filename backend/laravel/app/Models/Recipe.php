@@ -14,6 +14,7 @@ class Recipe extends Model
         'title',
         'description',
         'type',
+        'category',
         'status',
         'image',
         'creation_date'
@@ -28,6 +29,13 @@ class Recipe extends Model
     {
         return $this->belongsToMany(Ingredient::class, 'recipe_ingredients')
                     ->withPivot('quantity')
+                    ->withTimestamps();
+    }
+
+    public function mealLogs()
+    {
+        return $this->belongsToMany(MealLog::class, 'meal_log_recipes')
+                    ->withPivot('servings')
                     ->withTimestamps();
     }
 
