@@ -20,7 +20,6 @@ class CreateVotesTable extends Migration
             $table->unsignedTinyInteger('rating');
             $table->timestamps();
             $table->unique(['user_id','recipe_id']);
-            $table->check('rating BETWEEN 1 AND 5');
         });
     }
 

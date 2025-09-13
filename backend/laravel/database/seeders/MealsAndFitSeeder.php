@@ -37,7 +37,6 @@ class MealsAndFitSeeder extends Seeder
             ],
             [
                 'name' => 'Arroz blanco cocido',
-                'brand' => null,
                 'serving_size' => 100,
                 'serving_unit' => 'g',
                 'calories' => 130,
@@ -51,7 +50,6 @@ class MealsAndFitSeeder extends Seeder
             ],
             [
                 'name' => 'Aceite de oliva',
-                'brand' => null,
                 'serving_size' => 10,
                 'serving_unit' => 'ml',
                 'calories' => 88,

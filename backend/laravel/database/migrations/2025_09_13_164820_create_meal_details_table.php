@@ -27,8 +27,6 @@ class CreateMealDetailsTable extends Migration
             $table->decimal('fat', 12, 2)->default(0);
             $table->dateTime('logged_at')->useCurrent();
             $table->timestamps();
-            $table->check('NOT (ingredient_id IS NULL AND recipe_id IS NULL)');
-            $table->check('NOT (ingredient_id IS NOT NULL AND recipe_id IS NOT NULL)');
         });
     }
 
