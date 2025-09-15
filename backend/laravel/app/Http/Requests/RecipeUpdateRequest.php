@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Http\Requests;
+
+
+use Illuminate\Foundation\Http\FormRequest;
+
+
+class RecipeUpdateRequest extends FormRequest
+{
+public function authorize(): bool { return auth()->check(); }
+
+
+public function rules(): array
+{
+$routeParam = $this->route('recipe');
+$id = is_object($routeParam) ? ($routeParam->id ?? null) : $routeParam; // soporta Route Model Binding o id
+
+
+return [
+'title' => ['sometimes','string','max:180'],
+'slug' => ['nullable','string','max:200','unique:recipes,slug,' . $id],
+'description' => ['nullable','string'],
+'steps' => ['nullable','string'],
+'visibility' => ['sometimes','in:public,unlisted,private'],
+'servings' => ['sometimes','numeric','min:0.1'],
+'prep_time_minutes' => ['sometimes','integer','min:0'],
+'cook_time_minutes' => ['sometimes','integer','min:0'],
+'image_url' => ['nullable','string','max:255'],
+];
+}
+}

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\{
     HasMany, BelongsToMany
 };
 
+
 class User extends Authenticatable
 {
     protected $fillable = ['name','username','email','password','avatar_url','bio'];
