@@ -12,6 +12,15 @@ class Ingredient extends Model
         'is_verified','created_by'
     ];
 
+    protected $casts = [
+        'serving_size' => 'float',
+        'calories'     => 'float',
+        'protein'      => 'float',
+        'carbs'        => 'float',
+        'fat'          => 'float',
+        'is_verified'  => 'boolean',
+    ];
+
     public function recipes(): BelongsToMany
     {
         return $this->belongsToMany(Recipe::class, 'recipe_ingredient')

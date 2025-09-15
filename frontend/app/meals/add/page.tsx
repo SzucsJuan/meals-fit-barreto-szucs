@@ -1,101 +1,78 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Minus, Save, Clock } from "lucide-react"
-import Link from "next/link"
-import Navigation from "@/components/navigation"
-
-// Sample food database
-const foodDatabase = [
-  { id: 1, name: "Chicken Breast (100g)", calories: 165, protein: 31, carbs: 0, fats: 3.6, category: "Protein" },
-  { id: 2, name: "Brown Rice (1 cup cooked)", calories: 216, protein: 5, carbs: 45, fats: 1.8, category: "Carbs" },
-  { id: 3, name: "Broccoli (1 cup)", calories: 25, protein: 3, carbs: 5, fats: 0.3, category: "Vegetables" },
-  { id: 4, name: "Avocado (1 medium)", calories: 234, protein: 3, carbs: 12, fats: 21, category: "Fats" },
-  { id: 5, name: "Greek Yogurt (1 cup)", calories: 100, protein: 17, carbs: 6, fats: 0, category: "Protein" },
-  { id: 6, name: "Oatmeal (1 cup cooked)", calories: 154, protein: 6, carbs: 28, fats: 3, category: "Carbs" },
-  { id: 7, name: "Salmon (100g)", calories: 208, protein: 25, carbs: 0, fats: 12, category: "Protein" },
-  { id: 8, name: "Sweet Potato (1 medium)", calories: 112, protein: 2, carbs: 26, fats: 0.1, category: "Carbs" },
-  { id: 9, name: "Almonds (1 oz)", calories: 164, protein: 6, carbs: 6, fats: 14, category: "Fats" },
-  { id: 10, name: "Spinach (1 cup)", calories: 7, protein: 1, carbs: 1, fats: 0.1, category: "Vegetables" },
-]
+import Link from "next/link";
+import { useState, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Navigation from "@/components/navigation";
+import { useIngredients } from "@/lib/useIngredients";
+import { Search, Plus, Minus, Save, Clock } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SelectedFood {
-  id: number
-  name: string
-  calories: number
-  protein: number
-  carbs: number
-  fats: number
-  quantity: number
+  id: number;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;   // ojo: viene como 'fat' del back
+  quantity: number;
 }
 
 export default function AddMealPage() {
-  const [mealType, setMealType] = useState("")
-  const [mealTime, setMealTime] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([])
-  const [filteredFoods, setFilteredFoods] = useState(foodDatabase)
+  const [mealType, setMealType] = useState("");
+  const [mealTime, setMealTime] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: ingredients, loading } = useIngredients(searchQuery);
+  const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    const filtered = foodDatabase.filter((food) => food.name.toLowerCase().includes(query.toLowerCase()))
-    setFilteredFoods(filtered)
-  }
-
-  const addFood = (food: (typeof foodDatabase)[0]) => {
-    const existingFood = selectedFoods.find((f) => f.id === food.id)
-    if (existingFood) {
-      setSelectedFoods(selectedFoods.map((f) => (f.id === food.id ? { ...f, quantity: f.quantity + 1 } : f)))
+  const addFood = (ing: ReturnType<typeof useIngredients>["data"][number]) => {
+    const food = {
+      id: ing.id,
+      name: `${ing.name} (${ing.serving_size}${ing.serving_unit})`,
+      calories: ing.calories,
+      protein: ing.protein,
+      carbs: ing.carbs,
+      fats: ing.fat, // mapeo aquí
+      quantity: 1,
+    };
+    const existing = selectedFoods.find((f) => f.id === food.id);
+    if (existing) {
+      setSelectedFoods(selectedFoods.map((f) => (f.id === food.id ? { ...f, quantity: f.quantity + 1 } : f)));
     } else {
-      setSelectedFoods([...selectedFoods, { ...food, quantity: 1 }])
+      setSelectedFoods([...selectedFoods, food]);
     }
-  }
+  };
 
   const updateQuantity = (id: number, quantity: number) => {
-    if (quantity <= 0) {
-      setSelectedFoods(selectedFoods.filter((f) => f.id !== id))
-    } else {
-      setSelectedFoods(selectedFoods.map((f) => (f.id === id ? { ...f, quantity } : f)))
-    }
-  }
+    if (quantity <= 0) setSelectedFoods(selectedFoods.filter((f) => f.id !== id));
+    else setSelectedFoods(selectedFoods.map((f) => (f.id === id ? { ...f, quantity } : f)));
+  };
 
-  const calculateTotals = () => {
+  const totals = useMemo(() => {
     return selectedFoods.reduce(
-      (acc, food) => ({
-        calories: acc.calories + food.calories * food.quantity,
-        protein: acc.protein + food.protein * food.quantity,
-        carbs: acc.carbs + food.carbs * food.quantity,
-        fats: acc.fats + food.fats * food.quantity,
+      (acc, f) => ({
+        calories: acc.calories + f.calories * f.quantity,
+        protein:  acc.protein  + f.protein  * f.quantity,
+        carbs:    acc.carbs    + f.carbs    * f.quantity,
+        fats:     acc.fats     + f.fats     * f.quantity,
       }),
-      { calories: 0, protein: 0, carbs: 0, fats: 0 },
-    )
-  }
-
-  const totals = calculateTotals()
+      { calories: 0, protein: 0, carbs: 0, fats: 0 }
+    );
+  }, [selectedFoods]);
 
   const handleSaveMeal = () => {
-    // Here you would typically save to a database
-    console.log("Saving meal:", {
-      mealType,
-      mealTime,
-      foods: selectedFoods,
-      totals,
-    })
-    // Redirect back to meals page
-  }
+    // TODO: POST al back para crear MealLog + MealDetails
+    console.log("Saving meal:", { mealType, mealTime, foods: selectedFoods, totals });
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
       <Navigation />
 
-      {/* Header */}
       <div className="border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
@@ -115,9 +92,7 @@ export default function AddMealPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Food Search and Selection */}
           <div className="space-y-6">
-            {/* Meal Info */}
             <Card>
               <CardHeader>
                 <CardTitle>Meal Information</CardTitle>
@@ -155,7 +130,6 @@ export default function AddMealPage() {
               </CardContent>
             </Card>
 
-            {/* Food Search */}
             <Card>
               <CardHeader>
                 <CardTitle>Search Foods</CardTitle>
@@ -167,41 +141,47 @@ export default function AddMealPage() {
                   <Input
                     placeholder="Search for foods..."
                     value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
                   />
                 </div>
 
-                <div className="max-h-96 overflow-y-auto space-y-2">
-                  {filteredFoods.map((food) => (
-                    <div
-                      key={food.id}
-                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-foreground">{food.name}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {food.category}
-                          </Badge>
+                {loading ? (
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                ) : (
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {ingredients.map((ing) => (
+                      <div key={ing.id}
+                           className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-foreground">
+                              {ing.name} ({ing.serving_size}{ing.serving_unit})
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {ing.is_verified ? "Verified" : "Community"}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {ing.calories} cal • {ing.protein}g protein • {ing.carbs}g carbs • {ing.fat}g fat
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {food.calories} cal • {food.protein}g protein • {food.carbs}g carbs • {food.fats}g fats
-                        </div>
+                        <Button onClick={() => addFood(ing)} size="sm" variant="outline">
+                          <Plus className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button onClick={() => addFood(food)} size="sm" variant="outline">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                    {ingredients.length === 0 && (
+                      <div className="text-sm text-muted-foreground">No results.</div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
           {/* Right Column - Selected Foods and Summary */}
           <div className="space-y-6">
-            {/* Selected Foods */}
             <Card>
               <CardHeader>
                 <CardTitle>Selected Foods</CardTitle>
@@ -253,7 +233,6 @@ export default function AddMealPage() {
               </CardContent>
             </Card>
 
-            {/* Nutrition Summary */}
             <Card>
               <CardHeader>
                 <CardTitle>Nutrition Summary</CardTitle>
@@ -281,7 +260,6 @@ export default function AddMealPage() {
               </CardContent>
             </Card>
 
-            {/* Save Button */}
             <Button
               onClick={handleSaveMeal}
               className="w-full flex items-center gap-2"
