@@ -16,7 +16,8 @@ class DatabaseSeeder extends Seeder
         //Si queremos ejecutar un seeder puntual corremos en consola: php artisan db:seed --class="nombre del seeder"
         $this->call([
             UserSeeder::class,
-            MealsAndFitSeeder::class
+            MealsAndFitSeeder::class,
+            RecipeSeeder::class,
         ]);
     }
 }

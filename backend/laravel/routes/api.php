@@ -11,25 +11,34 @@ use App\Http\Controllers\{
     RecipeController
 };
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
+// (opcional) endpoint de prueba de auth
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware('auth:sanctum')->apiResource('recipes', RecipeController::class);
-Route::middleware('auth:sanctum')->apiResource('meal-logs', MealLogController::class);
-Route::middleware('auth:sanctum')->apiResource('meal-details', MealDetailController::class)->only(['store', 'destroy', 'update']);
+/**
+ * --- RUTAS PÚBLICAS (sin auth) ---
+ * Listado y detalle de recetas e ingredientes
+ */
+Route::apiResource('recipes', RecipeController::class)->only(['index','show']);
+Route::apiResource('ingredients', IngredientController::class)->only(['index','show']);
 
-Route::post('votes', [VoteController::class, 'store']);
-Route::post('recipes/{recipe}/favorite', [FavoriteController::class, 'toggle']);
-Route::apiResource('ingredients', IngredientController::class); //atajo CRUD completo para ingredientes
+/**
+ * --- RUTAS PROTEGIDAS (con auth) ---
+ * Crear/editar/borrar recetas e ingredientes
+ * Crear/eliminar/actualizar meal logs/details
+ * Votar y marcar favoritos
+ */
+Route::middleware('auth:sanctum')->group(function () {
+    // CRUD parcial protegido
+    Route::apiResource('recipes', RecipeController::class)->only(['store','update','destroy']);
+    Route::apiResource('ingredients', IngredientController::class)->only(['store','update','destroy']);
+
+    // Meal logs / details
+    Route::apiResource('meal-logs', MealLogController::class);
+    Route::apiResource('meal-details', MealDetailController::class)->only(['store','destroy','update']);
+
+    // Acciones de usuario
+    Route::post('votes', [VoteController::class, 'store']);
+    Route::post('recipes/{recipe}/favorite', [FavoriteController::class, 'toggle']);
+});

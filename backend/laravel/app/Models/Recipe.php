@@ -4,15 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\{
-    BelongsTo, BelongsToMany, HasMany
+    BelongsTo,
+    BelongsToMany,
+    HasMany
 };
 
 class Recipe extends Model
 {
     protected $fillable = [
-        'user_id','title','slug','description','steps','visibility',
-        'servings','prep_time_minutes','cook_time_minutes','image_url',
-        'calories','protein','carbs','fat'
+        'user_id',
+        'title',
+        'slug',
+        'description',
+        'steps',
+        'visibility',
+        'servings',
+        'prep_time_minutes',
+        'cook_time_minutes',
+        'image_url',
+        'calories',
+        'protein',
+        'carbs',
+        'fat'
+    ];
+
+    protected $casts = [
+        'servings'           => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -23,15 +40,15 @@ class Recipe extends Model
     public function ingredients(): BelongsToMany
     {
         return $this->belongsToMany(Ingredient::class, 'recipe_ingredient')
-                    ->withPivot(['quantity','unit','notes'])
-                    ->withTimestamps();
+            ->withPivot(['quantity', 'unit', 'notes'])
+            ->withTimestamps();
     }
 
     public function voters(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'votes')
-                    ->withPivot('rating')
-                    ->withTimestamps();
+            ->withPivot('rating')
+            ->withTimestamps();
     }
 
     public function votes(): HasMany
@@ -45,9 +62,18 @@ class Recipe extends Model
     }
 
 
-    public function scopePublic($q){ return $q->where('visibility','public'); }
-    public function scopeUnlisted($q){ return $q->where('visibility','unlisted'); }
-    public function scopePrivate($q){ return $q->where('visibility','private'); }
+    public function scopePublic($q)
+    {
+        return $q->where('visibility', 'public');
+    }
+    public function scopeUnlisted($q)
+    {
+        return $q->where('visibility', 'unlisted');
+    }
+    public function scopePrivate($q)
+    {
+        return $q->where('visibility', 'private');
+    }
 
 
     public function averageRating(): float
