@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
  */
 Route::apiResource('recipes', RecipeController::class)->only(['index','show']);
 Route::apiResource('ingredients', IngredientController::class)->only(['index','show']);
+Route::apiResource('meal-logs', MealLogController::class);
 
 /**
  * --- RUTAS PROTEGIDAS (con auth) ---
@@ -35,7 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('ingredients', IngredientController::class)->only(['store','update','destroy']);
 
     // Meal logs / details
-    Route::apiResource('meal-logs', MealLogController::class);
+    //Route::apiResource('meal-logs', MealLogController::class);
     Route::apiResource('meal-details', MealDetailController::class)->only(['store','destroy','update']);
 
     // Acciones de usuario
