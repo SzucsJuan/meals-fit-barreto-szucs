@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\{
     BelongsTo, BelongsToMany, HasMany
 };
 use InvalidArgumentException;
+use Illuminate\Support\Facades\Storage;
 
 class Recipe extends Model
 {
@@ -143,11 +144,10 @@ class Recipe extends Model
         return $this->refresh();
     }
 
-    /* === (opcional) accessor de imagen si usás storage público ===
-    use Illuminate\Support\Facades\Storage;
+    //=== (opcional) accessor de imagen si usás storage público ===
+    
     public function getImageUrlAttribute(): ?string
     {
         return $this->image_path ? Storage::url($this->image_path) : null;
     }
-    */
 }

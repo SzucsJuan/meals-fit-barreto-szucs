@@ -122,7 +122,7 @@ export default function AddMealPage() {
                         type="time"
                         value={mealTime}
                         onChange={(e) => setMealTime(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                       />
                     </div>
                   </div>
@@ -142,7 +142,7 @@ export default function AddMealPage() {
                     placeholder="Search for foods..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                   />
                 </div>
 

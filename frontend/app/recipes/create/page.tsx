@@ -90,7 +90,7 @@ export default function CreateRecipePage() {
       <Navigation />
 
       {/* Header */}
-      <div className="border-b border-border bg-card">
+      <div className="border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -124,6 +124,7 @@ export default function CreateRecipePage() {
                     placeholder="Enter recipe name"
                     value={recipeName}
                     onChange={(e) => setRecipeName(e.target.value)}
+                    className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                   />
                 </div>
                 <div className="space-y-2">
@@ -150,6 +151,7 @@ export default function CreateRecipePage() {
                   placeholder="Describe your recipe"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                 />
               </div>
 
@@ -161,6 +163,7 @@ export default function CreateRecipePage() {
                     placeholder="e.g., 30 min"
                     value={prepTime}
                     onChange={(e) => setPrepTime(e.target.value)}
+                    className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                   />
                 </div>
                 <div className="space-y-2">
@@ -171,6 +174,7 @@ export default function CreateRecipePage() {
                     placeholder="Number of servings"
                     value={servings}
                     onChange={(e) => setServings(e.target.value)}
+                    className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                   />
                 </div>
               </div>
@@ -199,6 +203,7 @@ export default function CreateRecipePage() {
                       placeholder="Ingredient name"
                       value={ingredient.name}
                       onChange={(e) => updateIngredient(ingredient.id, "name", e.target.value)}
+                      className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                     />
                   </div>
                   <div className="w-24">
@@ -206,6 +211,7 @@ export default function CreateRecipePage() {
                       placeholder="Amount"
                       value={ingredient.amount}
                       onChange={(e) => updateIngredient(ingredient.id, "amount", e.target.value)}
+                      className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                     />
                   </div>
                   <div className="w-24">
@@ -213,6 +219,7 @@ export default function CreateRecipePage() {
                       placeholder="Unit"
                       value={ingredient.unit}
                       onChange={(e) => updateIngredient(ingredient.id, "unit", e.target.value)}
+                      className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                     />
                   </div>
                   <Button
@@ -225,6 +232,62 @@ export default function CreateRecipePage() {
                   </Button>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          {/* Nutrition Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Nutrition Information</CardTitle>
+              <CardDescription>Per serving nutritional values</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="calories">Calories</Label>
+                  <Input
+                    id="calories"
+                    type="number"
+                    placeholder="0"
+                    value={nutrition.calories}
+                    onChange={(e) => setNutrition({ ...nutrition, calories: e.target.value })}
+                    className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="protein">Protein (g)</Label>
+                  <Input
+                    id="protein"
+                    type="number"
+                    placeholder="0"
+                    value={nutrition.protein}
+                    onChange={(e) => setNutrition({ ...nutrition, protein: e.target.value })}
+                    className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="carbs">Carbs (g)</Label>
+                  <Input
+                    id="carbs"
+                    type="number"
+                    placeholder="0"
+                    value={nutrition.carbs}
+                    onChange={(e) => setNutrition({ ...nutrition, carbs: e.target.value })}
+                    className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fats">Fats (g)</Label>
+                  <Input
+                    id="fats"
+                    type="number"
+                    placeholder="0"
+                    value={nutrition.fats}
+                    onChange={(e) => setNutrition({ ...nutrition, fats: e.target.value })}
+                    className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -253,6 +316,7 @@ export default function CreateRecipePage() {
                       placeholder="Describe this step"
                       value={instruction.step}
                       onChange={(e) => updateInstruction(instruction.id, e.target.value)}
+                      className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                     />
                   </div>
                   <Button
@@ -266,58 +330,6 @@ export default function CreateRecipePage() {
                   </Button>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-
-          {/* Nutrition Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Nutrition Information</CardTitle>
-              <CardDescription>Per serving nutritional values</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="calories">Calories</Label>
-                  <Input
-                    id="calories"
-                    type="number"
-                    placeholder="0"
-                    value={nutrition.calories}
-                    onChange={(e) => setNutrition({ ...nutrition, calories: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="protein">Protein (g)</Label>
-                  <Input
-                    id="protein"
-                    type="number"
-                    placeholder="0"
-                    value={nutrition.protein}
-                    onChange={(e) => setNutrition({ ...nutrition, protein: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="carbs">Carbs (g)</Label>
-                  <Input
-                    id="carbs"
-                    type="number"
-                    placeholder="0"
-                    value={nutrition.carbs}
-                    onChange={(e) => setNutrition({ ...nutrition, carbs: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fats">Fats (g)</Label>
-                  <Input
-                    id="fats"
-                    type="number"
-                    placeholder="0"
-                    value={nutrition.fats}
-                    onChange={(e) => setNutrition({ ...nutrition, fats: e.target.value })}
-                  />
-                </div>
-              </div>
             </CardContent>
           </Card>
 

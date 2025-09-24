@@ -160,9 +160,9 @@ export default function HomePage() {
 
                                       {achievement.unlocked ? (
                                         <div className="flex items-center justify-between gap-2">
-                                          <span className="text-xs text-muted-foreground truncate">
+                                          {/* <span className="text-xs text-muted-foreground truncate">
                                             Unlocked {new Date(achievement.unlockedDate).toLocaleDateString()}
-                                          </span>
+                                          </span> */}
                                           <Button size="sm" variant="ghost" className="h-6 px-2 text-xs flex-shrink-0">
                                             <Share2 className="h-3 w-3 mr-1" />
                                             Share
@@ -279,7 +279,7 @@ export default function HomePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">
+                <Button className="w-full" variant="outline">
                   <Plus className="h-4 w-4 mr-2" />
                   New Recipe
                 </Button>
@@ -325,7 +325,7 @@ export default function HomePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button variant="outline" className="w-full">
                   <Calendar className="h-4 w-4 mr-2" />
                   View Calendar
                 </Button>

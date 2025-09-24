@@ -27,7 +27,7 @@ export default function Navigation() {
           className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
         >
           <Home className="h-4 w-4" />
-          Dashboard
+          Home
         </Button>
       </Link>
       <Link href="/recipes" onClick={onLinkClick}>

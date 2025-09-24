@@ -181,7 +181,7 @@ export default function FavoritesPage() {
               </div>
             </div>
             <Link href="/">
-              <Button variant="outline">Back to Dashboard</Button>
+              <Button variant="outline">Back to Home</Button>
             </Link>
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function FavoritesPage() {
               placeholder="Search favorites..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
             />
           </div>
           <div className="flex gap-2">
