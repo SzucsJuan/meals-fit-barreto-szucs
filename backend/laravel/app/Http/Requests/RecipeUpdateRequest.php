@@ -10,7 +10,8 @@ class RecipeUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return true;
+        //return auth()->check();
     }
 
 
@@ -30,6 +31,12 @@ class RecipeUpdateRequest extends FormRequest
             'prep_time_minutes' => ['sometimes', 'integer', 'min:0'],
             'cook_time_minutes' => ['sometimes', 'integer', 'min:0'],
             'image_url' => ['nullable', 'string', 'max:255'],
+
+            'ingredients' => 'sometimes|array',
+            'ingredients.*.ingredient_id' => 'required_with:ingredients|integer|exists:ingredients,id',
+            'ingredients.*.quantity'      => 'required_with:ingredients|numeric|min:0.01',
+            'ingredients.*.unit'          => 'required_with:ingredients|in:g,ml,unit',
+            'ingredients.*.notes'         => 'sometimes|nullable|string|max:255',
         ];
     }
 }

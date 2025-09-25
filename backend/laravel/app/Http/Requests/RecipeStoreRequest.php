@@ -11,9 +11,11 @@ class RecipeStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return true;
+        //return auth()->check();
     }
 
+    
 
     public function rules(): array
     {
@@ -27,6 +29,12 @@ class RecipeStoreRequest extends FormRequest
             'prep_time_minutes' => ['nullable', 'integer', 'min:0'],
             'cook_time_minutes' => ['nullable', 'integer', 'min:0'],
             'image_url' => ['nullable', 'string', 'max:255'],
+
+            'ingredients' => 'array',
+            'ingredients.*.ingredient_id' => 'required|integer|exists:ingredients,id',
+            'ingredients.*.quantity'      => 'required|numeric|min:0.01',
+            'ingredients.*.unit'          => 'required|in:g,ml,unit',
+            'ingredients.*.notes'         => 'nullable|string|max:255',
         ];
     }
 }

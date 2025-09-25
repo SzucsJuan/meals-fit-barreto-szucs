@@ -4,10 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Recipe;
 use Illuminate\Http\Request;
+use App\Services\RecipeService;
 use App\Http\Requests\{RecipeStoreRequest, RecipeUpdateRequest};
 
 class RecipeController extends Controller
 {
+    protected RecipeService $recipes;
+
+    public function __construct(RecipeService $recipes)
+    {
+        $this->recipes = $recipes;
+    }
+
     // GET /api/recipes?q=&per_page=&order=
     public function index(Request $request)
     {
@@ -71,16 +79,34 @@ class RecipeController extends Controller
         $data['user_id'] = $data['user_id'] ?? 1; // ⚠️ solo para desarrollo
         $recipe = Recipe::create($data);
 
-        return response()->json($recipe, 201);
+        if (!empty($data['ingredients'])) {
+        $this->recipes->syncIngredientsAndRecompute($recipe, $data['ingredients'], ignoreUnitMismatch: false);
+        } else {
+        // sin ingredientes, aseguro macros a 0
+        $recipe->fill(['calories'=>0,'protein'=>0,'carbs'=>0,'fat'=>0])->save();
+        }
+
+        return response()->json($recipe->fresh()->load('ingredients:id,name'), 201);
     }
 
     // PUT
     public function update(RecipeUpdateRequest $request, Recipe $recipe)
     {
         // $this->authorize('update', $recipe); // descomentar con auth
-        $recipe->update($request->validated());
-        return $recipe;
-    }
+        $data = $request->validated();
+        
+        $recipe->update($data);
+        
+        if (array_key_exists('ingredients', $data)) {
+            // si llegó el array, sincronizamos (aunque esté vacío → elimina todos)
+            $this->recipes->syncIngredientsAndRecompute($recipe, $data['ingredients'], ignoreUnitMismatch: false);
+        } else {
+            // si no llegó, al menos recalcular si cambiaste servings u otros
+            $recipe->recomputeMacrosAndSave(true);
+        }
+    
+        return $recipe->load('ingredients:id,name');
+        }
 
     // DELETE
     public function destroy(Recipe $recipe)
