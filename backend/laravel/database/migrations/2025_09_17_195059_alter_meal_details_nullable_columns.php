@@ -9,7 +9,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('meal_details', function (Blueprint $table) {
-            // Primero soltar FKs si existen (ajustá los nombres si difieren)
+            // Eliminar FKs existentes
             try { $table->dropForeign(['ingredient_id']); } catch (\Throwable $e) {}
             try { $table->dropForeign(['recipe_id']); } catch (\Throwable $e) {}
 
@@ -33,8 +33,6 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('meal_details', function (Blueprint $table) {
-            // (si realmente querés volver atrás, revertí a NOT NULL y FKs como estaban)
-            // Ejemplo: $table->decimal('servings', 8, 2)->nullable(false)->change();
         });
     }
 };

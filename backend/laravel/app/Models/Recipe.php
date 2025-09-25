@@ -17,6 +17,11 @@ class Recipe extends Model
         'calories','protein','carbs','fat'
     ];
 
+    protected $casts = [
+        'calories' => 'float', 'protein' => 'float', 'carbs' => 'float', 'fat' => 'float',
+        'servings' => 'integer',
+    ];
+
     protected $appends = ['image_url']; // si usás accessor de imagen (opcional)
 
     /** Relaciones **/
@@ -25,6 +30,7 @@ class Recipe extends Model
     public function ingredients(): BelongsToMany
     {
         return $this->belongsToMany(Ingredient::class, 'recipe_ingredient')
+            ->using(RecipeIngredient::class)
             ->withPivot(['quantity','unit','notes'])
             ->withTimestamps();
     }
