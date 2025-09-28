@@ -19,7 +19,9 @@ export function useIngredients(search: string) {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ingredients`);
+    const url = new URL(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ingredients`
+    );
     if (search) url.searchParams.set("q", search);
     url.searchParams.set("per_page", "50");
 
@@ -31,7 +33,7 @@ export function useIngredients(search: string) {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         // Laravel API Resource (paginado) devuelve { data: [...] }
         const json = await r.json();
-        setData(json.data ?? json); 
+        setData(json.data ?? json);
       })
       .catch((e) => {
         if (e.name !== "AbortError") setError(e.message);

@@ -23,7 +23,7 @@ export default function CreateRecipePage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState<"public"|"unlisted"|"private">("public");
+  const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
   const [prepTime, setPrepTime] = useState("");
   const [cookTime, setCookTime] = useState("");
   const [servings, setServings] = useState("");
@@ -32,7 +32,7 @@ export default function CreateRecipePage() {
     { tempId: 1, ingredient_id: null, quantity: "", unit: "" }
   ]);
 
-  const [steps, setSteps] = useState<{ id:number; step:string }[]>([{ id: 1, step: "" }]);
+  const [steps, setSteps] = useState<{ id: number; step: string }[]>([{ id: 1, step: "" }]);
 
   const ingredientUnitMap = useMemo(() => {
     const m = new Map<number, Unit>();
@@ -65,7 +65,6 @@ export default function CreateRecipePage() {
   };
 
   const handleSave = async () => {
-    // autocompletar unidad por defecto si el user no eligió
     const normalized = rows.map(r => ({
       ...r,
       unit: (r.unit || (r.ingredient_id ? (ingredientUnitMap.get(r.ingredient_id) ?? '') : '')) as Unit | ''
@@ -84,7 +83,6 @@ export default function CreateRecipePage() {
       });
       router.push("/recipes");
     } catch {
-      // el hook ya setea error visible
     }
   };
 
@@ -126,7 +124,7 @@ export default function CreateRecipePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="visibility">Visibility</Label>
-                  <Select value={visibility} onValueChange={(v:any) => setVisibility(v)}>
+                  <Select value={visibility} onValueChange={(v: any) => setVisibility(v)}>
                     <SelectTrigger><SelectValue placeholder="Select visibility" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="public">Public</SelectItem>
@@ -185,7 +183,7 @@ export default function CreateRecipePage() {
                         onValueChange={(val) => {
                           const id = Number(val);
                           const autoUnit = ingredientUnitMap.get(id) ?? '';
-                          updateRow(row.tempId, { ingredient_id: id, unit: (row.unit || autoUnit) as Unit|'' });
+                          updateRow(row.tempId, { ingredient_id: id, unit: (row.unit || autoUnit) as Unit | '' });
                         }}
                       >
                         <SelectTrigger><SelectValue placeholder="Select ingredient" /></SelectTrigger>
@@ -210,7 +208,7 @@ export default function CreateRecipePage() {
 
                     <div className="md:col-span-2">
                       <Label>Unit</Label>
-                      <Select value={row.unit || ''} onValueChange={(v:any) => updateRow(row.tempId, { unit: v })}>
+                      <Select value={row.unit || ''} onValueChange={(v: any) => updateRow(row.tempId, { unit: v })}>
                         <SelectTrigger><SelectValue placeholder={defaultUnit || "unit"} /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="g">g</SelectItem>

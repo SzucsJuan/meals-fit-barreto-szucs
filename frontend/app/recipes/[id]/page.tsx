@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Heart, Edit, Share2 } from "lucide-react";
 import Link from "next/link";
 import { detailRecipe } from "@/lib/detailRecipe";
-import { RecipeEditModal } from "@/components/RecipeEditModal";
 
 function splitSteps(steps?: string | null) {
   if (!steps) return [];
@@ -18,7 +17,6 @@ function splitSteps(steps?: string | null) {
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { data: r, loading, error } = detailRecipe(params.id);
-  const [openEdit, setOpenEdit] = useState(false);
 
   const totalMinutes = (r?.prep_time_minutes ?? 0) + (r?.cook_time_minutes ?? 0);
   const steps = splitSteps(r?.steps);
@@ -46,7 +44,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               <div>
                 <img src={r.image_url || "/placeholder.svg"} alt={r.title}
-                     className="w-full h-80 object-cover rounded-lg" />
+                  className="w-full h-80 object-cover rounded-lg" />
               </div>
 
               <div className="space-y-4">
@@ -86,9 +84,8 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                 </div>
 
                 <div className="flex gap-2">
-                  <Button className="flex-1" onClick={() => setOpenEdit(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Recipe
+                  <Button asChild className="flex-1">
+                    <Link href={`/recipes/${r.id}/edit`}>Edit Recipe</Link>
                   </Button>
                   <Button variant="outline">
                     <Share2 className="h-4 w-4 mr-2" />
@@ -133,11 +130,8 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                 <CardContent>
                   <ul className="space-y-3">
                     {r.ingredients.map((ing) => (
-                      <li key={ing.id} className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-primary rounded-full" />
-                        <span className="font-medium">{ing.pivot.quantity} {ing.pivot.unit}</span>
-                        <span>{ing.name}</span>
-                        {ing.pivot.notes ? <span className="text-xs text-muted-foreground">– {ing.pivot.notes}</span> : null}
+                      <li key={ing.id}>
+                        {ing.pivot.quantity} {ing.pivot.unit} – {ing.name} {ing.pivot.notes && `(${ing.pivot.notes})`}
                       </li>
                     ))}
                   </ul>
@@ -162,14 +156,6 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                 </CardContent>
               </Card>
             </div>
-
-            {/* Modal */}
-            <RecipeEditModal
-              open={openEdit}
-              onClose={() => setOpenEdit(false)}
-              recipe={r}
-              onUpdated={() => router.refresh()}
-            />
           </>
         )}
       </div>

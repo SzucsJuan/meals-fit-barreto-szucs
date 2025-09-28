@@ -1,25 +1,37 @@
-// lib/useRecipe.ts
-import { useEffect, useState } from 'react';
-import { apiRecipes, type RecipeDTO } from './api';
+"use client";
 
-export function detailRecipe(id: string | number) {
-  const [data, setData] = useState<RecipeDTO | null>(null);
-  const [loading, setLoad] = useState(false);
-  const [error, setErr] = useState<string | null>(null);
+import { useEffect, useState, useCallback } from "react";
+import { RecipeDetail } from "./type";
+import { s } from "./sanitize";
 
-  useEffect(() => {
+export function detailRecipe(id: string) {
+  const [data, setData] = useState<RecipeDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refetch = useCallback(() => {
     if (!id) return;
-    const ctrl = new AbortController();
-    setLoad(true);
-    setErr(null);
+    setLoading(true);
+    setError(null);
 
-    apiRecipes.show(id)
-      .then((r) => setData(r))
-      .catch((e) => { if (e.name !== 'AbortError') setErr(e.message || 'Error'); })
-      .finally(() => setLoad(false));
+    const safeId = s.text(id, 100);
+    const url = `${
+      process.env.NEXT_PUBLIC_API_BASE_URL
+    }/api/recipes/${encodeURIComponent(safeId)}`;
 
-    return () => ctrl.abort();
+    fetch(url)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(setData)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  return { data, loading, error };
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { data, loading, error, refetch };
 }
