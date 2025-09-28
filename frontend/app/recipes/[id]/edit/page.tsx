@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StepsEditor } from "@/components/stepsEditor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CookingPot } from "lucide-react";
 import Link from "next/link";
 
 import { detailRecipe } from "@/lib/detailRecipe";
@@ -113,7 +114,13 @@ export default function EditRecipePage({ params }: { params: { id: string } }) {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Edit Recipe</h1>
+          <div className="flex items-center gap-3">
+            <CookingPot className="h-8 w-8 text-primary" style={{ color: "#FF9800" }} />
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Edit your recipe</h1>
+              <p className="text-muted-foreground">Edit the details of your recipe</p>
+            </div>
+          </div>
           <div className="flex gap-2">
             <Link href={`/recipes/${params.id}`}>
               <Button variant="outline">Cancel</Button>
@@ -129,7 +136,7 @@ export default function EditRecipePage({ params }: { params: { id: string } }) {
         {!loading && !recipe && !error && <div className="text-sm text-muted-foreground">Not found.</div>}
 
         {recipe && (
-          <div className="space-y-8">
+          <div className="space-y-8 pt-4">
             {/* Básicos */}
             <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-3">

@@ -28,7 +28,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link href="/recipes">
-            <Button variant="outline">← Back to Recipes</Button>
+            <Button variant="outline">Back to Recipes</Button>
           </Link>
         </div>
 
@@ -41,7 +41,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
         {r && (
           <>
             {/* Header */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 pt-4">
               <div>
                 <img src={r.image_url || "/placeholder.svg"} alt={r.title}
                   className="w-full h-80 object-cover rounded-lg" />

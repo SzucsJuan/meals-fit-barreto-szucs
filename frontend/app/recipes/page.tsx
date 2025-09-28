@@ -26,7 +26,7 @@ export default function RecipesPage() {
               <ChefHat className="h-8 w-8" style={{ color: "#FF9800" }} />
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground">Recipe Collection</h1>
-                <p className="text-muted-foreground">Discover and create healthy recipes</p>
+                <p className="text-muted-foreground">Find your favorite recipes</p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-3">

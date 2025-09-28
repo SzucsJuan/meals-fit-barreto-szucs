@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ChefHat, Plus, Minus, Save } from "lucide-react";
+import { ChefHat, Plus, Minus, Save, Beef } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -95,7 +95,7 @@ export default function CreateRecipePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <ChefHat className="h-8 w-8 text-primary" />
+              <Beef className="h-8 w-8 text-primary" style={{ color: "#FF9800" }} />
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Create New Recipe</h1>
                 <p className="text-muted-foreground">Share your healthy creations</p>
