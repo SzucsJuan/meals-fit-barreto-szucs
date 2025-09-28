@@ -1,5 +1,6 @@
 "use client";
-
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Navigation from "@/components/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Heart, Edit, Share2 } from "lucide-react";
 import Link from "next/link";
 import { detailRecipe } from "@/lib/detailRecipe";
+import { RecipeEditModal } from "@/components/RecipeEditModal";
 
 function splitSteps(steps?: string | null) {
   if (!steps) return [];
@@ -14,7 +16,9 @@ function splitSteps(steps?: string | null) {
 }
 
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const { data: r, loading, error } = detailRecipe(params.id);
+  const [openEdit, setOpenEdit] = useState(false);
 
   const totalMinutes = (r?.prep_time_minutes ?? 0) + (r?.cook_time_minutes ?? 0);
   const steps = splitSteps(r?.steps);
@@ -41,11 +45,8 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
             {/* Header */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               <div>
-                <img
-                  src={r.image_url || "/placeholder.svg"}
-                  alt={r.title}
-                  className="w-full h-80 object-cover rounded-lg"
-                />
+                <img src={r.image_url || "/placeholder.svg"} alt={r.title}
+                     className="w-full h-80 object-cover rounded-lg" />
               </div>
 
               <div className="space-y-4">
@@ -53,9 +54,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                   <div>
                     <h1 className="text-3xl font-bold text-foreground mb-2">{r.title}</h1>
                     <p className="text-muted-foreground text-lg">{r.description}</p>
-                    {r.user?.name && (
-                      <p className="text-xs text-muted-foreground mt-2">by {r.user.name}</p>
-                    )}
+                    {r.user?.name && <p className="text-xs text-muted-foreground mt-2">by {r.user.name}</p>}
                   </div>
                   <Button variant="ghost" size="sm">
                     <Heart className="h-5 w-5 text-muted-foreground" />
@@ -65,9 +64,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary">{r.visibility}</Badge>
                   {typeof r.avg_rating === "number" && (
-                    <Badge variant="outline">
-                      ★ {r.avg_rating.toFixed(1)} ({r.votes_count ?? 0})
-                    </Badge>
+                    <Badge variant="outline">★ {r.avg_rating.toFixed(1)} ({r.votes_count ?? 0})</Badge>
                   )}
                 </div>
 
@@ -89,12 +86,10 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                 </div>
 
                 <div className="flex gap-2">
-                  <Link href={`/recipes/${r.id}/edit`}>
-                    <Button className="flex-1">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Recipe
-                    </Button>
-                  </Link>
+                  <Button className="flex-1" onClick={() => setOpenEdit(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Recipe
+                  </Button>
                   <Button variant="outline">
                     <Share2 className="h-4 w-4 mr-2" />
                     Share
@@ -133,34 +128,24 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
 
             {/* Ingredients & Instructions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Ingredients */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Ingredients</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Ingredients</CardTitle></CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
                     {r.ingredients.map((ing) => (
                       <li key={ing.id} className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <span className="font-medium">
-                          {ing.pivot.quantity} {ing.pivot.unit}
-                        </span>
+                        <div className="w-2 h-2 bg-primary rounded-full" />
+                        <span className="font-medium">{ing.pivot.quantity} {ing.pivot.unit}</span>
                         <span>{ing.name}</span>
-                        {ing.pivot.notes ? (
-                          <span className="text-xs text-muted-foreground">– {ing.pivot.notes}</span>
-                        ) : null}
+                        {ing.pivot.notes ? <span className="text-xs text-muted-foreground">– {ing.pivot.notes}</span> : null}
                       </li>
                     ))}
                   </ul>
                 </CardContent>
               </Card>
 
-              {/* Instructions */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Instructions</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Instructions</CardTitle></CardHeader>
                 <CardContent>
                   {steps.length === 0 ? (
                     <div className="text-sm text-muted-foreground">No steps provided.</div>
@@ -177,6 +162,14 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                 </CardContent>
               </Card>
             </div>
+
+            {/* Modal */}
+            <RecipeEditModal
+              open={openEdit}
+              onClose={() => setOpenEdit(false)}
+              recipe={r}
+              onUpdated={() => router.refresh()}
+            />
           </>
         )}
       </div>

@@ -46,5 +46,7 @@ export type RecipeDTO = {
 
 export const apiRecipes = {
   create: (payload: any) => api('/api/recipes', { method: 'POST', body: JSON.stringify(payload) }),
-  show: (id: number | string) => api<RecipeDTO>(`/api/recipes/${id}`)
+  show: (id: number | string) => api<RecipeDTO>(`/api/recipes/${id}`),
+  update: (id: number | string, payload: any) =>
+    api(`/api/recipes/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
 };
