@@ -189,4 +189,9 @@ class Recipe extends Model
 
         return $slug;
     }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image_path ? Storage::url($this->image_path) : null;
+    }
 }

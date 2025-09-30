@@ -18,7 +18,7 @@ class MealLog extends Model
     ];
 
     protected $casts = [
-        'log_date' => 'datetime:Y-m-d',
+        'log_date' => 'date:Y-m-d',
         'total_calories' => 'float',
         'total_protein' => 'float',
         'total_carbs' => 'float',
@@ -32,6 +32,6 @@ class MealLog extends Model
 
     public function details(): HasMany
     {
-        return $this->hasMany(MealDetail::class, 'meal_log_id');
+        return $this->hasMany(MealDetail::class);
     }
 }

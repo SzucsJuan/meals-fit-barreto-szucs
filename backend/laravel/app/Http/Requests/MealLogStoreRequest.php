@@ -6,20 +6,19 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class MealLogStoreRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
 
     public function rules(): array
     {
         return [
+            // 'user_id'  => ['required','integer','exists:users,id'], ---con auth
             'user_id'   => 'sometimes|exists:users,id', // quitar cuando uses auth
-            'log_date'  => 'nullable|date', // default hoy
-
+            'log_date'  => 'required|date_format:Y-m-d', // default hoy
             'notes'     => 'nullable|string|max:500',
 
             // Detalles del log (ingredientes o receta)
             'details'   => 'required|array|min:1',
             'details.*.meal_type'    => 'required|string|in:breakfast,lunch,dinner,snack',
-            'details.*.logged_at'    => 'nullable|date',
+            'details.*.logged_at'    => 'nullable|date_format:Y-m-d H:i:s',
 
             // Opción 1: por ingrediente
             'details.*.ingredient_id'=> 'nullable|exists:ingredients,id',
@@ -58,4 +57,5 @@ class MealLogStoreRequest extends FormRequest
             }
         });
     }
+        public function authorize(): bool { return true; } //modificar cuando se use auth
 }
