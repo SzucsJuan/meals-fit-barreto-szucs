@@ -14,12 +14,24 @@ class MealLogController extends Controller
     public function index(Request $request)
     {
         $userId = (int) $request->query('user_id', 1); // reemplazar por auth()->id() al tener login
+        $date   = $request->query('date');
         $from   = $request->query('from');
         $to     = $request->query('to');
-
+        
         $q = MealLog::with('details.ingredient:id,name', 'details.recipe:id,title')
             ->where('user_id', $userId)
             ->orderByDesc('log_date');
+        
+        if ($date) {
+            $log = (clone $q)
+                ->whereDate('log_date', $date)
+                ->first();
+
+            if (!$log) {
+                return response()->noContent();
+            }
+            return response()->json($log);
+        }
 
         if ($from) $q->whereDate('log_date', '>=', $from);
         if ($to)   $q->whereDate('log_date', '<=', $to);
