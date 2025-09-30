@@ -18,12 +18,12 @@ class RecipeUpdateRequest extends FormRequest
     public function rules(): array
     {
         $routeParam = $this->route('recipe');
-        $id = is_object($routeParam) ? ($routeParam->id ?? null) : $routeParam; // soporta Route Model Binding o id
+        $id = is_object($routeParam) ? ($routeParam->id ?? null) : $routeParam; 
 
 
         return [
             'title' => ['sometimes', 'string', 'max:180'],
-            'slug' => ['nullable', 'string', 'max:200', 'unique:recipes,slug,' . $id],
+            'slug' => ['nullable', 'string', 'max:200', 'unique:recipes,slug,' . $routeParam->id],
             'description' => ['nullable', 'string'],
             'steps' => ['nullable', 'string'],
             'visibility' => ['sometimes', 'in:public,unlisted,private'],

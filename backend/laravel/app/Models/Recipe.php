@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\{
     BelongsTo, BelongsToMany, HasMany
 };
@@ -150,10 +151,42 @@ class Recipe extends Model
         return $this->refresh();
     }
 
-    //=== (opcional) accessor de imagen si usás storage público ===
-    
-    public function getImageUrlAttribute(): ?string
+    protected static function booted(): void
     {
-        return $this->image_path ? Storage::url($this->image_path) : null;
+        // Al crear
+        static::creating(function (Recipe $recipe) {
+            if (empty($recipe->slug)) {
+                $recipe->slug = static::makeUniqueSlug($recipe->title);
+            }
+        });
+
+        // Al actualizar: si cambia el título y no mandaron un slug manual, lo regeneramos
+        static::updating(function (Recipe $recipe) {
+            $titleChanged = $recipe->isDirty('title');
+            $slugProvided = $recipe->isDirty('slug') && !empty($recipe->slug);
+
+            if ($titleChanged && !$slugProvided) {
+                $recipe->slug = static::makeUniqueSlug($recipe->title, $recipe->id);
+            }
+        });
+    }
+
+    protected static function makeUniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($title) ?: 'recipe';
+        $slug = $base;
+        $i = 1;
+
+        while (
+            static::query()
+                ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+                ->where('slug', $slug)
+                ->exists()
+        ) {
+            $slug = "{$base}-{$i}";
+            $i++;
+        }
+
+        return $slug;
     }
 }
