@@ -1,82 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Target, TrendingUp, Edit, Trash2 } from "lucide-react"
-import Link from "next/link"
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
-import Navigation from "@/components/navigation"
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import Navigation from "@/components/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Plus, Target, TrendingUp, Edit, Trash2 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { useTodayMealLog } from "@/lib/useTodayMealLog";
 
-// Sample meal data
-const todaysMeals = [
-  {
-    id: 1,
-    type: "Breakfast",
-    time: "8:30 AM",
-    foods: [
-      { name: "Oatmeal with berries", calories: 280, protein: 8, carbs: 45, fats: 6 },
-      { name: "Greek yogurt", calories: 100, protein: 17, carbs: 6, fats: 0 },
-    ],
-  },
-  {
-    id: 2,
-    type: "Lunch",
-    time: "12:45 PM",
-    foods: [
-      { name: "Grilled chicken breast", calories: 185, protein: 35, carbs: 0, fats: 4 },
-      { name: "Quinoa salad", calories: 220, protein: 8, carbs: 39, fats: 5 },
-    ],
-  },
-  {
-    id: 3,
-    type: "Snack",
-    time: "3:30 PM",
-    foods: [{ name: "Apple with almond butter", calories: 190, protein: 4, carbs: 25, fats: 8 }],
-  },
-]
-
-const nutritionGoals = {
-  calories: 2200,
-  protein: 165,
-  carbs: 275,
-  fats: 73,
-}
-
-// Calculate totals
-const totals = todaysMeals.reduce(
-  (acc, meal) => {
-    meal.foods.forEach((food) => {
-      acc.calories += food.calories
-      acc.protein += food.protein
-      acc.carbs += food.carbs
-      acc.fats += food.fats
-    })
-    return acc
-  },
-  { calories: 0, protein: 0, carbs: 0, fats: 0 },
-)
-
-const macroData = [
-  { name: "Protein", value: totals.protein, color: "#F74800" },
-  { name: "Carbs", value: totals.carbs, color: "#629178" },
-  { name: "Fats", value: totals.fats, color: "#475569" },
-]
-
-const weeklyData = [
-  { day: "Mon", calories: 2100, protein: 160, carbs: 250, fats: 70 },
-  { day: "Tue", calories: 2050, protein: 155, carbs: 240, fats: 68 },
-  { day: "Wed", calories: 2200, protein: 170, carbs: 280, fats: 75 },
-  { day: "Thu", calories: 1950, protein: 145, carbs: 220, fats: 65 },
-  { day: "Fri", calories: 2150, protein: 165, carbs: 260, fats: 72 },
-  { day: "Sat", calories: 2300, protein: 175, carbs: 290, fats: 78 },
-  { day: "Today", calories: totals.calories, protein: totals.protein, carbs: totals.carbs, fats: totals.fats },
-]
+const nutritionGoals = { calories: 2200, protein: 165, carbs: 275, fats: 73 };
 
 export default function MealsPage() {
-  const [selectedView, setSelectedView] = useState<"today" | "week">("today")
+  const [selectedView, setSelectedView] = useState<"today" | "week">("today");
+  const { dayTotals, mealCards, loading, error, refetch } = useTodayMealLog(1);
+
+  const macroData = useMemo(() => ([
+    { name: "Protein", value: dayTotals.protein, color: "#F74800" },
+    { name: "Carbs",   value: dayTotals.carbs,   color: "#629178" },
+    { name: "Fats",    value: dayTotals.fats,    color: "#475569" },
+  ]), [dayTotals]);
+
+  // placeholder semanal (cuando tengas endpoint weekly lo reemplazás)
+  const weeklyData = useMemo(() => {
+    return [
+      { day: "Mon", calories: 2100 },
+      { day: "Tue", calories: 2050 },
+      { day: "Wed", calories: 2200 },
+      { day: "Thu", calories: 1950 },
+      { day: "Fri", calories: 2150 },
+      { day: "Sat", calories: 2300 },
+      { day: "Today", calories: dayTotals.calories },
+    ];
+  }, [dayTotals]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,21 +53,8 @@ export default function MealsPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex p-2">
-                <Button
-                  variant={selectedView === "today" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setSelectedView("today")}
-                  className="mr-1"
-                >
-                  Today
-                </Button>
-                <Button
-                  variant={selectedView === "week" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setSelectedView("week")}
-                >
-                  Week
-                </Button>
+                <Button variant={selectedView === "today" ? "default" : "ghost"} size="sm" onClick={() => setSelectedView("today")} className="mr-1">Today</Button>
+                <Button variant={selectedView === "week" ? "default" : "ghost"}  size="sm" onClick={() => setSelectedView("week")}>Week</Button>
               </div>
               <Link href="/meals/add">
                 <Button className="flex items-center gap-2">
@@ -123,56 +68,51 @@ export default function MealsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {loading && <div className="text-sm text-muted-foreground">Loading...</div>}
+        {error && <div className="text-sm text-red-600">Error: {error}</div>}
+
         {selectedView === "today" ? (
           <>
             {/* Daily Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Calories</CardTitle>
-                </CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Calories</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{totals.calories}</div>
+                  <div className="text-2xl font-bold text-foreground">{dayTotals.calories}</div>
                   <div className="text-xs text-muted-foreground">of {nutritionGoals.calories} goal</div>
-                  <Progress value={(totals.calories / nutritionGoals.calories) * 100} className="mt-2" />
+                  <Progress value={(dayTotals.calories / nutritionGoals.calories) * 100} className="mt-2" />
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Protein</CardTitle>
-                </CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Protein</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{totals.protein}g</div>
+                  <div className="text-2xl font-bold text-foreground">{dayTotals.protein}g</div>
                   <div className="text-xs text-muted-foreground">of {nutritionGoals.protein}g goal</div>
-                  <Progress value={(totals.protein / nutritionGoals.protein) * 100} className="mt-2" />
+                  <Progress value={(dayTotals.protein / nutritionGoals.protein) * 100} className="mt-2" />
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Carbs</CardTitle>
-                </CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Carbs</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{totals.carbs}g</div>
+                  <div className="text-2xl font-bold text-foreground">{dayTotals.carbs}g</div>
                   <div className="text-xs text-muted-foreground">of {nutritionGoals.carbs}g goal</div>
-                  <Progress value={(totals.carbs / nutritionGoals.carbs) * 100} className="mt-2" />
+                  <Progress value={(dayTotals.carbs / nutritionGoals.carbs) * 100} className="mt-2" />
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Fats</CardTitle>
-                </CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Fats</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{totals.fats}g</div>
+                  <div className="text-2xl font-bold text-foreground">{dayTotals.fats}g</div>
                   <div className="text-xs text-muted-foreground">of {nutritionGoals.fats}g goal</div>
-                  <Progress value={(totals.fats / nutritionGoals.fats) * 100} className="mt-2" />
+                  <Progress value={(dayTotals.fats / nutritionGoals.fats) * 100} className="mt-2" />
                 </CardContent>
               </Card>
             </div>
 
-            {/* Macro Distribution Chart */}
+            {/* Macro Distribution / Calorie Progress */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <Card>
                 <CardHeader>
@@ -183,18 +123,8 @@ export default function MealsPage() {
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie
-                          data={macroData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {macroData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
+                        <Pie data={macroData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                          {macroData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
                         </Pie>
                         <Tooltip formatter={(value) => `${value}g`} />
                       </PieChart>
@@ -220,7 +150,7 @@ export default function MealsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Current Intake</span>
-                      <span className="font-bold text-2xl text-primary">{totals.calories}</span>
+                      <span className="font-bold text-2xl text-primary">{dayTotals.calories}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Daily Goal</span>
@@ -228,89 +158,79 @@ export default function MealsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Remaining</span>
-                      <span className="font-medium text-accent">{nutritionGoals.calories - totals.calories}</span>
+                      <span className="font-medium">{nutritionGoals.calories - dayTotals.calories}</span>
                     </div>
-                    <Progress value={(totals.calories / nutritionGoals.calories) * 100} className="h-3" />
+                    <Progress value={(dayTotals.calories / nutritionGoals.calories) * 100} className="h-3" />
                     <div className="text-center text-sm text-muted-foreground">
-                      {Math.round((totals.calories / nutritionGoals.calories) * 100)}% of daily goal
+                      {Math.round((dayTotals.calories / nutritionGoals.calories) * 100)}% of daily goal
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Today's Meals */}
+            {/* Today's Meals (desde backend) */}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-foreground">Today's Meals</h2>
-                <Link href="/meals/add">
-                  <Button variant="outline" size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Meal
-                  </Button>
-                </Link>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => refetch()}>Refresh</Button>
+                  <Link href="/meals/add">
+                    <Button variant="outline" size="sm"><Plus className="h-4 w-4 mr-2" />Add Meal</Button>
+                  </Link>
+                </div>
               </div>
 
-              {todaysMeals.map((meal) => {
-                const mealTotals = meal.foods.reduce(
-                  (acc, food) => ({
-                    calories: acc.calories + food.calories,
-                    protein: acc.protein + food.protein,
-                    carbs: acc.carbs + food.carbs,
-                    fats: acc.fats + food.fats,
-                  }),
-                  { calories: 0, protein: 0, carbs: 0, fats: 0 },
-                )
+              {mealCards.length === 0 && !loading && (
+                <Card><CardContent className="py-6 text-sm text-muted-foreground">No meals logged today.</CardContent></Card>
+              )}
 
-                return (
-                  <Card key={meal.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline">{meal.type}</Badge>
-                          <span className="text-sm text-muted-foreground">{meal.time}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+              {mealCards.map((meal, idx) => (
+                <Card key={idx}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline">{meal.type}</Badge>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {meal.foods.map((food, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                          >
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
+                        <Button variant="destructive" size="sm"><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {meal.details.map((d) => {
+                        const label =
+                          d.ingredient?.name ??
+                          d.recipe?.title ??
+                          `Item #${d.id}`;
+                        return (
+                          <div key={d.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                             <div>
-                              <div className="font-medium text-foreground">{food.name}</div>
+                              <div className="font-medium text-foreground">{label}</div>
                               <div className="text-sm text-muted-foreground">
-                                {food.calories} cal • {food.protein}g protein • {food.carbs}g carbs • {food.fats}g fats
+                                {Math.round(d.calories)} cal • {Math.round(d.protein)}g protein • {Math.round(d.carbs)}g carbs • {Math.round(d.fat)}g fats
                               </div>
                             </div>
                           </div>
-                        ))}
-                        <div className="flex items-center justify-between pt-3 border-t border-border">
-                          <span className="font-medium text-foreground">Meal Total</span>
-                          <div className="text-sm text-muted-foreground">
-                            <span className="font-medium text-primary">{mealTotals.calories} cal</span> •
-                            {mealTotals.protein}g protein • {mealTotals.carbs}g carbs • {mealTotals.fats}g fats
-                          </div>
+                        );
+                      })}
+                      <div className="flex items-center justify-between pt-3 border-t border-border">
+                        <span className="font-medium text-foreground">Meal Total</span>
+                        <div className="text-sm text-muted-foreground">
+                          <span className="font-medium text-primary">{Math.round(meal.totals.calories)} cal</span> •
+                          {Math.round(meal.totals.protein)}g protein • {Math.round(meal.totals.carbs)}g carbs • {Math.round(meal.totals.fats)}g fats
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </>
         ) : (
-          /* Weekly View */
+          // Weekly View (placeholder)
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -332,78 +252,15 @@ export default function MealsPage() {
               </CardContent>
             </Card>
 
+            {/* … tarjetas estáticas, las podés conectar más adelante */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    Weekly Average
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Calories</span>
-                      <span className="font-medium">2,107</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Protein</span>
-                      <span className="font-medium">162g</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Carbs</span>
-                      <span className="font-medium">254g</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Fats</span>
-                      <span className="font-medium">71g</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Goals Met</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Calorie Goal</span>
-                      <span className="font-medium">5/7 days</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Protein Goal</span>
-                      <span className="font-medium">6/7 days</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Carb Goal</span>
-                      <span className="font-medium">4/7 days</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Fat Goal</span>
-                      <span className="font-medium">5/7 days</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Streak</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-primary mb-2">12</div>
-                    <div className="text-sm text-muted-foreground">Days logging meals</div>
-                    <div className="mt-4 text-xs text-muted-foreground">Keep it up! You're building a great habit.</div>
-                  </div>
-                </CardContent>
-              </Card>
+              <Card><CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" />Weekly Average</CardTitle></CardHeader><CardContent>Conectaremos luego</CardContent></Card>
+              <Card><CardHeader><CardTitle>Goals Met</CardTitle></CardHeader><CardContent>Conectaremos luego</CardContent></Card>
+              <Card><CardHeader><CardTitle>Streak</CardTitle></CardHeader><CardContent>Conectaremos luego</CardContent></Card>
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

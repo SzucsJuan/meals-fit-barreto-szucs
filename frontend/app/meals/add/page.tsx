@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/navigation";
 import { useIngredients } from "@/lib/useIngredients";
+import { useCreateMealLog, type MealType } from "@/lib/useCreateMealLog";
 import { Search, Plus, Minus, Save, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,8 +20,10 @@ interface SelectedFood {
   calories: number;
   protein: number;
   carbs: number;
-  fats: number;   // ojo: viene como 'fat' del back
-  quantity: number;
+  fats: number;            // del back es 'fat'
+  serving_size: number;    // ⬅️ nuevo
+  serving_unit: "g" | "ml" | "unit"; // ⬅️ nuevo
+  quantity: number;        // número de porciones base
 }
 
 export default function AddMealPage() {
@@ -28,15 +32,19 @@ export default function AddMealPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: ingredients, loading } = useIngredients(searchQuery);
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
+  const { createMealLog, loading: saving, error: saveError } = useCreateMealLog();
+  const router = useRouter();
 
   const addFood = (ing: ReturnType<typeof useIngredients>["data"][number]) => {
-    const food = {
+    const food: SelectedFood = {
       id: ing.id,
       name: `${ing.name} (${ing.serving_size}${ing.serving_unit})`,
       calories: ing.calories,
       protein: ing.protein,
       carbs: ing.carbs,
-      fats: ing.fat, // mapeo aquí
+      fats: ing.fat,
+      serving_size: ing.serving_size,          // ⬅️
+      serving_unit: ing.serving_unit,          // ⬅️
       quantity: 1,
     };
     const existing = selectedFoods.find((f) => f.id === food.id);
@@ -56,17 +64,62 @@ export default function AddMealPage() {
     return selectedFoods.reduce(
       (acc, f) => ({
         calories: acc.calories + f.calories * f.quantity,
-        protein:  acc.protein  + f.protein  * f.quantity,
-        carbs:    acc.carbs    + f.carbs    * f.quantity,
-        fats:     acc.fats     + f.fats     * f.quantity,
+        protein: acc.protein + f.protein * f.quantity,
+        carbs: acc.carbs + f.carbs * f.quantity,
+        fats: acc.fats + f.fats * f.quantity,
       }),
       { calories: 0, protein: 0, carbs: 0, fats: 0 }
     );
   }, [selectedFoods]);
 
-  const handleSaveMeal = () => {
-    // TODO: POST al back para crear MealLog + MealDetails
-    console.log("Saving meal:", { mealType, mealTime, foods: selectedFoods, totals });
+
+  const handleSaveMeal = async () => {
+    if (!mealType || selectedFoods.length === 0) return;
+
+    // fecha y hora
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const log_date = `${yyyy}-${mm}-${dd}`;
+
+    // logged_at (opcional): combinamos fecha + hora del selector
+    const logged_at = mealTime
+      ? `${log_date} ${mealTime}:00`
+      : null;
+
+    // Si no hay auth todavía:
+    const user_id = 1; // ⚠️ reemplazar cuando tengas login
+
+    const details = selectedFoods.map((f) => {
+      // Podemos calcular grams solo si la porción base es g/ml
+      const grams =
+        f.serving_unit === "g" || f.serving_unit === "ml"
+          ? Math.round(f.quantity * f.serving_size)
+          : null;
+
+      return {
+        ingredient_id: f.id,
+        servings: f.quantity,                 // n° de porciones base
+        grams,
+        meal_type: mealType as MealType,
+        logged_at,
+      };
+    });
+
+    try {
+      await createMealLog({ user_id, log_date, notes: null, details });
+      // reset UI
+      setSelectedFoods([]);
+      setMealTime("");
+      setMealType("");
+      setSearchQuery("");
+
+      router.push("/meals");
+    } catch (e) {
+      // el hook ya setea error, pero por si querés mostrar algo puntual
+      console.error(e);
+    }
   };
 
   return (
@@ -152,7 +205,7 @@ export default function AddMealPage() {
                   <div className="max-h-96 overflow-y-auto space-y-2">
                     {ingredients.map((ing) => (
                       <div key={ing.id}
-                           className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                        className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-foreground">
@@ -263,11 +316,13 @@ export default function AddMealPage() {
             <Button
               onClick={handleSaveMeal}
               className="w-full flex items-center gap-2"
-              disabled={selectedFoods.length === 0 || !mealType}
+              disabled={selectedFoods.length === 0 || !mealType || saving}
             >
               <Save className="h-4 w-4" />
-              Save Meal
+              {saving ? "Saving..." : "Save Meal"}
             </Button>
+
+            {saveError && <div className="text-sm text-red-600">{saveError}</div>}
           </div>
         </div>
       </div>

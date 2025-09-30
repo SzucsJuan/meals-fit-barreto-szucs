@@ -8,11 +8,28 @@ use Illuminate\Database\Eloquent\Relations\{BelongsTo};
 class MealDetail extends Model
 {
     protected $fillable = [
-        'meal_log_id','meal_type','ingredient_id','recipe_id','servings','grams',
-        'calories','protein','carbs','fat','logged_at'
+        'meal_log_id',
+        'meal_type',
+        'ingredient_id',
+        'recipe_id',
+        'servings',
+        'grams',
+        'calories',
+        'protein',
+        'carbs',
+        'fat',
+        'logged_at'
     ];
 
-    protected $casts = ['logged_at' => 'datetime'];
+    protected $casts = [
+        'servings' => 'float',
+        'grams' => 'float',
+        'calories' => 'float',
+        'protein' => 'float',
+        'carbs' => 'float',
+        'fat' => 'float',
+        'logged_at' => 'datetime',
+    ];
 
     public function log(): BelongsTo
     {

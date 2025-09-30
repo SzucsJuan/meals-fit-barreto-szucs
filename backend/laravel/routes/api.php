@@ -22,7 +22,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
  */
 Route::apiResource('recipes', RecipeController::class)->only(['index','show', 'store', 'update', 'destroy']);
 Route::apiResource('ingredients', IngredientController::class)->only(['index','show']);
-Route::apiResource('meal-logs', MealLogController::class);
+// Route::apiResource('meal-logs', MealLogController::class);
+Route::apiResource('meal-logs', MealLogController::class)->only(['index','show','store']);
 
 /**
  * --- RUTAS PROTEGIDAS (con auth) ---

@@ -12,14 +12,32 @@ class MealLogController extends Controller
     // GET /api/meal-logs?user_id=1&from=2025-09-01&to=2025-09-30
     public function index(Request $request)
     {
-        $userId = (int) $request->query('user_id', 2); // reemplazar por auth()->id() cuando haya login
-        $from   = $request->query('from'); // opcional
-        $to     = $request->query('to');   // opcional
+        // cuando tengas auth: $userId = (int) auth()->id();
+        $userId = (int) $request->query('user_id', 2);
 
-        $q = MealLog::with('details')
-            ->where('user_id', $userId)
-            ->orderByDesc('log_date');
+        $date = $request->query('date'); // YYYY-MM-DD (si viene, devolvemos 1 registro)
+        $from = $request->query('from'); // opcional
+        $to   = $request->query('to');   // opcional
 
+        $base = MealLog::with([
+            'details.ingredient:id,name',
+            'details.recipe:id,title',
+        ])->where('user_id', $userId);
+
+        // ====== MODO A: por fecha exacta (un solo log, no paginado) ======
+        if ($date) {
+            $log = (clone $base)
+                ->whereDate('log_date', $date)
+                ->first();
+
+            if (!$log) {
+                return response()->noContent(); // 204 si no hay log para ese día
+            }
+            return response()->json($log);
+        }
+
+        // ====== MODO B: historial paginado (rango) ======
+        $q = (clone $base)->orderByDesc('log_date');
         if ($from) $q->whereDate('log_date', '>=', $from);
         if ($to)   $q->whereDate('log_date', '<=', $to);
 
@@ -95,7 +113,7 @@ class MealLogController extends Controller
                         'meal_type'   => $mealType,
                         'ingredient_id'=> $ing->id,
                         'recipe_id'   => null,
-                        'servings'    => null,
+                        'servings'    => $serving,
                         'grams'       => $grams,
                         'calories'    => round($cals, 2),
                         'protein'     => round($prot, 2),
