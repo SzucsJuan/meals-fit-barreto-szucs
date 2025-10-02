@@ -166,7 +166,7 @@ export default function AddMealPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="meal-time">Time</Label>
                     <div className="relative">
                       <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -178,7 +178,7 @@ export default function AddMealPage() {
                         className="pl-10 border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
                       />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </CardContent>
             </Card>
