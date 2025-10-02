@@ -24,6 +24,8 @@ Route::apiResource('recipes', RecipeController::class)->only(['index','show', 's
 Route::apiResource('ingredients', IngredientController::class)->only(['index','show']);
 // Route::apiResource('meal-logs', MealLogController::class);
 Route::apiResource('meal-logs', MealLogController::class)->only(['index','show','store']);
+Route::apiResource('meal-details', MealDetailController::class)->only(['destroy','update']);
+
 
 /**
  * --- RUTAS PROTEGIDAS (con auth) ---
