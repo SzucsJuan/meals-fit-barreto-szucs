@@ -89,7 +89,7 @@ export default function HomePage() {
               <Home className="h-8 w-8" style={{ color: "#FF9800" }} />
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground">Welcome back!</h1>
-                <p className="text-muted-foreground">Track your nutrition and reach your fitness goals</p>
+                <p className="text-muted-foreground">What’s on your plate today?</p>
               </div>
             </div>
             {/* Achievements Button */}
@@ -215,52 +215,75 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Daily Overview */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Calories</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">1,847</div>
-              <div className="text-xs text-muted-foreground">of 2,200 goal</div>
-              <Progress value={84} className="mt-2" />
-            </CardContent>
-          </Card>
+              {/* Favorites Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Heart className="h-6 w-6" style={{ color: "#FF9800" }} />
+                <div>
+                  <CardTitle>Favorite Recipes</CardTitle>
+                  <CardDescription>Your most loved meal recipes</CardDescription>
+                </div>
+              </div>
+              <Link href="/favorites">
+                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
+                  View All Favorites
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Sample favorite recipes */}
+              <Link href="/recipes/1">
+                <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-foreground">Protein Smoothie Bowl</h4>
+                    <Badge variant="secondary">Breakfast</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">High protein, low carb</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>320 cal</span>
+                    <span>25g protein</span>
+                    <span>15g carbs</span>
+                  </div>
+                </div>
+              </Link>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Protein</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">142g</div>
-              <div className="text-xs text-muted-foreground">of 165g goal</div>
-              <Progress value={86} className="mt-2" />
-            </CardContent>
-          </Card>
+              <Link href="/recipes/2">
+                <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-foreground">Grilled Chicken Salad</h4>
+                    <Badge variant="secondary">Lunch</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">Lean protein, fresh veggies</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>450 cal</span>
+                    <span>35g protein</span>
+                    <span>12g carbs</span>
+                  </div>
+                </div>
+              </Link>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Carbs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">203g</div>
-              <div className="text-xs text-muted-foreground">of 275g goal</div>
-              <Progress value={74} className="mt-2" />
-            </CardContent>
-          </Card>
+              <Link href="/recipes/3">
+                <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-foreground">Quinoa Power Bowl</h4>
+                    <Badge variant="secondary">Dinner</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">Complete amino acids</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>520 cal</span>
+                    <span>18g protein</span>
+                    <span>65g carbs</span>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Fats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">67g</div>
-              <div className="text-xs text-muted-foreground">of 73g goal</div>
-              <Progress value={92} className="mt-2" />
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Action Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
@@ -334,75 +357,6 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Favorites Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Heart className="h-6 w-6" style={{ color: "#FF9800" }} />
-                <div>
-                  <CardTitle>Favorite Recipes</CardTitle>
-                  <CardDescription>Your most loved meal recipes</CardDescription>
-                </div>
-              </div>
-              <Link href="/favorites">
-                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
-                  View All Favorites
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Sample favorite recipes */}
-              <Link href="/recipes/1">
-                <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-foreground">Protein Smoothie Bowl</h4>
-                    <Badge variant="secondary">Breakfast</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">High protein, low carb</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>320 cal</span>
-                    <span>25g protein</span>
-                    <span>15g carbs</span>
-                  </div>
-                </div>
-              </Link>
-
-              <Link href="/recipes/2">
-                <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-foreground">Grilled Chicken Salad</h4>
-                    <Badge variant="secondary">Lunch</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">Lean protein, fresh veggies</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>450 cal</span>
-                    <span>35g protein</span>
-                    <span>12g carbs</span>
-                  </div>
-                </div>
-              </Link>
-
-              <Link href="/recipes/3">
-                <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-foreground">Quinoa Power Bowl</h4>
-                    <Badge variant="secondary">Dinner</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">Complete amino acids</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>520 cal</span>
-                    <span>18g protein</span>
-                    <span>65g carbs</span>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Quick Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -454,7 +408,7 @@ export default function HomePage() {
         </div>
 
         {/* Quick Access to Meal Tracking */}
-        <div className="mt-8">
+        {/* <div className="mt-8">
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -488,7 +442,7 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </div> */}
       </div>
     </div>
   )

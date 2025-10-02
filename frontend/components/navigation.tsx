@@ -30,16 +30,6 @@ export default function Navigation() {
           Home
         </Button>
       </Link>
-      <Link href="/recipes" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/recipes") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
-        >
-          <ChefHat className="h-4 w-4" />
-          Recipes
-        </Button>
-      </Link>
       <Link href="/meals" onClick={onLinkClick}>
         <Button
           variant={isActive("/meals") ? "default" : "ghost"}
@@ -50,14 +40,14 @@ export default function Navigation() {
           Meals
         </Button>
       </Link>
-      <Link href="/calendar" onClick={onLinkClick}>
+      <Link href="/recipes" onClick={onLinkClick}>
         <Button
-          variant={isActive("/calendar") ? "default" : "ghost"}
+          variant={isActive("/recipes") ? "default" : "ghost"}
           size="sm"
           className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
         >
-          <Calendar className="h-4 w-4" />
-          Calendar
+          <ChefHat className="h-4 w-4" />
+          Recipes
         </Button>
       </Link>
       <Link href="/favorites" onClick={onLinkClick}>
@@ -68,6 +58,16 @@ export default function Navigation() {
         >
           <Heart className="h-4 w-4" />
           Favorites
+        </Button>
+      </Link>
+      <Link href="/calendar" onClick={onLinkClick}>
+        <Button
+          variant={isActive("/calendar") ? "default" : "ghost"}
+          size="sm"
+          className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
+        >
+          <Calendar className="h-4 w-4" />
+          Calendar
         </Button>
       </Link>
     </>
