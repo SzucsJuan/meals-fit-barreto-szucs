@@ -4,19 +4,20 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Updated color tokens for nutrition/fitness theme */
   --background: #ffffff;
   --foreground: #475569;
-  --card: #FAF9F6;
-  --card-foreground: #2C3E50;
+  --card: #faf9f6;
+  --card-foreground: #475569;
   --popover: #ffffff;
   --popover-foreground: #475569;
-  --primary: #4CAF50;
+  --primary: #4caf50;
   --primary-foreground: #ffffff;
   --secondary: #fdf2f8;
   --secondary-foreground: #153868;
   --muted: #f8fafc;
   --muted-foreground: #475569;
-  --accent: #F7D86C;
+  --accent: #f7d86c;
   --accent-foreground: #ffffff;
   --destructive: #c62828;
   --destructive-foreground: #ffffff;
@@ -123,7 +124,4 @@
   body {
     @apply bg-background text-foreground;
   }
-  button, a, select {
-  cursor: pointer;
-}
 }
