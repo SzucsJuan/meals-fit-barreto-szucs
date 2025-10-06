@@ -1,11 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Shield, Users, ChefHat, FileText, TrendingUp, AlertCircle, CheckCircle, Clock, Activity } from "lucide-react"
+import { Shield, Users, ChefHat, TrendingUp, AlertCircle, CheckCircle, Clock, Activity, EggFried } from "lucide-react"
 import Link from "next/link"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 
 const statsData = [
   { name: "Mon", users: 45, recipes: 12, meals: 234 },
@@ -17,7 +18,15 @@ const statsData = [
   { name: "Sun", users: 58, recipes: 22, meals: 321 },
 ]
 
+const categoryDistribution = [
+  { name: "Breakfast", value: 892, color: "#ec4899" },
+  { name: "Lunch", value: 1234, color: "#be123c" },
+  { name: "Dinner", value: 1456, color: "#475569" },
+  { name: "Snacks", value: 310, color: "#f472b6" },
+]
+
 export default function AdminDashboard() {
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -42,7 +51,7 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -90,26 +99,10 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Documents
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">127</div>
-              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                <TrendingUp className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">+5%</span> from last month
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link href="/admin/users">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-rose-200 dark:border-rose-900/30">
               <CardHeader>
@@ -142,32 +135,16 @@ export default function AdminDashboard() {
             </Card>
           </Link>
 
-          <Link href="/admin/content">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-slate-200 dark:border-slate-800">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                    <FileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">Content Management</CardTitle>
-                    <CardDescription className="text-xs">Upload documents</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/analytics">
+          <Link href="/">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-rose-200 dark:border-rose-900/30">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
-                    <TrendingUp className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                    <EggFried className="h-5 w-5 text-rose-600 dark:text-rose-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-base">Analytics</CardTitle>
-                    <CardDescription className="text-xs">View insights</CardDescription>
+                    <CardTitle className="text-base">Back to App</CardTitle>
+                    <CardDescription className="text-xs">Back to the app</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -200,20 +177,39 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Meal Logging Trend</CardTitle>
-              <CardDescription>Daily meal entries over the week</CardDescription>
+              <CardTitle>Recipe Category Distribution</CardTitle>
+              <CardDescription>Breakdown of recipes by meal type</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={statsData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
+                  <PieChart>
+                    <Pie
+                      data={categoryDistribution}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {categoryDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
                     <Tooltip />
-                    <Line type="monotone" dataKey="meals" stroke="#ec4899" strokeWidth={2} name="Meals Logged" />
-                  </LineChart>
+                  </PieChart>
                 </ResponsiveContainer>
+              </div>
+              <div className="flex flex-wrap justify-center gap-4 mt-4">
+                {categoryDistribution.map((category) => (
+                  <div key={category.name} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
+                    <span className="text-sm text-muted-foreground">
+                      {category.name} ({category.value})
+                    </span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -221,6 +217,7 @@ export default function AdminDashboard() {
 
         {/* Recent Activity & Alerts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Activity Card */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -264,6 +261,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
+          {/* Pending Actions Card */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -323,50 +321,6 @@ export default function AdminDashboard() {
                     </Button>
                   </Link>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Links */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Links</CardTitle>
-              <CardDescription>Frequently accessed admin functions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                <Link href="/admin/users/new">
-                  <Button variant="outline" size="sm" className="w-full bg-transparent">
-                    Add User
-                  </Button>
-                </Link>
-                <Link href="/admin/recipes/new">
-                  <Button variant="outline" size="sm" className="w-full bg-transparent">
-                    Add Recipe
-                  </Button>
-                </Link>
-                <Link href="/admin/content/upload">
-                  <Button variant="outline" size="sm" className="w-full bg-transparent">
-                    Upload Doc
-                  </Button>
-                </Link>
-                <Link href="/admin/analytics">
-                  <Button variant="outline" size="sm" className="w-full bg-transparent">
-                    Reports
-                  </Button>
-                </Link>
-                <Link href="/admin/settings">
-                  <Button variant="outline" size="sm" className="w-full bg-transparent">
-                    Settings
-                  </Button>
-                </Link>
-                <Link href="/">
-                  <Button variant="outline" size="sm" className="w-full bg-transparent">
-                    Back to App
-                  </Button>
-                </Link>
               </div>
             </CardContent>
           </Card>
