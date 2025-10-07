@@ -101,16 +101,10 @@ export default function SignupPage() {
 
               {/* Email/Password Form */}
               <form className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First name</Label>
-                    <Input id="firstName" type="text" placeholder="John" className="h-11" required />
+                    <Label htmlFor="name">Full name</Label>
+                    <Input id="name" type="text" placeholder="John Doe" className="h-11" required />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last name</Label>
-                    <Input id="lastName" type="text" placeholder="Doe" className="h-11" required />
-                  </div>
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" placeholder="name@example.com" className="h-11" required />
@@ -125,6 +119,17 @@ export default function SignupPage() {
                     required
                   />
                   <p className="text-xs text-muted-foreground">Must be at least 8 characters long</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm password</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="Confirm your password"
+                    className="h-11"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">Passwords must match</p>
                 </div>
 
                 <Button type="submit" className="w-full h-11" size="lg">

@@ -11,7 +11,16 @@ use Illuminate\Database\Eloquent\Relations\{
 
 class User extends Authenticatable
 {
-    protected $fillable = ['name','username','email','password','avatar_url','bio'];
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+        'profile_picture',
+        'age',
+        'weight',
+        'height',
+    ];
 
     public function recipes(): HasMany
     {
