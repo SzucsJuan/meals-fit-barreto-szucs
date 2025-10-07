@@ -8,7 +8,7 @@ use App\Http\Controllers\{
     MealLogController,
     MealDetailController,
     IngredientController,
-    RecipeController
+    RecipeController,
 };
 
 // (opcional) endpoint de prueba de auth
@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::apiResource('recipes', RecipeController::class)->only(['index','show', 'store', 'update', 'destroy']);
 Route::apiResource('ingredients', IngredientController::class)->only(['index','show']);
 // Route::apiResource('meal-logs', MealLogController::class);
+Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
 Route::apiResource('meal-logs', MealLogController::class)->only(['index','show','store']);
 Route::apiResource('meal-details', MealDetailController::class)->only(['destroy','update']);
 

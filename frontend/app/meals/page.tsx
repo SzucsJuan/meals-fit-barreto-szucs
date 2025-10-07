@@ -10,31 +10,24 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Target, TrendingUp, Edit, Trash2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { useTodayMealLog } from "@/lib/useTodayMealLog";
+import { useWeeklyMealLog } from "@/lib/useWeeklyMealLog";
 
 const nutritionGoals = { calories: 2200, protein: 165, carbs: 275, fats: 73 };
 
 export default function MealsPage() {
   const [selectedView, setSelectedView] = useState<"today" | "week">("today");
+
   const { dayTotals, mealCards, loading, error, refetch } = useTodayMealLog(1);
+  const { barData: weeklyData, loading: wLoading, error: wError, refetch: wRefetch } = useWeeklyMealLog(1);
 
-  const macroData = useMemo(() => ([
-    { name: "Protein", value: dayTotals.protein, color: "#F74800" },
-    { name: "Carbs",   value: dayTotals.carbs,   color: "#629178" },
-    { name: "Fats",    value: dayTotals.fats,    color: "#475569" },
-  ]), [dayTotals]);
-
-  // placeholder semanal (cuando tengas endpoint weekly lo reemplazás)
-  const weeklyData = useMemo(() => {
-    return [
-      { day: "Mon", calories: 2100 },
-      { day: "Tue", calories: 2050 },
-      { day: "Wed", calories: 2200 },
-      { day: "Thu", calories: 1950 },
-      { day: "Fri", calories: 2150 },
-      { day: "Sat", calories: 2300 },
-      { day: "Today", calories: dayTotals.calories },
-    ];
-  }, [dayTotals]);
+  const macroData = useMemo(
+    () => [
+      { name: "Protein", value: dayTotals.protein, color: "#F74800" },
+      { name: "Carbs", value: dayTotals.carbs, color: "#629178" },
+      { name: "Fats", value: dayTotals.fats, color: "#475569" },
+    ],
+    [dayTotals]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,8 +46,21 @@ export default function MealsPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex p-2">
-                <Button variant={selectedView === "today" ? "default" : "ghost"} size="sm" onClick={() => setSelectedView("today")} className="mr-1">Today</Button>
-                <Button variant={selectedView === "week" ? "default" : "ghost"}  size="sm" onClick={() => setSelectedView("week")}>Week</Button>
+                <Button
+                  variant={selectedView === "today" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setSelectedView("today")}
+                  className="mr-1"
+                >
+                  Today
+                </Button>
+                <Button
+                  variant={selectedView === "week" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setSelectedView("week")}
+                >
+                  Week
+                </Button>
               </div>
               <Link href="/meals/add">
                 <Button className="flex items-center gap-2">
@@ -76,7 +82,9 @@ export default function MealsPage() {
             {/* Daily Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Calories</CardTitle></CardHeader>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Calories</CardTitle>
+                </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">{dayTotals.calories}</div>
                   <div className="text-xs text-muted-foreground">of {nutritionGoals.calories} goal</div>
@@ -85,7 +93,9 @@ export default function MealsPage() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Protein</CardTitle></CardHeader>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Protein</CardTitle>
+                </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">{dayTotals.protein}g</div>
                   <div className="text-xs text-muted-foreground">of {nutritionGoals.protein}g goal</div>
@@ -94,7 +104,9 @@ export default function MealsPage() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Carbs</CardTitle></CardHeader>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Carbs</CardTitle>
+                </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">{dayTotals.carbs}g</div>
                   <div className="text-xs text-muted-foreground">of {nutritionGoals.carbs}g goal</div>
@@ -103,7 +115,9 @@ export default function MealsPage() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Fats</CardTitle></CardHeader>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Fats</CardTitle>
+                </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">{dayTotals.fats}g</div>
                   <div className="text-xs text-muted-foreground">of {nutritionGoals.fats}g goal</div>
@@ -124,7 +138,9 @@ export default function MealsPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={macroData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
-                          {macroData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
+                          {macroData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
                         </Pie>
                         <Tooltip formatter={(value) => `${value}g`} />
                       </PieChart>
@@ -174,15 +190,22 @@ export default function MealsPage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-foreground">Today's Meals</h2>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => refetch()}>Refresh</Button>
+                  <Button variant="outline" size="sm" onClick={() => refetch()}>
+                    Refresh
+                  </Button>
                   <Link href="/meals/add">
-                    <Button variant="outline" size="sm"><Plus className="h-4 w-4 mr-2" />Add Meal</Button>
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Meal
+                    </Button>
                   </Link>
                 </div>
               </div>
 
               {mealCards.length === 0 && !loading && (
-                <Card><CardContent className="py-6 text-sm text-muted-foreground">No meals logged today.</CardContent></Card>
+                <Card>
+                  <CardContent className="py-6 text-sm text-muted-foreground">No meals logged today.</CardContent>
+                </Card>
               )}
 
               {mealCards.map((meal, idx) => (
@@ -193,20 +216,24 @@ export default function MealsPage() {
                         <Badge variant="outline">{meal.type}</Badge>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
-                        <Button variant="destructive" size="sm"><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {meal.details.map((d) => {
-                        const label =
-                          d.ingredient?.name ??
-                          d.recipe?.title ??
-                          `Item #${d.id}`;
+                        const label = d.ingredient?.name ?? d.recipe?.title ?? `Item #${d.id}`;
                         return (
-                          <div key={d.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                          <div
+                            key={d.id}
+                            className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                          >
                             <div>
                               <div className="font-medium text-foreground">{label}</div>
                               <div className="text-sm text-muted-foreground">
@@ -230,33 +257,77 @@ export default function MealsPage() {
             </div>
           </>
         ) : (
-          // Weekly View (placeholder)
+          // Weekly View (datos reales desde useWeeklyMealLog)
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Weekly Nutrition Trends</CardTitle>
-                <CardDescription>Your nutrition intake over the past week</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Weekly Nutrition Trends</CardTitle>
+                    <CardDescription>Your nutrition intake over the past week</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => wRefetch()}>
+                    Refresh
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={weeklyData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="day" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="calories" fill="#FC9A0E" name="Calories" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                {wLoading && <div className="text-sm text-muted-foreground">Loading weekly data…</div>}
+                {wError && <div className="text-sm text-red-600">Error: {wError}</div>}
+                {!wLoading && !wError && (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={weeklyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="calories" name="Calories" fill="#FC9A0E" />
+                        {/* Si querés mostrar macros también:
+                        <Bar dataKey="protein" name="Protein (g)" fill="#F74800" />
+                        <Bar dataKey="carbs"   name="Carbs (g)"   fill="#629178" />
+                        <Bar dataKey="fats"    name="Fats (g)"    fill="#475569" />
+                        */}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* … tarjetas estáticas, las podés conectar más adelante */}
+            {/* Tarjetas semanales (placeholder conectable) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card><CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" />Weekly Average</CardTitle></CardHeader><CardContent>Conectaremos luego</CardContent></Card>
-              <Card><CardHeader><CardTitle>Goals Met</CardTitle></CardHeader><CardContent>Conectaremos luego</CardContent></Card>
-              <Card><CardHeader><CardTitle>Streak</CardTitle></CardHeader><CardContent>Conectaremos luego</CardContent></Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Weekly Average
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {!wLoading && !wError ? (
+                    <div className="text-sm text-muted-foreground">
+                      {Math.round(weeklyData.reduce((a, d) => a + (d.calories || 0), 0) / Math.max(weeklyData.length, 1))} cal/día
+                    </div>
+                  ) : (
+                    "—"
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Goals Met</CardTitle>
+                </CardHeader>
+                <CardContent>Conectaremos luego</CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Streak</CardTitle>
+                </CardHeader>
+                <CardContent>Conectaremos luego</CardContent>
+              </Card>
             </div>
           </div>
         )}

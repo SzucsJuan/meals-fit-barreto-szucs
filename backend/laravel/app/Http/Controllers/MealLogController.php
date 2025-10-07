@@ -7,6 +7,7 @@ use App\Http\Requests\MealLogStoreRequest;
 use App\Models\{MealLog, MealDetail, Ingredient, Recipe};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class MealLogController extends Controller
 {
@@ -14,14 +15,14 @@ class MealLogController extends Controller
     public function index(Request $request)
     {
         $userId = (int) $request->query('user_id', 1); // reemplazar por auth()->id() al tener login
-        $date   = $request->query('date');
-        $from   = $request->query('from');
-        $to     = $request->query('to');
-        
+        $date = $request->query('date');
+        $from = $request->query('from');
+        $to = $request->query('to');
+
         $q = MealLog::with('details.ingredient:id,name', 'details.recipe:id,title')
             ->where('user_id', $userId)
             ->orderByDesc('log_date');
-        
+
         if ($date) {
             $log = (clone $q)
                 ->whereDate('log_date', $date)
@@ -33,8 +34,10 @@ class MealLogController extends Controller
             return response()->json($log);
         }
 
-        if ($from) $q->whereDate('log_date', '>=', $from);
-        if ($to)   $q->whereDate('log_date', '<=', $to);
+        if ($from)
+            $q->whereDate('log_date', '>=', $from);
+        if ($to)
+            $q->whereDate('log_date', '<=', $to);
 
         return $q->paginate(30);
     }
@@ -49,9 +52,9 @@ class MealLogController extends Controller
     public function store(MealLogStoreRequest $request)
     {
         // $userId = $request->user()->id; // con auth
-        $userId  = (int) $request->input('user_id', 1); // DEV
+        $userId = (int) $request->input('user_id', 1); // DEV
         $logDate = (string) $request->input('log_date'); // YYYY-MM-DD (local)
-        $notes   = $request->input('notes');             // opcional
+        $notes = $request->input('notes');             // opcional
         $details = $request->input('details', []);
 
         return DB::transaction(function () use ($userId, $logDate, $notes, $details) {
@@ -61,75 +64,75 @@ class MealLogController extends Controller
                 ['user_id' => $userId, 'log_date' => $logDate],
                 [
                     'total_calories' => 0,
-                    'total_protein'  => 0,
-                    'total_carbs'    => 0,
-                    'total_fat'      => 0,
-                    'notes'          => $notes,
+                    'total_protein' => 0,
+                    'total_carbs' => 0,
+                    'total_fat' => 0,
+                    'notes' => $notes,
                 ]
             );
 
             $batchTotals = [
                 'calories' => 0.0,
-                'protein'  => 0.0,
-                'carbs'    => 0.0,
-                'fat'      => 0.0,
+                'protein' => 0.0,
+                'carbs' => 0.0,
+                'fat' => 0.0,
             ];
 
             foreach ($details as $d) {
                 $mealType = $d['meal_type']; // 'breakfast' | 'lunch' | 'dinner' | 'snack'
                 $loggedAt = $d['logged_at'] ?? null;
 
-                if(!$loggedAt){
+                if (!$loggedAt) {
                     $loggedAt = $logDate . ' 12:00:00'; // default si no envías
                 }
 
                 if (!empty($d['ingredient_id'])) {
 
                     // ===== Detalle por INGREDIENTE =====
-                    $ing   = Ingredient::findOrFail((int)$d['ingredient_id']);
-                    $grams = isset($d['grams']) ? (float)$d['grams'] : null;
-                    $servs = isset($d['servings']) ? (float)$d['servings'] : 1.0;
+                    $ing = Ingredient::findOrFail((int) $d['ingredient_id']);
+                    $grams = isset($d['grams']) ? (float) $d['grams'] : null;
+                    $servs = isset($d['servings']) ? (float) $d['servings'] : 1.0;
 
                     // Cálculo:
                     // - Si vino grams y el ingrediente es g/ml => factor = grams / serving_size
                     // - Si NO vino grams => usamos "servings" como múltiplo de la porción base.
                     $serving = (float) ($ing->serving_size ?: 1);
 
-                    if ($grams !== null && in_array($ing->serving_unit, ['g','ml'])) {
+                    if ($grams !== null && in_array($ing->serving_unit, ['g', 'ml'])) {
                         $factor = $serving > 0 ? ($grams / $serving) : 0;
                     } else {
                         $factor = $servs; // múltiplos de la porción base
                     }
 
                     $cals = $ing->calories * $factor;
-                    $prot = $ing->protein  * $factor;
-                    $carb = $ing->carbs    * $factor;
-                    $fat  = $ing->fat      * $factor;
+                    $prot = $ing->protein * $factor;
+                    $carb = $ing->carbs * $factor;
+                    $fat = $ing->fat * $factor;
 
                     MealDetail::create([
-                        'meal_log_id'  => $mealLog->id,
-                        'meal_type'    => $mealType,
-                        'ingredient_id'=> $ing->id,
-                        'recipe_id'    => null,
-                        'servings'     => $servs,
-                        'grams'        => $grams,
-                        'calories'     => round($cals, 2),
-                        'protein'      => round($prot, 2),
-                        'carbs'        => round($carb, 2),
-                        'fat'          => round($fat, 2),
-                        'logged_at'    => $loggedAt,
+                        'meal_log_id' => $mealLog->id,
+                        'meal_type' => $mealType,
+                        'ingredient_id' => $ing->id,
+                        'recipe_id' => null,
+                        'servings' => $servs,
+                        'grams' => $grams,
+                        'calories' => round($cals, 2),
+                        'protein' => round($prot, 2),
+                        'carbs' => round($carb, 2),
+                        'fat' => round($fat, 2),
+                        'logged_at' => $loggedAt,
                     ]);
 
                     $batchTotals['calories'] += $cals;
-                    $batchTotals['protein']  += $prot;
-                    $batchTotals['carbs']    += $carb;
-                    $batchTotals['fat']      += $fat;
+                    $batchTotals['protein'] += $prot;
+                    $batchTotals['carbs'] += $carb;
+                    $batchTotals['fat'] += $fat;
 
                 } elseif (!empty($d['recipe_id'])) {
 
                     // ===== Detalle por RECETA =====
-                    $recipe   = Recipe::with('ingredients')->findOrFail((int)$d['recipe_id']);
-                    $servs    = isset($d['servings']) ? (float)$d['servings'] : 1.0;
+                    $recipe = Recipe::with('ingredients')->findOrFail((int) $d['recipe_id']);
+                    $servs = isset($d['servings']) ? (float) $d['servings'] : 1.0;
 
                     // Garantizamos macros totales de la receta (si faltan)
                     if ($recipe->calories === null) {
@@ -140,40 +143,40 @@ class MealLogController extends Controller
                     $base = $recipe->servings > 0
                         ? [
                             'cal' => $recipe->calories / $recipe->servings,
-                            'pro' => $recipe->protein  / $recipe->servings,
-                            'car' => $recipe->carbs    / $recipe->servings,
-                            'fat' => $recipe->fat      / $recipe->servings,
-                          ]
+                            'pro' => $recipe->protein / $recipe->servings,
+                            'car' => $recipe->carbs / $recipe->servings,
+                            'fat' => $recipe->fat / $recipe->servings,
+                        ]
                         : [
                             'cal' => $recipe->calories,
                             'pro' => $recipe->protein,
                             'car' => $recipe->carbs,
                             'fat' => $recipe->fat,
-                          ];
+                        ];
 
                     $cals = $base['cal'] * $servs;
                     $prot = $base['pro'] * $servs;
                     $carb = $base['car'] * $servs;
-                    $fat  = $base['fat'] * $servs;
+                    $fat = $base['fat'] * $servs;
 
                     MealDetail::create([
-                        'meal_log_id'  => $mealLog->id,
-                        'meal_type'    => $mealType,
-                        'ingredient_id'=> null,
-                        'recipe_id'    => $recipe->id,
-                        'servings'     => $servs,
-                        'grams'        => null,
-                        'calories'     => round($cals, 2),
-                        'protein'      => round($prot, 2),
-                        'carbs'        => round($carb, 2),
-                        'fat'          => round($fat, 2),
-                        'logged_at'    => $loggedAt,
+                        'meal_log_id' => $mealLog->id,
+                        'meal_type' => $mealType,
+                        'ingredient_id' => null,
+                        'recipe_id' => $recipe->id,
+                        'servings' => $servs,
+                        'grams' => null,
+                        'calories' => round($cals, 2),
+                        'protein' => round($prot, 2),
+                        'carbs' => round($carb, 2),
+                        'fat' => round($fat, 2),
+                        'logged_at' => $loggedAt,
                     ]);
 
                     $batchTotals['calories'] += $cals;
-                    $batchTotals['protein']  += $prot;
-                    $batchTotals['carbs']    += $carb;
-                    $batchTotals['fat']      += $fat;
+                    $batchTotals['protein'] += $prot;
+                    $batchTotals['carbs'] += $carb;
+                    $batchTotals['fat'] += $fat;
                 }
             }
 
@@ -188,13 +191,79 @@ class MealLogController extends Controller
                 ->first();
 
             $mealLog->update([
-                'total_calories' => round((float)$sums->cals, 2),
-                'total_protein'  => round((float)$sums->prot, 2),
-                'total_carbs'    => round((float)$sums->carb, 2),
-                'total_fat'      => round((float)$sums->fat, 2),
+                'total_calories' => round((float) $sums->cals, 2),
+                'total_protein' => round((float) $sums->prot, 2),
+                'total_carbs' => round((float) $sums->carb, 2),
+                'total_fat' => round((float) $sums->fat, 2),
             ]);
 
             return $mealLog->load('details.ingredient:id,name', 'details.recipe:id,title');
         });
+    }
+
+    public function weekly(Request $request)
+    {
+        $userId = (int) $request->query('user_id', 1); // reemplazar por auth()->id() cuando haya login
+        $tz = (string) $request->query('tz', 'America/Argentina/Buenos_Aires');
+
+        // Ventana: últimos 7 días en TZ del usuario (si usás DATE, ya es "local")
+        $today = Carbon::now($tz)->toDateString();                   // YYYY-MM-DD
+        $start = Carbon::now($tz)->subDays(7)->toDateString();       // YYYY-MM-DD
+
+        // Sumar macros por día (usamos details para exactitud)
+        // Si preferís usar los totales de meal_logs, cambiá a SUM(ml.total_*)
+        $rows = MealDetail::query()
+            ->selectRaw('
+                ml.log_date AS d,
+                COALESCE(SUM(meal_details.calories),0) AS calories,
+                COALESCE(SUM(meal_details.protein),0)  AS protein,
+                COALESCE(SUM(meal_details.carbs),0)    AS carbs,
+                COALESCE(SUM(meal_details.fat),0)      AS fats
+            ')
+            ->join('meal_logs as ml', 'ml.id', '=', 'meal_details.meal_log_id')
+            ->where('ml.user_id', $userId)
+            ->whereBetween('ml.log_date', [$start, $today])
+            ->groupBy('ml.log_date')
+            ->orderBy('ml.log_date')
+            ->get()
+            ->keyBy('d'); // key por fecha para mapear rápido
+
+        // Armar esqueleto de los 7 días sin huecos
+        $out = [];
+        $cursor = Carbon::parse($start, $tz);
+        $end = Carbon::parse($today, $tz);
+
+        while ($cursor->lte($end)) {
+            $date = $cursor->toDateString();
+            $label = $cursor->format('D'); // Mon, Tue, ...
+            $out[$date] = [
+                'date' => $date,
+                'dayShort' => $label,
+                'calories' => 0,
+                'protein' => 0,
+                'carbs' => 0,
+                'fats' => 0,
+            ];
+            $cursor->addDay();
+        }
+
+        // Rellenar con datos reales
+        foreach ($rows as $d => $row) {
+            if (isset($out[$d])) {
+                $out[$d]['calories'] = (float) $row->calories;
+                $out[$d]['protein'] = (float) $row->protein;
+                $out[$d]['carbs'] = (float) $row->carbs;
+                $out[$d]['fats'] = (float) $row->fats;
+            }
+        }
+
+        // Último día como "Today"
+        $lastKey = array_key_last($out);
+        if ($lastKey) {
+            $out[$lastKey]['dayShort'] = 'Today';
+        }
+
+        // Respuesta ordenada por fecha ascendente
+        return response()->json(array_values($out));
     }
 }
