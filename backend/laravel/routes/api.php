@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use App\Http\Controllers\{
     FavoriteController,
     VoteController,
@@ -9,10 +10,9 @@ use App\Http\Controllers\{
     MealDetailController,
     IngredientController,
     RecipeController,
-    AuthController
+    AuthController,
+    
 };
-
-// (opcional) endpoint de prueba de auth
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -22,6 +22,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 });
 
 Route::post('register', [AuthController::class, 'register']);
+
+
 
 /**
  * --- RUTAS PÚBLICAS (sin auth) ---

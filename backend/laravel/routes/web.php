@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +19,21 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/sanctum/csrf-cookie', function () {
+    return response()->noContent();
+});
+
+
+
+// Login/Logout deben vivir en web, no en api
+Route::post('/login', [AuthController::class, 'login']);     // SIN auth
+
+Route::post('/logout', function (Illuminate\Http\Request $request) {
+    Auth::guard('web')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return response()->noContent();
+})->middleware(['auth', 'web']);
+
+
