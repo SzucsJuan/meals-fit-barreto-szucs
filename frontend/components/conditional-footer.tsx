@@ -8,7 +8,7 @@ export function ConditionalFooter() {
 
   // Don't show footer on authentication pages
   const isAuthPage =
-    pathname?.startsWith("/login") || pathname?.startsWith("/signup") || pathname?.startsWith("/forgot-password")
+    pathname?.startsWith("/signin") || pathname?.startsWith("/signup") || pathname?.startsWith("/forgot-password")
 
   if (isAuthPage) {
     return null

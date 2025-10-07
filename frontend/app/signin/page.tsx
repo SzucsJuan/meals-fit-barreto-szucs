@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Apple } from "lucide-react"
+import { EggFried } from "lucide-react"
 
 export default function LoginPage() {
   return (
@@ -12,7 +12,11 @@ export default function LoginPage() {
       <div className="hidden lg:flex flex-col justify-center items-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-12">
         <div className="max-w-md space-y-6">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold text-balance text-foreground">Welcome back to your health journey</h1>
+            <Link href="/" className="inline-flex items-center gap-2 mb-6">
+              <EggFried className="h-8 w-8 text-primary" />
+              <span className="text-4xl font-bold text-foreground">Meals&Fit</span>
+            </Link>
+            <h1 className="text-2xl font-bold text-balance text-foreground mt-2">Welcome back to your health journey</h1>
             <p className="text-lg text-muted-foreground text-pretty">
               Track your nutrition, discover recipes, and achieve your fitness goals with personalized insights.
             </p>
@@ -49,10 +53,6 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Logo and Header */}
           <div className="space-y-2 text-center lg:text-left">
-            <Link href="/" className="inline-flex items-center gap-2 mb-6">
-              <Apple className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-foreground">Meals&Fit</span>
-            </Link>
             <h2 className="text-3xl font-bold text-foreground">Sign in to your account</h2>
             <p className="text-muted-foreground">
               Don't have an account?{" "}
