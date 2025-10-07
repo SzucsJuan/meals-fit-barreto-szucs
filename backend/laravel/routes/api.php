@@ -9,12 +9,19 @@ use App\Http\Controllers\{
     MealDetailController,
     IngredientController,
     RecipeController,
+    AuthController
 };
 
 // (opcional) endpoint de prueba de auth
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    //aca van las rutas de admin
+});
+
+Route::post('register', [AuthController::class, 'register']);
 
 /**
  * --- RUTAS PÚBLICAS (sin auth) ---

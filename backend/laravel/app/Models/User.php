@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\{
     HasMany, BelongsToMany
 };
-
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
@@ -21,6 +23,16 @@ class User extends Authenticatable
         'weight',
         'height',
     ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = Hash::make($value);
+    }
 
     public function recipes(): HasMany
     {
@@ -61,5 +73,10 @@ class User extends Authenticatable
     public function calendarEvents(): HasMany
     {
         return $this->hasMany(CalendarEvent::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }
