@@ -1,21 +1,57 @@
 "use client"
 
-import { useState } from "react"
-import Image from "next/image";
-import { usePathname } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
+import { authApi } from "@/lib/api"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { usePathname, useRouter } from "next/navigation"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { MessageCircle, Home, Users, Apple, ChefHat, Target, Calendar, Heart, Menu } from "lucide-react"
+import { Home, ChefHat, Target, Calendar, Heart, Menu, LogOut, LogIn, UserPlus } from "lucide-react"
+
+type UserDTO = { id: number; name: string; email: string }
 
 export default function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<UserDTO | null>(null)
+  const [checking, setChecking] = useState(true)
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const me = await authApi.me()
+        if (mounted) setUser(me)
+      } catch {
+        if (mounted) setUser(null)
+      } finally {
+        if (mounted) setChecking(false)
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true
     if (path !== "/" && pathname.startsWith(path)) return true
     return false
+  }
+
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true)
+      await authApi.logout()            // POST /logout (con CSRF y cookies)
+      setUser(null)
+      router.push("/signin")                  
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoggingOut(false)
+      setMobileMenuOpen(false)
+    }
   }
 
   const NavigationLinks = ({ mobile = false, onLinkClick = () => {} }) => (
@@ -73,40 +109,56 @@ export default function Navigation() {
     </>
   )
 
-  const SecondaryLinks = ({ mobile = false, onLinkClick = () => {} }) => (
-    <>
-      <Link href="/chat" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/chat") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
-        >
-          <MessageCircle className="h-4 w-4" />
-          Chat
-        </Button>
-      </Link>
-      {/* <Link href="/index" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/index") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
-        >
-          <Home className="h-4 w-4" />
-          Index
-        </Button>
-      </Link> */}
-      <Link href="/community" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/community") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
-        >
-          <Users className="h-4 w-4" />
-          Community
-        </Button>
-      </Link>
-    </>
-  )
+  // Botonera derecha (Auth)
+  const AuthButtons = ({ mobile = false, onLinkClick = () => {} }) => {
+    if (checking) {
+      // placeholder mínimo mientras verifica sesión
+      return (
+        <div className={`${mobile ? "flex flex-col gap-2" : "flex items-center gap-2"}`}>
+          <Button variant="ghost" size="sm" disabled className={`${mobile ? "w-full justify-start" : ""}`}>
+            ...
+          </Button>
+        </div>
+      )
+    }
+
+    if (user) {
+      return (
+        <div className={`${mobile ? "flex flex-col gap-2" : "flex items-center gap-2"}`}>
+          <span className={`text-sm text-muted-foreground ${mobile ? "px-2" : ""}`}>
+            {user.name}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className={`${mobile ? "w-full justify-start" : ""}`}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            {loggingOut ? "Logging out..." : "Logout"}
+          </Button>
+        </div>
+      )
+    }
+
+    return (
+      <div className={`${mobile ? "flex flex-col gap-2" : "flex items-center gap-2"}`}>
+        <Link href="/signin" onClick={onLinkClick}>
+          <Button variant="ghost" size="sm" className={`${mobile ? "w-full justify-start" : ""}`}>
+            <LogIn className="h-4 w-4 mr-2" />
+            Sign in
+          </Button>
+        </Link>
+        <Link href="/signup" onClick={onLinkClick}>
+          <Button size="sm" className={`${mobile ? "w-full justify-start" : ""}`}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Sign up
+          </Button>
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <nav className="border-b border-border bg-card">
@@ -122,9 +174,9 @@ export default function Navigation() {
             <NavigationLinks />
           </div>
 
-          {/* Desktop Secondary Navigation */}
-          <div className="hidden md:flex items-center gap-1">
-            <SecondaryLinks />
+          {/* Desktop Right (Auth) */}
+          <div className="hidden md:flex items-center gap-2">
+            <AuthButtons />
           </div>
 
           {/* Mobile Navigation */}
@@ -142,17 +194,12 @@ export default function Navigation() {
                     <NavigationLinks mobile onLinkClick={() => setMobileMenuOpen(false)} />
                   </div>
                   <div className="flex flex-col gap-2 pt-4 border-t">
-                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">MORE</h3>
-                    <SecondaryLinks mobile onLinkClick={() => setMobileMenuOpen(false)} />
+                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">ACCOUNT</h3>
+                    <AuthButtons mobile onLinkClick={() => setMobileMenuOpen(false)} />
                   </div>
                 </div>
               </SheetContent>
             </Sheet>
-          </div>
-
-          {/* Tablet Navigation - Show secondary links only */}
-          <div className="hidden md:flex lg:hidden items-center gap-1">
-            <SecondaryLinks />
           </div>
         </div>
       </div>

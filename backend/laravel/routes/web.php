@@ -37,3 +37,21 @@ Route::post('/logout', function (Illuminate\Http\Request $request) {
 })->middleware(['auth', 'web']);
 
 
+
+// RUTAS TESTING - DEBUG
+
+Route::get('/debug-auth', function (Request $request) {
+    return response()->json([
+        'authenticated' => Auth::check(),
+        'via_remember'  => Auth::viaRemember(),
+        'user' => Auth::user() ? [
+            'id'    => Auth::user()->id,
+            'name'  => Auth::user()->name,
+            'email' => Auth::user()->email,
+        ] : null,
+        'session_id' => $request->session()->getId(),
+        'cookies'    => array_keys($request->cookies->all()),
+    ]);
+})->middleware('web', 'auth');
+
+

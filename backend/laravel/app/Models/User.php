@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
+    use HasApiTokens, Notifiable;
     protected $fillable = [
         'name',
         'email',

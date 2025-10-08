@@ -1,11 +1,61 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Apple, Target, TrendingUp, Award, EggFried } from "lucide-react"
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Apple, Target, TrendingUp, Award, EggFried } from "lucide-react";
+import { authApi } from "@/lib/api";
+
+// Validaciones simples (sin libs)
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const minLen = (v: string, n: number) => v.trim().length >= n;
 
 export default function SignupPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!minLen(name, 2)) errs.name = "Tu nombre debe tener al menos 2 caracteres.";
+    if (!isEmail(email)) errs.email = "Email inválido.";
+    if (!minLen(password, 8)) errs.password = "La contraseña debe tener al menos 8 caracteres.";
+    if (confirm !== password) errs.confirm = "Las contraseñas no coinciden.";
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    if (!validate()) return;
+
+    try {
+      setLoading(true);
+      // 1) Registro (token devuelto no lo usamos; la sesión es por cookie)
+      await authApi.register({ name, email, password, password_confirmation: confirm });
+
+      // 2) Auto-login para crear la sesión web y tener cookie de sesión
+      await authApi.login({ email, password });
+
+      // 3) Redirigimos adonde quieras (home, dashboard, etc.)
+      router.push("/");
+    } catch (err: any) {
+      setFormError(err.message || "Error al registrarte.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left Side - Hero Section */}
@@ -50,7 +100,6 @@ export default function SignupPage() {
       {/* Right Side - Signup Form */}
       <div className="flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-background">
         <div className="w-full max-w-md space-y-8">
-          {/* Logo and Header */}
           <div className="space-y-2 text-center lg:text-left">
             <h2 className="text-3xl font-bold text-foreground">Create your account</h2>
             <p className="text-muted-foreground">
@@ -67,17 +116,35 @@ export default function SignupPage() {
               <CardDescription>No credit card required</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <form className="space-y-4" onSubmit={onSubmit} noValidate>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    className="h-11"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    aria-invalid={!!fieldErrors.name}
+                  />
+                  {fieldErrors.name && <p className="text-xs text-red-600">{fieldErrors.name}</p>}
+                </div>
 
-              {/* Email/Password Form */}
-              <form className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full name</Label>
-                    <Input id="name" type="text" placeholder="John Doe" className="h-11" required />
-                  </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="name@example.com" className="h-11" required />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    className="h-11"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    aria-invalid={!!fieldErrors.email}
+                  />
+                  {fieldErrors.email && <p className="text-xs text-red-600">{fieldErrors.email}</p>}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -85,10 +152,14 @@ export default function SignupPage() {
                     type="password"
                     placeholder="Create a strong password"
                     className="h-11"
-                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    aria-invalid={!!fieldErrors.password}
                   />
                   <p className="text-xs text-muted-foreground">Must be at least 8 characters long</p>
+                  {fieldErrors.password && <p className="text-xs text-red-600">{fieldErrors.password}</p>}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm password</Label>
                   <Input
@@ -96,14 +167,19 @@ export default function SignupPage() {
                     type="password"
                     placeholder="Confirm your password"
                     className="h-11"
-                    required
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    aria-invalid={!!fieldErrors.confirm}
                   />
                   <p className="text-xs text-muted-foreground">Passwords must match</p>
+                  {fieldErrors.confirm && <p className="text-xs text-red-600">{fieldErrors.confirm}</p>}
                 </div>
 
-                <Button type="submit" className="w-full h-11" size="lg">
-                  Create account
+                <Button type="submit" className="w-full h-11" size="lg" disabled={loading}>
+                  {loading ? "Creating..." : "Create account"}
                 </Button>
+
+                {formError && <p className="text-sm text-red-600">{formError}</p>}
               </form>
             </CardContent>
           </Card>
@@ -121,5 +197,5 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

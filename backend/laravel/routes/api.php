@@ -11,48 +11,43 @@ use App\Http\Controllers\{
     IngredientController,
     RecipeController,
     AuthController,
-    
 };
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    //aca van las rutas de admin
-});
+// --------- Auth de SPA (cookie de sesión) -----------
+Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum'])
+    ->get('/user', fn (Request $request) => $request->user());
 
+// Registro (login/logout están en web.php)
 Route::post('register', [AuthController::class, 'register']);
 
 
-
-/**
- * --- RUTAS PÚBLICAS (sin auth) ---
- * Listado y detalle de recetas e ingredientes
- */
-Route::apiResource('recipes', RecipeController::class)->only(['index','show', 'store', 'update', 'destroy']);
-Route::apiResource('ingredients', IngredientController::class)->only(['index','show']);
-// Route::apiResource('meal-logs', MealLogController::class);
-Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
-Route::apiResource('meal-logs', MealLogController::class)->only(['index','show','store']);
-Route::apiResource('meal-details', MealDetailController::class)->only(['destroy','update']);
+// ===================== RUTAS PÚBLICAS =====================
+// Lectura de recetas e ingredientes
+Route::apiResource('recipes', RecipeController::class)->only(['index', 'show']);
+Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show']);
 
 
-/**
- * --- RUTAS PROTEGIDAS (con auth) ---
- * Crear/editar/borrar recetas e ingredientes
- * Crear/eliminar/actualizar meal logs/details
- * Votar y marcar favoritos
- */
-// Route::middleware('auth:sanctum')->group(function () {
-//     // CRUD parcial protegido
-//     Route::apiResource('recipes', RecipeController::class)->only(['store','update','destroy']);
-//     Route::apiResource('ingredients', IngredientController::class)->only(['store','update','destroy']);
+// ===================== RUTAS PROTEGIDAS =====================
+Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum'])->group(function () {
 
-//     // Meal logs / details
-//     //Route::apiResource('meal-logs', MealLogController::class);
-//     Route::apiResource('meal-details', MealDetailController::class)->only(['store','destroy','update']);
+    Route::apiResource('recipes', RecipeController::class)->only(['store', 'update', 'destroy']);
 
-//     // Acciones de usuario
-//     Route::post('votes', [VoteController::class, 'store']);
-//     Route::post('recipes/{recipe}/favorite', [FavoriteController::class, 'toggle']);
-// });
+    Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
+    Route::apiResource('meal-logs', MealLogController::class)->only(['index', 'show', 'store']);
+    Route::apiResource('meal-details', MealDetailController::class)->only(['destroy', 'update']);
+
+    // Route::apiResource('meal-details', MealDetailController::class)->only(['store','destroy','update']);
+
+    // Acciones de usuario
+    // Route::post('votes', [VoteController::class, 'store']);
+    // Route::post('recipes/{recipe}/favorite', [FavoriteController::class, 'toggle']);
+});
+
+
+// ===================== RUTAS ADMIN =====================
+Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'role:admin'])->group(function () {
+    
+});
+
+
+
