@@ -14,16 +14,20 @@ class Recipe extends Model
 {
     protected $fillable = [
         'user_id','title','slug','description','steps','visibility',
-        'servings','prep_time_minutes','cook_time_minutes','image_url',
+        'servings','prep_time_minutes','cook_time_minutes',
+        'image_disk','image_path','image_thumb_path','image_webp_path',
+        'image_width','image_height',
         'calories','protein','carbs','fat'
     ];
 
     protected $casts = [
         'calories' => 'float', 'protein' => 'float', 'carbs' => 'float', 'fat' => 'float',
         'servings' => 'integer',
+        'image_width' => 'integer', 'image_height' => 'integer',
     ];
 
-    protected $appends = ['image_url']; // si usás accessor de imagen (opcional)
+    // Exponer URLs derivadas automáticamente en la API
+    protected $appends = ['image_url', 'image_thumb_url', 'image_webp_url'];
 
     /** Relaciones **/
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
@@ -62,51 +66,27 @@ class Recipe extends Model
     /* ======= MACROS CÁLCULO ====== */
     /* ============================= */
 
-    /**
-     * Calcula los macros de la receta sumando los ingredientes según sus cantidades en la pivot.
-     *
-     * @param  bool $perServing          Si true, divide los totales por $this->servings (si > 0).
-     * @param  bool $ignoreUnitMismatch  Si true, ignora ingredientes con unidad distinta a la definida en el ingrediente.
-     *                                   Si false (default), lanza excepción si hay desajuste de unidades.
-     * @return array{calories:float, protein:float, carbs:float, fat:float}
-     */
     public function calculateMacros(bool $perServing = false, bool $ignoreUnitMismatch = false): array
     {
-        // Cargamos solo lo necesario si aún no está cargado
         $this->loadMissing(['ingredients' => function ($q) {
             $q->select('ingredients.id','name','serving_size','serving_unit','calories','protein','carbs','fat');
         }]);
 
-        $totals = [
-            'calories' => 0.0,
-            'protein'  => 0.0,
-            'carbs'    => 0.0,
-            'fat'      => 0.0,
-        ];
+        $totals = ['calories'=>0.0,'protein'=>0.0,'carbs'=>0.0,'fat'=>0.0];
 
         foreach ($this->ingredients as $ing) {
             $qty  = (float) ($ing->pivot->quantity ?? 0);
             $unit = (string) ($ing->pivot->unit ?? '');
 
-            // Validación de unidad: SIN conversiones automáticas (g ↔ ml necesitan densidad)
             if ($unit !== $ing->serving_unit) {
-                if ($ignoreUnitMismatch) {
-                    // Simplemente salteamos este ingrediente
-                    continue;
-                }
+                if ($ignoreUnitMismatch) continue;
                 throw new InvalidArgumentException(
                     "Unidad incompatible para {$ing->name}: en receta '{$unit}' vs ingrediente '{$ing->serving_unit}'"
                 );
             }
 
-            // Factor de escala: cuánto de la porción base estamos usando
-            $serving = (float) ($ing->serving_size ?: 0);
-            if ($serving <= 0) {
-                // Evitamos división por 0: si el serving del ingrediente es 0 o null, asumimos 1
-                $serving = 1.0;
-            }
-
-            $factor = $qty / $serving;
+            $serving = (float) ($ing->serving_size ?: 1.0);
+            $factor  = $qty / $serving;
 
             $totals['calories'] += (float)$ing->calories * $factor;
             $totals['protein']  += (float)$ing->protein  * $factor;
@@ -114,7 +94,6 @@ class Recipe extends Model
             $totals['fat']      += (float)$ing->fat      * $factor;
         }
 
-        // Si se pide por porción y la receta declara "servings"
         if ($perServing && (int)$this->servings > 0) {
             $totals['calories'] /= (int)$this->servings;
             $totals['protein']  /= (int)$this->servings;
@@ -122,51 +101,44 @@ class Recipe extends Model
             $totals['fat']      /= (int)$this->servings;
         }
 
-        // Redondeamos a 2 decimales para presentación/consistencia
-        foreach ($totals as $k => $v) {
-            $totals[$k] = round((float)$v, 2);
-        }
-
+        foreach ($totals as $k => $v) $totals[$k] = round((float)$v, 2);
         return $totals;
     }
 
-    /**
-     * Recalcula macros (totales) y los guarda en la receta (campos calories/protein/carbs/fat).
-     * Por convención se guardan los **totales de la receta completa**.
-     *
-     * @param  bool $ignoreUnitMismatch  Igual que en calculateMacros()
-     * @return $this
-     */
     public function recomputeMacrosAndSave(bool $ignoreUnitMismatch = false): self
     {
-        $totals = $this->calculateMacros(perServing: false, ignoreUnitMismatch: $ignoreUnitMismatch);
-
-        $this->fill([
-            'calories' => $totals['calories'],
-            'protein'  => $totals['protein'],
-            'carbs'    => $totals['carbs'],
-            'fat'      => $totals['fat'],
-        ])->save();
-
+        $totals = $this->calculateMacros(false, $ignoreUnitMismatch);
+        $this->fill($totals)->save();
         return $this->refresh();
     }
 
+    /* ============================= */
+    /* ========== SLUGS ============ */
+    /* ============================= */
+
     protected static function booted(): void
     {
-        // Al crear
         static::creating(function (Recipe $recipe) {
-            if (empty($recipe->slug)) {
-                $recipe->slug = static::makeUniqueSlug($recipe->title);
-            }
+            if (empty($recipe->slug)) $recipe->slug = static::makeUniqueSlug($recipe->title);
         });
 
-        // Al actualizar: si cambia el título y no mandaron un slug manual, lo regeneramos
         static::updating(function (Recipe $recipe) {
             $titleChanged = $recipe->isDirty('title');
             $slugProvided = $recipe->isDirty('slug') && !empty($recipe->slug);
-
             if ($titleChanged && !$slugProvided) {
                 $recipe->slug = static::makeUniqueSlug($recipe->title, $recipe->id);
+            }
+        });
+
+        // 🧹 Al borrar la receta, eliminar archivos asociados del storage
+        static::deleting(function (Recipe $recipe) {
+            if (!$recipe->image_disk) return;
+            $disk = $recipe->image_disk;
+            foreach (['image_path','image_thumb_path','image_webp_path'] as $col) {
+                $p = $recipe->{$col};
+                if ($p && Storage::disk($disk)->exists($p)) {
+                    Storage::disk($disk)->delete($p);
+                }
             }
         });
     }
@@ -174,8 +146,7 @@ class Recipe extends Model
     protected static function makeUniqueSlug(string $title, ?int $ignoreId = null): string
     {
         $base = Str::slug($title) ?: 'recipe';
-        $slug = $base;
-        $i = 1;
+        $slug = $base; $i = 1;
 
         while (
             static::query()
@@ -190,8 +161,25 @@ class Recipe extends Model
         return $slug;
     }
 
+    /* ============================= */
+    /* ======= ACCESSORS URL ======= */
+    /* ============================= */
+
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image_path ? Storage::url($this->image_path) : null;
+        if (!$this->image_disk || !$this->image_path) return null;
+        return Storage::disk($this->image_disk)->url($this->image_path);
+    }
+
+    public function getImageThumbUrlAttribute(): ?string
+    {
+        if (!$this->image_disk || !$this->image_thumb_path) return null;
+        return Storage::disk($this->image_disk)->url($this->image_thumb_path);
+    }
+
+    public function getImageWebpUrlAttribute(): ?string
+    {
+        if (!$this->image_disk || !$this->image_webp_path) return null;
+        return Storage::disk($this->image_disk)->url($this->image_webp_path);
     }
 }
