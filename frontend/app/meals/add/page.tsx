@@ -20,10 +20,10 @@ interface SelectedFood {
   calories: number;
   protein: number;
   carbs: number;
-  fats: number;            // del back es 'fat'
-  serving_size: number;    // ⬅️ nuevo
-  serving_unit: "g" | "ml" | "unit"; // ⬅️ nuevo
-  quantity: number;        // número de porciones base
+  fats: number;           
+  serving_size: number;    
+  serving_unit: "g" | "ml" | "unit"; 
+  quantity: number;       
 }
 
 export default function AddMealPage() {
@@ -43,8 +43,8 @@ export default function AddMealPage() {
       protein: ing.protein,
       carbs: ing.carbs,
       fats: ing.fat,
-      serving_size: ing.serving_size,          // ⬅️
-      serving_unit: ing.serving_unit,          // ⬅️
+      serving_size: ing.serving_size,        
+      serving_unit: ing.serving_unit,       
       quantity: 1,
     };
     const existing = selectedFoods.find((f) => f.id === food.id);
@@ -76,7 +76,6 @@ export default function AddMealPage() {
   const handleSaveMeal = async () => {
     if (!mealType || selectedFoods.length === 0) return;
 
-    // fecha y hora
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, "0");
@@ -88,19 +87,15 @@ export default function AddMealPage() {
       ? `${log_date} ${mealTime}:00`
       : null;
 
-    // Si no hay auth todavía:
-    const user_id = 1; // ⚠️ reemplazar cuando tengas login
-
     const details = selectedFoods.map((f) => {
-      // Podemos calcular grams solo si la porción base es g/ml
-      const grams =
-        f.serving_unit === "g" || f.serving_unit === "ml"
-          ? Math.round(f.quantity * f.serving_size)
-          : null;
+          const grams =
+            f.serving_unit === "g" || f.serving_unit === "ml"
+              ? Math.round(f.quantity * f.serving_size)
+              : null;
 
       return {
         ingredient_id: f.id,
-        servings: f.quantity,                 // n° de porciones base
+        servings: f.quantity,
         grams,
         meal_type: mealType as MealType,
         logged_at,
@@ -108,8 +103,7 @@ export default function AddMealPage() {
     });
 
     try {
-      await createMealLog({ user_id, log_date, notes: null, details });
-      // reset UI
+      await createMealLog({ log_date, notes: null, details });
       setSelectedFoods([]);
       setMealTime("");
       setMealType("");
@@ -117,7 +111,6 @@ export default function AddMealPage() {
 
       router.push("/meals");
     } catch (e) {
-      // el hook ya setea error, pero por si querés mostrar algo puntual
       console.error(e);
     }
   };

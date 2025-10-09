@@ -10,30 +10,18 @@ class MealLogStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'user_id'  => ['required','integer','exists:users,id'], ---con auth
-            'user_id'   => 'sometimes|exists:users,id', // quitar cuando uses auth
-            'log_date'  => 'required|date_format:Y-m-d', // default hoy
-            'notes'     => 'nullable|string|max:500',
+            'log_date' => ['required','date_format:Y-m-d'],
+            'notes'    => ['nullable','string','max:5000'],
+            'details'  => ['array'],
+            'details.*.meal_type'     => ['required','in:breakfast,lunch,dinner,snack'],
+            'details.*.ingredient_id' => ['nullable','integer','exists:ingredients,id'],
+            'details.*.recipe_id'     => ['nullable','integer','exists:recipes,id'],
+            'details.*.servings'      => ['nullable','numeric','min:0'],
+            'details.*.grams'         => ['nullable','numeric','min:0'],
+            'details.*.logged_at'     => ['nullable','date_format:Y-m-d H:i:s'],
 
-            // Detalles del log (ingredientes o receta)
-            'details'   => 'required|array|min:1',
-            'details.*.meal_type'    => 'required|string|in:breakfast,lunch,dinner,snack',
-            'details.*.logged_at'    => 'nullable|date_format:Y-m-d H:i:s',
-
-            // Opción 1: por ingrediente
-            'details.*.ingredient_id'=> 'nullable|exists:ingredients,id',
-            'details.*.grams'        => 'nullable|numeric|min:0',
-
-            // Opción 2: por receta
-            'details.*.recipe_id'    => 'nullable|exists:recipes,id',
-            'details.*.servings'     => 'nullable|numeric|min:0',
-
-            // Macros provenientes del cliente se ignoran (se recalculan server-side)
-            // pero podés permitírlos como optional si querés auditarlos:
-            // 'details.*.calories'  => 'nullable|numeric|min:0',
-            // 'details.*.protein'   => 'nullable|numeric|min:0',
-            // 'details.*.carbs'     => 'nullable|numeric|min:0',
-            // 'details.*.fat'       => 'nullable|numeric|min:0',
+            // 🔒 prohibir que te manden user_id
+            'user_id' => ['prohibited'],
         ];
     }
 

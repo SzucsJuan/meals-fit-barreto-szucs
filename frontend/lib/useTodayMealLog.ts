@@ -32,25 +32,33 @@ export interface MealLogDTO {
   details: MealDetailDTO[];
 }
 
-function todayISODate() {
-  const d = new Date();
-  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-    .toISOString().slice(0, 10);
-}
-
-export function useTodayMealLog(userId = 1) {
+export function useTodayMealLog() {
   const [data, setData] = useState<MealLogDTO | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function refetch(date = todayISODate()) {
+   function todayISODate() {
+    const d = new Date();
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+      .toISOString().slice(0, 10);
+  }
+
+   async function refetch(date = todayISODate()) {
     setLoading(true);
     setError(null);
     try {
-      const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/meal-logs`);
-      url.searchParams.set("user_id", String(userId));
+      const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/meals`);
+      // console.log(url);
       url.searchParams.set("date", date);
-      const res = await fetch(url.toString());
+
+      const res = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+        },
+        credentials: "include",
+      });
+
       if (res.status === 204 || res.status === 404) {
         setData(null);
       } else if (!res.ok) {
@@ -66,7 +74,7 @@ export function useTodayMealLog(userId = 1) {
     }
   }
 
-  useEffect(() => { refetch(); }, []); // carga de hoy por defecto
+  useEffect(() => { refetch(); }, []);
 
   // Agrupar detalles por meal_type para la UI
   const grouped = useMemo(() => {

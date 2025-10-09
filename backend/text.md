@@ -1,3 +1,8 @@
+PRENDER BACK:
+
+php artisan serve --host=localhost --port=8000
+
+
 Datos de usuarios
 
 Admin:
@@ -15,3 +20,4 @@ Usuario 2:
     name: Ian
     email: ian@user.com
     pass: ian123
+

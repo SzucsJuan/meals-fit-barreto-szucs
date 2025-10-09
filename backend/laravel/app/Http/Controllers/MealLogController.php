@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-
-use App\Http\Requests\MealLogStoreRequest;
-use App\Models\{MealLog, MealDetail, Ingredient, Recipe};
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use App\Http\Requests\MealLogStoreRequest;
+use App\Models\{MealLog, MealDetail, Ingredient, Recipe};
 
 class MealLogController extends Controller
 {
-    // GET /api/meal-logs?user_id=1&from=YYYY-MM-DD&to=YYYY-MM-DD
     public function index(Request $request)
     {
-        $userId = (int) $request->query('user_id', 1); // reemplazar por auth()->id() al tener login
+        $userId = auth()->id(); 
+        // Log::info('User ID:', ['id' => auth()->id()]); 
         $date = $request->query('date');
         $from = $request->query('from');
         $to = $request->query('to');
@@ -42,20 +42,19 @@ class MealLogController extends Controller
         return $q->paginate(30);
     }
 
-    // GET /api/meal-logs/{mealLog}
     public function show(MealLog $mealLog)
     {
         return $mealLog->load('details.ingredient:id,name', 'details.recipe:id,title');
     }
 
-    // POST /api/meal-logs
     public function store(MealLogStoreRequest $request)
     {
-        // $userId = $request->user()->id; // con auth
-        $userId = (int) $request->input('user_id', 1); // DEV
-        $logDate = (string) $request->input('log_date'); // YYYY-MM-DD (local)
-        $notes = $request->input('notes');             // opcional
+
+        $userId  = $request->user()->id;
+        $logDate = (string) $request->input('log_date');
+        $notes   = $request->input('notes');
         $details = $request->input('details', []);
+
 
         return DB::transaction(function () use ($userId, $logDate, $notes, $details) {
 
@@ -203,7 +202,7 @@ class MealLogController extends Controller
 
     public function weekly(Request $request)
     {
-        $userId = (int) $request->query('user_id', 1); // reemplazar por auth()->id() cuando haya login
+        $userId = auth()->id();
         $tz = (string) $request->query('tz', 'America/Argentina/Buenos_Aires');
 
         // Ventana: últimos 7 días en TZ del usuario (si usás DATE, ya es "local")
@@ -257,13 +256,11 @@ class MealLogController extends Controller
             }
         }
 
-        // Último día como "Today"
         $lastKey = array_key_last($out);
         if ($lastKey) {
             $out[$lastKey]['dayShort'] = 'Today';
         }
 
-        // Respuesta ordenada por fecha ascendente
         return response()->json(array_values($out));
     }
 }

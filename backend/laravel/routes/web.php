@@ -25,7 +25,6 @@ Route::get('/sanctum/csrf-cookie', function () {
 });
 
 
-
 // Login/Logout deben vivir en web, no en api
 Route::post('/login', [AuthController::class, 'login']);     // SIN auth
 

@@ -17,8 +17,8 @@ const nutritionGoals = { calories: 2200, protein: 165, carbs: 275, fats: 73 };
 export default function MealsPage() {
   const [selectedView, setSelectedView] = useState<"today" | "week">("today");
 
-  const { dayTotals, mealCards, loading, error, refetch } = useTodayMealLog(1);
-  const { barData: weeklyData, loading: wLoading, error: wError, refetch: wRefetch } = useWeeklyMealLog(1);
+  const { dayTotals, mealCards, loading, error, refetch } = useTodayMealLog();
+  const { barData: weeklyData, loading: wLoading, error: wError, refetch: wRefetch } = useWeeklyMealLog();
 
   const macroData = useMemo(
     () => [

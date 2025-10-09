@@ -17,12 +17,10 @@ use App\Http\Controllers\{
 Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum'])
     ->get('/user', fn (Request $request) => $request->user());
 
-// Registro (login/logout están en web.php)
 Route::post('register', [AuthController::class, 'register']);
 
 
 // ===================== RUTAS PÚBLICAS =====================
-// Lectura de recetas e ingredientes
 Route::apiResource('recipes', RecipeController::class)->only(['index', 'show']);
 Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show']);
 
@@ -33,7 +31,7 @@ Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum'])->g
     Route::apiResource('recipes', RecipeController::class)->only(['store', 'update', 'destroy']);
 
     Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
-    Route::apiResource('meal-logs', MealLogController::class)->only(['index', 'show', 'store']);
+    Route::apiResource('meals', MealLogController::class)->only(['index', 'show', 'store']);
     Route::apiResource('meal-details', MealDetailController::class)->only(['destroy', 'update']);
 
     // Route::apiResource('meal-details', MealDetailController::class)->only(['store','destroy','update']);
