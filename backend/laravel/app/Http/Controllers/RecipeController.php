@@ -18,44 +18,48 @@ class RecipeController extends Controller
 
     // GET /api/recipes?q=&per_page=&order=
     public function index(Request $request)
-    {
-        $q       = trim((string) $request->query('q', ''));
-        $perPage = (int) $request->query('per_page', 15);
-        $order   = $request->query('order', 'latest'); // latest|rating|calories|protein|carbs|fat
+{
+    $q       = trim((string) $request->query('q', ''));
+    $perPage = (int) $request->query('per_page', 15);
+    $order   = $request->query('order', 'latest'); // latest|rating|calories|protein|carbs|fat
+    $user    = $request->user();
 
-        $query = Recipe::query()
-            ->with(['user:id,name', 'ingredients:id,name'])
-            ->withAvg('votes as avg_rating', 'rating')
-            ->withCount(['votes', 'favoritedBy'])
-            ->where('visibility', 'public');
+    $query = Recipe::query()
+        ->with(['user:id,name', 'ingredients:id,name'])
+        ->withAvg('votes as avg_rating', 'rating')
+        ->withCount(['votes', 'favoritedBy'])
+        // públicas o del dueño
+        ->where(function($w) use ($user) {
+            $w->where('visibility', 'public')
+              ->orWhere('user_id', $user->id);
+        });
 
-        // filtro de búsqueda: título/descr o nombre de ingrediente
-        if ($q !== '') {
-            $query->where(function ($sub) use ($q) {
-                $sub->where('title', 'like', "%{$q}%")
-                    ->orWhere('description', 'like', "%{$q}%")
-                    ->orWhereHas('ingredients', function ($qIng) use ($q) {
-                        $qIng->where('name', 'like', "%{$q}%");
-                    });
-            });
-        }
-
-        switch ($order) {
-            case 'rating':
-                $query->orderByDesc('avg_rating')->orderByDesc('id');
-                break;
-            case 'calories':
-            case 'protein':
-            case 'carbs':
-            case 'fat':
-                $query->orderByDesc($order)->orderByDesc('id');
-                break;
-            default:
-                $query->latest(); // created_at desc
-        }
-
-        return $query->paginate($perPage);
+    if ($q !== '') {
+        $query->where(function ($sub) use ($q) {
+            $sub->where('title', 'like', "%{$q}%")
+                ->orWhere('description', 'like', "%{$q}%")
+                ->orWhereHas('ingredients', function ($qIng) use ($q) {
+                    $qIng->where('name', 'like', "%{$q}%");
+                });
+        });
     }
+
+    switch ($order) {
+        case 'rating':
+            $query->orderByDesc('avg_rating')->orderByDesc('id');
+            break;
+        case 'calories':
+        case 'protein':
+        case 'carbs':
+        case 'fat':
+            $query->orderByDesc($order)->orderByDesc('id');
+            break;
+        default:
+            $query->latest();
+    }
+
+    return $query->paginate($perPage);
+}
 
     // GET
     public function show(Recipe $recipe)
@@ -70,25 +74,27 @@ class RecipeController extends Controller
 
     // POST
     public function store(RecipeStoreRequest $request)
-    {
-        // Con auth:
-        // $recipe = $request->user()->recipes()->create($request->validated());
+{
+    // 1) Ignoramos user_id del cliente por seguridad
+    $data = $request->safe()->except(['user_id']);
 
-        // Sin auth (dev): usar un user_id fijo
-        $data = $request->validated();
-        $data['user_id'] = $data['user_id'] ?? 1; // ⚠️ solo para desarrollo
-        $recipe = Recipe::create($data);
+    // 2) Creamos por relación del usuario autenticado (no más hardcode)
+    $recipe = $request->user()->recipes()->create($data);
 
-        if (!empty($data['ingredients'])) {
-        $this->recipes->syncIngredientsAndRecompute($recipe, $data['ingredients'], ignoreUnitMismatch: false);
-        } else {
-        // sin ingredientes, aseguro macros a 0
+    // 3) Ingredientes + macros
+    if (!empty($data['ingredients'])) {
+        $this->recipes->syncIngredientsAndRecompute(
+            $recipe,
+            $data['ingredients'],
+            ignoreUnitMismatch: false
+        );
+    } else {
+        // sin ingredientes → macros en 0 para no dejar valores sucios
         $recipe->fill(['calories'=>0,'protein'=>0,'carbs'=>0,'fat'=>0])->save();
-        }
-
-        return response()->json($recipe->fresh()->load('ingredients:id,name'), 201);
     }
 
+    return response()->json($recipe->fresh()->load('ingredients:id,name'), 201);
+}
     // PUT
     public function update(RecipeUpdateRequest $request, Recipe $recipe)
     {

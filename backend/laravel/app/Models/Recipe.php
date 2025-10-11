@@ -165,21 +165,21 @@ class Recipe extends Model
     /* ======= ACCESSORS URL ======= */
     /* ============================= */
 
-    public function getImageUrlAttribute(): ?string
-    {
-        if (!$this->image_disk || !$this->image_path) return null;
-        return Storage::disk($this->image_disk)->url($this->image_path);
-    }
+    // public function getImageUrlAttribute(): ?string
+    // {
+    //     if (!$this->image_disk || !$this->image_path) return null;
+    //     return Storage::disk($this->image_disk)->url($this->image_path);
+    // }
 
-    public function getImageThumbUrlAttribute(): ?string
-    {
-        if (!$this->image_disk || !$this->image_thumb_path) return null;
-        return Storage::disk($this->image_disk)->url($this->image_thumb_path);
-    }
+    // public function getImageThumbUrlAttribute(): ?string
+    // {
+    //     if (!$this->image_disk || !$this->image_thumb_path) return null;
+    //     return Storage::disk($this->image_disk)->url($this->image_thumb_path);
+    // }
 
-    public function getImageWebpUrlAttribute(): ?string
-    {
-        if (!$this->image_disk || !$this->image_webp_path) return null;
-        return Storage::disk($this->image_disk)->url($this->image_webp_path);
-    }
+    // public function getImageWebpUrlAttribute(): ?string
+    // {
+    //     if (!$this->image_disk || !$this->image_webp_path) return null;
+    //     return Storage::disk($this->image_disk)->url($this->image_webp_path);
+    // }
 }

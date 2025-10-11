@@ -4,19 +4,19 @@ export interface RecipeListItem {
   id: number;
   title: string;
   description: string | null;
-  image_url: string | null;
+  image_url: string | null; // ojo: será null si los accessors están comentados en el model
   servings: number;
   calories: number;
   protein: number;
   carbs: number;
-  fat: number; // ⚠️ es "fat" en el back
+  fat: number;
   prep_time_minutes: number | null;
   cook_time_minutes: number | null;
   avg_rating?: number | null;
   votes_count?: number;
   favorited_by_count?: number;
   user?: { id: number; name: string };
-  // ingredients?: { id: number; name: string }[]; // descomenta si lo querés usar
+  // ingredients?: { id: number; name: string }[];
 }
 
 export function useRecipes(search: string, order: string = "latest") {
@@ -34,11 +34,15 @@ export function useRecipes(search: string, order: string = "latest") {
     setLoading(true);
     setError(null);
 
-    fetch(url.toString(), { signal: ctrl.signal })
+    fetch(url.toString(), {
+      signal: ctrl.signal,
+      credentials: "include",              // ⬅️ importante para Sanctum
+      headers: { Accept: "application/json" },
+    })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const json = await r.json();
-        setData(json.data ?? json);
+        setData(json.data ?? json);        // paginator o colección
       })
       .catch((e) => {
         if (e.name !== "AbortError") setError(e.message);
@@ -64,7 +68,11 @@ export function useRecipe(id: number | string | null) {
     setLoading(true);
     setError(null);
 
-    fetch(url, { signal: ctrl.signal })
+    fetch(url, {
+      signal: ctrl.signal,
+      credentials: "include",              // ⬅️ también acá
+      headers: { Accept: "application/json" },
+    })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const json = await r.json();
