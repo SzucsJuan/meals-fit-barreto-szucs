@@ -25,7 +25,6 @@ export function middleware(req: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
   if (!isProtected) return NextResponse.next();
 
-  // ✅ Chequeo de sesión (Sanctum)
   const hasSession =
     !!req.cookies.get("laravel_session")?.value;
 

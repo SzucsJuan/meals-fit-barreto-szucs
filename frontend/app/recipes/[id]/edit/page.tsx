@@ -11,10 +11,10 @@ import { StepsEditor } from "@/components/stepsEditor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CookingPot } from "lucide-react";
 import Link from "next/link";
-
 import { detailRecipe } from "@/lib/detailRecipe";
 import { useIngredients } from "@/lib/useIngredients";
 import { useUpdateRecipe, type EditRow, type Unit } from "@/lib/useUpdateRecipe";
+import RequireAuth from "@/components/RequireAuth";
 import { s } from "@/lib/sanitize";
 
 export default function EditRecipePage({ params }: { params: { id: string } }) {
@@ -38,7 +38,6 @@ export default function EditRecipePage({ params }: { params: { id: string } }) {
     return m;
   }, [ingredientOptions]);
 
-  // precarga
   useEffect(() => {
     if (!recipe) return;
     setTitle(recipe.title);
@@ -109,6 +108,7 @@ export default function EditRecipePage({ params }: { params: { id: string } }) {
   }
 
   return (
+    <RequireAuth>
     <div className="min-h-screen bg-background">
       <Navigation />
 
@@ -261,5 +261,6 @@ export default function EditRecipePage({ params }: { params: { id: string } }) {
         )}
       </div>
     </div>
+    </RequireAuth>
   );
 }

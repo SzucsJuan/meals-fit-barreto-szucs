@@ -51,7 +51,6 @@ export async function api<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  // Agrega X-XSRF-TOKEN desde la cookie
   const xsrf = getCookie("XSRF-TOKEN");
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
 
@@ -69,7 +68,6 @@ export async function api<T>(
   try {
     body = await res.json();
   } catch {
-    // puede no haber body (html, vacío, etc.)
   }
 
   if (!res.ok) {
@@ -102,10 +100,8 @@ export const authApi = {
   // web.php => /logout (requiere estar autenticado)
   logout: () => api<{ message?: string }>("/logout", { method: "POST" }),
 
-  // api.php protegido por sanctum
   me: () => api<UserDTO>("/api/user", { method: "GET" }),
 };
-
 
 export type RecipeDTO = {
   id: number;

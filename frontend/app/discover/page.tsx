@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Heart, Search, Clock, Users, Plus, Trash2, Binoculars } from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/navigation"
+import RequireAuth from "@/components/RequireAuth";   
 
 // Sample favorite recipes data
 const favoriteRecipes = [
@@ -165,6 +166,7 @@ export default function DiscoverPage() {
   const avgCalories = Math.round(favoriteRecipes.reduce((sum, recipe) => sum + recipe.calories, 0) / totalFavorites)
 
   return (
+    <RequireAuth>
     <div className="min-h-screen bg-background">
       {/* Navigation */}
       <Navigation />
@@ -227,10 +229,6 @@ export default function DiscoverPage() {
         <div className="grid grid-cols-1 gap-8">
           {/* Favorite Recipes */}
           <div className="lg:col-span-2">
-            {/* <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-foreground">Favorite Recipes</h2>
-              <Badge variant="outline">{filteredRecipes.length} recipes</Badge>
-            </div> */}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRecipes.map((recipe) => (
@@ -323,83 +321,9 @@ export default function DiscoverPage() {
               </Card>
             )}
           </div>
-
-          {/* Sidebar */}
-          {/* <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Meal Combinations</CardTitle>
-                <CardDescription>Your favorite daily meal plans</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {favoriteMealCombos.map((combo) => (
-                  <div key={combo.id} className="p-4 border border-border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-foreground">{combo.name}</h4>
-                      <Badge variant="outline">{combo.timesUsed}x used</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">{combo.description}</p>
-                    <div className="space-y-1 mb-3">
-                      {combo.meals.map((meal, index) => (
-                        <div key={index} className="text-xs text-muted-foreground">
-                          • {meal}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-primary font-medium">{combo.totalCalories} cal</span>
-                      <span className="text-accent font-medium">{combo.totalProtein}g protein</span>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Link href="/recipes/create">
-                  <Button className="w-full bg-transparent" variant="outline">
-                    Create New Recipe
-                  </Button>
-                </Link>
-                <Link href="/meals/add">
-                  <Button className="w-full mt-2">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Log Meal
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Favorite Insights</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Most Popular Category</span>
-                  <Badge variant="secondary">Breakfast</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Avg Prep Time</span>
-                  <span className="font-medium">18 min</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Protein Focus</span>
-                  <span className="font-medium">68% high protein</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Difficulty Level</span>
-                  <span className="font-medium">Mostly Easy</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div> */}
         </div>
       </div>
     </div>
+    </RequireAuth>
   )
 }

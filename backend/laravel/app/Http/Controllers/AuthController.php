@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RegisterRequest;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\RegisterRequest;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthController extends Controller
 {
@@ -30,7 +29,6 @@ class AuthController extends Controller
                 'name'  => $user->name,
                 'email' => $user->email,
             ],
-            'token' => $token, 
         ], 201);
     }
     public function login(Request $request)
@@ -55,11 +53,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Cierra sesión del guard web
         Auth::guard('web')->logout();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Logged out'], 200);
+        $forgetSession = Cookie::forget(config('session.cookie', 'laravel_session'));
+        $forgetXSRF    = Cookie::forget('XSRF-TOKEN');
+
+        return response()->noContent()
+            ->withCookie($forgetSession)
+            ->withCookie($forgetXSRF);
     }
 }
 

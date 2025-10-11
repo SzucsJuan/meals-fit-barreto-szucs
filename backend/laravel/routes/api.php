@@ -14,38 +14,26 @@ use App\Http\Controllers\{
 };
 
 // --------- Auth de SPA (cookie de sesión) -----------
-Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum'])
+// Añadimos 'no-store' acá también
+Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no-store'])
     ->get('/user', fn (Request $request) => $request->user());
 
+// Si usás registro por API pública:
 Route::post('register', [AuthController::class, 'register']);
 
-
-// ===================== RUTAS PÚBLICAS =====================
-Route::apiResource('recipes', RecipeController::class)->only(['index', 'show']);
-Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show']);
-
-
 // ===================== RUTAS PROTEGIDAS =====================
-Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum'])->group(function () {
+Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no-store'])->group(function () {
 
-    Route::apiResource('recipes', RecipeController::class)->only(['store', 'update', 'destroy']);
+    Route::apiResource('recipes', RecipeController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
 
-    Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
+    Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show', 'store']);
+
     Route::apiResource('meals', MealLogController::class)->only(['index', 'show', 'store']);
     Route::apiResource('meal-details', MealDetailController::class)->only(['destroy', 'update']);
-
-    // Route::apiResource('meal-details', MealDetailController::class)->only(['store','destroy','update']);
-
-    // Acciones de usuario
-    // Route::post('votes', [VoteController::class, 'store']);
-    // Route::post('recipes/{recipe}/favorite', [FavoriteController::class, 'toggle']);
+    Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
 });
-
 
 // ===================== RUTAS ADMIN =====================
-Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'role:admin'])->group(function () {
-    
+Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'role:admin', 'no-store'])->group(function () {
+    // admin...
 });
-
-
-
