@@ -62,15 +62,15 @@ class RecipeController extends Controller
 }
 
     // GET
-    public function show(Recipe $recipe)
-    {
-        // $this->authorize('view', $recipe); // descomentalo cuando tengas auth/policies
-        abort_unless($recipe->visibility === 'public', 404);
+public function show(Recipe $recipe, Request $request)
+{
+    $isOwner = $recipe->user_id === $request->user()->id;
+    abort_unless($recipe->visibility === 'public' || $isOwner, 404);
 
-        return $recipe->load(['user:id,name', 'ingredients:id,name'])
-            ->loadCount(['votes', 'favoritedBy'])
-            ->loadAvg('votes as avg_rating', 'rating');
-    }
+    return $recipe->load(['user:id,name', 'ingredients:id,name'])
+        ->loadCount(['votes', 'favoritedBy'])
+        ->loadAvg('votes as avg_rating', 'rating');
+}
 
     // POST
     public function store(RecipeStoreRequest $request)
