@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { usePathname, useRouter } from "next/navigation"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, ChefHat, Target, Calendar, Heart, Menu, LogOut, LogIn, UserPlus } from "lucide-react"
+import { Home, ChefHat, Target, Calendar, Heart, Menu, LogOut, LogIn, UserPlus, Binoculars } from "lucide-react"
 
 type UserDTO = { id: number; name: string; email: string }
 
@@ -43,7 +43,7 @@ export default function Navigation() {
   const handleLogout = async () => {
     try {
       setLoggingOut(true)
-      await authApi.logout()            // POST /logout (con CSRF y cookies)
+      await authApi.logout()            
       setUser(null)
       router.push("/signin")                  
     } catch (e) {
@@ -56,9 +56,9 @@ export default function Navigation() {
 
   const NavigationLinks = ({ mobile = false, onLinkClick = () => {} }) => (
     <>
-      <Link href="/" onClick={onLinkClick}>
+      <Link href="/home" onClick={onLinkClick}>
         <Button
-          variant={isActive("/") ? "default" : "ghost"}
+          variant={isActive("/home") ? "default" : "ghost"}
           size="sm"
           className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
         >
@@ -83,27 +83,17 @@ export default function Navigation() {
           className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
         >
           <ChefHat className="h-4 w-4" />
-          Recipes
+          My Recipes
         </Button>
       </Link>
-      <Link href="/favorites" onClick={onLinkClick}>
+      <Link href="/discover" onClick={onLinkClick}>
         <Button
-          variant={isActive("/favorites") ? "default" : "ghost"}
+          variant={isActive("/discover") ? "default" : "ghost"}
           size="sm"
           className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
         >
-          <Heart className="h-4 w-4" />
-          Favorites
-        </Button>
-      </Link>
-      <Link href="/calendar" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/calendar") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
-        >
-          <Calendar className="h-4 w-4" />
-          Calendar
+          <Binoculars className="h-4 w-4" />
+          Discover
         </Button>
       </Link>
     </>
@@ -164,7 +154,7 @@ export default function Navigation() {
     <nav className="border-b border-border bg-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/home" className="flex items-center gap-2">
             <Image src="/icon/logo.png" alt="MealsFit Logo" width={32} height={32} />
             <h1 className="text-xl font-bold text-foreground">Meals&amp;Fit</h1>
           </Link>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Heart, Search, Clock, Users, Plus, Trash2 } from "lucide-react"
+import { Heart, Search, Clock, Users, Plus, Trash2, Binoculars } from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/navigation"
 
@@ -131,7 +131,7 @@ const favoriteMealCombos = [
   },
 ]
 
-export default function FavoritesPage() {
+export default function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"recent" | "popular" | "name">("recent")
@@ -174,13 +174,13 @@ export default function FavoritesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Heart className="h-8 w-8" style={{ color: "#FF9800" }} />
+              <Binoculars className="h-8 w-8" style={{ color: "#FF9800" }} />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">My Favorites</h1>
-                <p className="text-muted-foreground">Your most loved recipes and meal combinations</p>
+                <h1 className="text-2xl font-bold text-foreground">Discover. Get inspired. Cook.</h1>
+                <p className="text-muted-foreground">Explore unique community creations and find inspiration for your next meal</p>
               </div>
             </div>
-            <Link href="/">
+            <Link href="/home">
               <Button variant="outline">Back to Home</Button>
             </Link>
           </div>
@@ -188,55 +188,13 @@ export default function FavoritesPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Favorites</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">{totalFavorites}</div>
-              <div className="text-xs text-muted-foreground">recipes saved</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Avg Calories</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{avgCalories}</div>
-              <div className="text-xs text-muted-foreground">per recipe</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Most Used</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-accent">15x</div>
-              <div className="text-xs text-muted-foreground">Greek Yogurt Parfait</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Categories</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-chart-3">4</div>
-              <div className="text-xs text-muted-foreground">meal types</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search favorites..."
+              placeholder="Find your next recipe"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/30"
@@ -266,15 +224,15 @@ export default function FavoritesPage() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           {/* Favorite Recipes */}
           <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
+            {/* <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-foreground">Favorite Recipes</h2>
               <Badge variant="outline">{filteredRecipes.length} recipes</Badge>
-            </div>
+            </div> */}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRecipes.map((recipe) => (
                 <Card key={recipe.id} className="hover:shadow-lg transition-shadow overflow-hidden">
                   <div className="relative">
@@ -289,7 +247,7 @@ export default function FavoritesPage() {
                       className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                       onClick={() => handleRemoveFromFavorites(recipe.id)}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Heart className="h-4 w-4 text-destructive" />
                     </Button>
                     <Badge variant="secondary" className="absolute bottom-2 left-2 bg-white/90">
                       {recipe.category}
@@ -354,24 +312,20 @@ export default function FavoritesPage() {
             {filteredRecipes.length === 0 && (
               <Card>
                 <CardContent className="text-center py-12">
-                  <Heart className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No favorites found</h3>
+                  <Binoculars className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Recipe not found</h3>
                   <p className="text-muted-foreground mb-4">
                     {searchQuery || selectedCategory !== "all"
-                      ? "Try adjusting your search or filters"
+                      ? "Try adjusting your search"
                       : "Start adding recipes to your favorites to see them here"}
                   </p>
-                  <Link href="/recipes">
-                    <Button>Browse Recipes</Button>
-                  </Link>
                 </CardContent>
               </Card>
             )}
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Favorite Meal Combinations */}
+          {/* <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Meal Combinations</CardTitle>
@@ -401,32 +355,25 @@ export default function FavoritesPage() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Link href="/recipes">
-                  <Button className="w-full bg-transparent" variant="outline">
-                    Browse All Recipes
-                  </Button>
-                </Link>
                 <Link href="/recipes/create">
                   <Button className="w-full bg-transparent" variant="outline">
                     Create New Recipe
                   </Button>
                 </Link>
                 <Link href="/meals/add">
-                  <Button className="w-full">
+                  <Button className="w-full mt-2">
                     <Plus className="h-4 w-4 mr-2" />
-                    Log Meal from Favorites
+                    Log Meal
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
-            {/* Nutrition Insights */}
             <Card>
               <CardHeader>
                 <CardTitle>Favorite Insights</CardTitle>
@@ -450,7 +397,7 @@ export default function FavoritesPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

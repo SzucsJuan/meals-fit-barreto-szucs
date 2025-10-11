@@ -36,7 +36,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       await authApi.login({ email, password }); // crea cookie de sesión
-      router.push("/"); // o a donde quieras (dashboard)
+      router.push("/home");
     } catch (err: any) {
       setFormError(err.message || "Credenciales inválidas.");
     } finally {

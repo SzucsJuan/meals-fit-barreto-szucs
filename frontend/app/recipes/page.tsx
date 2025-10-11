@@ -25,17 +25,11 @@ export default function RecipesPage() {
             <div className="flex items-center gap-3">
               <ChefHat className="h-8 w-8" style={{ color: "#FF9800" }} />
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground">Recipe Collection</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Collection</h1>
                 <p className="text-muted-foreground">Find your favorite recipes</p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-3">
-              <Link href="/favorites" className="w-full sm:w-auto">
-                <Button variant="outline" className="flex items-center gap-2 bg-transparent w-full sm:w-auto">
-                  <Heart className="h-4 w-4" />
-                  Favorites
-                </Button>
-              </Link>
               <Link href="/recipes/create" className="w-full sm:w-auto">
                 <Button className="flex items-center gap-2 w-full sm:w-auto">
                   <Plus className="h-4 w-4" />

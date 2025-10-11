@@ -2,6 +2,13 @@ import Link from "next/link"
 import Image from "next/image"
 import { Heart, Mail, Instagram, Facebook } from "lucide-react"
 
+const navItems = [
+  { label: "Home", href: "/home" },
+  { label: "Meals", href: "/meals" },
+  { label: "My Recipes", href: "/recipes" },
+  { label: "Discover", href: "/discover" },
+];
+
 export function Footer() {
   return (
     <footer className="mt-16">
@@ -42,14 +49,11 @@ export function Footer() {
             <div className="space-y-4 flex flex-col items-center md:items-center">
               <h3 className="font-semibold text-base">Navigation</h3>
               <ul className="space-y-3 text-sm">
-                {["Home","Meals","Recipes","Favorites","Calendar"].map((item) => (
-                  <li key={item}>
-                    <Link
-                      href={`/${item.toLowerCase() === "home" ? "" : item.toLowerCase()}`}
-                      className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
-                    >
+                {navItems.map(({label, href}) => (
+                  <li key={label}>
+                    <Link href={href} className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
                       <span className="w-1 h-1 rounded-full bg-primary/50 group-hover:bg-primary transition-colors" />
-                      {item}
+                      {label}
                     </Link>
                   </li>
                 ))}

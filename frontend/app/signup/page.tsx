@@ -47,8 +47,7 @@ export default function SignupPage() {
       // 2) Auto-login para crear la sesión web y tener cookie de sesión
       await authApi.login({ email, password });
 
-      // 3) Redirigimos adonde quieras (home, dashboard, etc.)
-      router.push("/");
+      router.push("/home");
     } catch (err: any) {
       setFormError(err.message || "Error al registrarte.");
     } finally {
