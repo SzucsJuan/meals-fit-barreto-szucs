@@ -104,7 +104,7 @@ export default function AdminDashboard() {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link href="/admin/users">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-rose-200 dark:border-rose-900/30">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2">
@@ -120,7 +120,7 @@ export default function AdminDashboard() {
           </Link>
 
           <Link href="/admin/recipes">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-pink-200 dark:border-pink-900/30">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2">
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
           </Link>
 
           <Link href="/home">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-rose-200 dark:border-rose-900/30">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2">
