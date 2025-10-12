@@ -51,17 +51,6 @@ const users = [
   },
   {
     id: 3,
-    name: "Emma Davis",
-    email: "emma.d@example.com",
-    role: "moderator",
-    status: "active",
-    joinedDate: "2023-12-05",
-    recipesCreated: 34,
-    mealsLogged: 567,
-    lastActive: "2024-01-22",
-  },
-  {
-    id: 4,
     name: "John Smith",
     email: "john.s@example.com",
     role: "user",
@@ -72,7 +61,7 @@ const users = [
     lastActive: "2024-01-18",
   },
   {
-    id: 5,
+    id: 4,
     name: "Anonymous User",
     email: "anon@example.com",
     role: "user",
@@ -83,7 +72,7 @@ const users = [
     lastActive: "2024-01-22",
   },
   {
-    id: 6,
+    id: 5,
     name: "Admin User",
     email: "admin@example.com",
     role: "admin",
@@ -148,13 +137,6 @@ export default function AdminUsersPage() {
             Admin
           </Badge>
         )
-      case "moderator":
-        return (
-          <Badge variant="secondary" className="bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300">
-            <Shield className="h-3 w-3 mr-1" />
-            Moderator
-          </Badge>
-        )
       case "user":
         return <Badge variant="outline">User</Badge>
       default:
@@ -190,7 +172,7 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20">
+      <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -199,8 +181,8 @@ export default function AdminUsersPage() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
-              <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
-                <Users className="h-8 w-8 text-rose-600 dark:text-rose-400" />
+              <div className="p-2">
+                <Users className="h-8 w-8" style={{ color: "#FF9800" }} />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">User Management</h1>
@@ -236,7 +218,6 @@ export default function AdminUsersPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="moderator">Moderator</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
@@ -365,13 +346,6 @@ export default function AdminUsersPage() {
                 Admin
               </Button>
               <Button
-                variant={filterRole === "moderator" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterRole("moderator")}
-              >
-                Moderator
-              </Button>
-              <Button
                 variant={filterRole === "user" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterRole("user")}
@@ -489,7 +463,6 @@ export default function AdminUsersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="moderator">Moderator</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>

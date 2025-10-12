@@ -92,7 +92,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-background">
         <div className="w-full max-w-md space-y-8">
           <div className="space-y-2 text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-foreground">Sign in to your account</h2>
+            <h2 className="text-3xl font-bold text-foreground">Sign in and stay on track</h2>
             <p className="text-muted-foreground">
               Don't have an account?{" "}
               <Link href="/signup" className="text-primary hover:underline font-medium">
@@ -102,10 +102,6 @@ export default function LoginPage() {
           </div>
 
           <Card className="border-border">
-            <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-xl">Continue with</CardTitle>
-              <CardDescription>Or continue with email</CardDescription>
-            </CardHeader>
             <CardContent className="space-y-4">
               <form className="space-y-4" onSubmit={onSubmit} noValidate>
                 <div className="space-y-2">

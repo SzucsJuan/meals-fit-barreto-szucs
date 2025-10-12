@@ -181,7 +181,7 @@ export default function AdminRecipesPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20">
+      <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -190,8 +190,8 @@ export default function AdminRecipesPage() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
-              <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
-                <ChefHat className="h-8 w-8 text-pink-600 dark:text-pink-400" />
+              <div className="p-2">
+                <ChefHat className="h-8 w-8" style={{ color: "#FF9800" }} />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Recipe Management</h1>

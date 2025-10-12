@@ -19,10 +19,10 @@ const statsData = [
 ]
 
 const categoryDistribution = [
-  { name: "Breakfast", value: 892, color: "#ec4899" },
-  { name: "Lunch", value: 1234, color: "#be123c" },
-  { name: "Dinner", value: 1456, color: "#475569" },
-  { name: "Snacks", value: 310, color: "#f472b6" },
+  { name: "Breakfast", value: 892, color: "#FFD54F" },
+  { name: "Lunch", value: 1234, color: "#FF9800" },
+  { name: "Dinner", value: 1456, color: "#388E3C" },
+  { name: "Snacks", value: 310, color: "#A5D6A7" },
 ]
 
 export default function AdminDashboard() {
@@ -30,19 +30,19 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20">
+      <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
-                <Shield className="h-8 w-8 text-rose-600 dark:text-rose-400" />
+              <div className="p-2 rounded-lg">
+                <Shield className="h-8 w-8" style={{ color: "#FF9800" }} />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
                 <p className="text-muted-foreground">Manage your nutrition and fitness platform</p>
               </div>
             </div>
-            <Badge variant="secondary" className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
+            <Badge variant="secondary" style={{ color: "#4caf50" }}>
               Administrator
             </Badge>
           </div>
@@ -107,8 +107,8 @@ export default function AdminDashboard() {
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-rose-200 dark:border-rose-900/30">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
-                    <Users className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                  <div className="p-2">
+                    <Users className="h-5 w-5" style={{ color: "#FF9800" }} />
                   </div>
                   <div>
                     <CardTitle className="text-base">User Management</CardTitle>
@@ -123,8 +123,8 @@ export default function AdminDashboard() {
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-pink-200 dark:border-pink-900/30">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
-                    <ChefHat className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                  <div className="p-2">
+                    <ChefHat className="h-5 w-5" style={{ color: "#FF9800" }} />
                   </div>
                   <div>
                     <CardTitle className="text-base">Recipe Management</CardTitle>
@@ -135,12 +135,12 @@ export default function AdminDashboard() {
             </Card>
           </Link>
 
-          <Link href="/">
+          <Link href="/home">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-rose-200 dark:border-rose-900/30">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
-                    <EggFried className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                  <div className="p-2">
+                    <EggFried className="h-5 w-5" style={{ color: "#FF9800" }}/>
                   </div>
                   <div>
                     <CardTitle className="text-base">Back to App</CardTitle>
@@ -167,8 +167,8 @@ export default function AdminDashboard() {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="users" fill="#ec4899" name="New Users" />
-                    <Bar dataKey="recipes" fill="#be123c" name="New Recipes" />
+                    <Bar dataKey="users" fill="#4CAF50" name="New Users" />
+                    <Bar dataKey="recipes" fill="#FF9800" name="New Recipes" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                   </Link>
                 </div>
 
-                <div className="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/30 rounded-lg">
+                <div className="p-3 mt-8 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/30 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium">2 User reports to review</p>
                     <Badge
@@ -301,23 +301,6 @@ export default function AdminDashboard() {
                   <Link href="/admin/users?filter=reported">
                     <Button size="sm" variant="outline" className="w-full bg-transparent">
                       View Reports
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/30 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium">5 New community posts</p>
-                    <Badge
-                      variant="secondary"
-                      className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                    >
-                      New
-                    </Badge>
-                  </div>
-                  <Link href="/admin/content?filter=community">
-                    <Button size="sm" variant="outline" className="w-full bg-transparent">
-                      Moderate Posts
                     </Button>
                   </Link>
                 </div>
