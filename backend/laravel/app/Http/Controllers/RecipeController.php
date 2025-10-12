@@ -16,7 +16,6 @@ class RecipeController extends Controller
         $this->recipes = $recipes;
     }
 
-    // GET /api/recipes?q=&per_page=&order=
     public function index(Request $request)
 {
     $q       = trim((string) $request->query('q', ''));
@@ -62,7 +61,7 @@ class RecipeController extends Controller
 }
 
     // GET
-public function show(Recipe $recipe, Request $request)
+    public function show(Recipe $recipe, Request $request)
 {
     $isOwner = $recipe->user_id === $request->user()->id;
     abort_unless($recipe->visibility === 'public' || $isOwner, 404);

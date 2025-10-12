@@ -4,7 +4,13 @@ export interface RecipeListItem {
   id: number;
   title: string;
   description: string | null;
-  image_url: string | null; // ojo: será null si los accessors están comentados en el model
+  image_disk: string | null;
+  image_path: string | null;
+  image_thumb_path: string | null;
+  image_webp_path: string | null;
+  image_width: number | null;
+  image_height: number | null;
+
   servings: number;
   calories: number;
   protein: number;
@@ -16,7 +22,6 @@ export interface RecipeListItem {
   votes_count?: number;
   favorited_by_count?: number;
   user?: { id: number; name: string };
-  // ingredients?: { id: number; name: string }[];
 }
 
 export function useRecipes(search: string, order: string = "latest") {
@@ -36,7 +41,7 @@ export function useRecipes(search: string, order: string = "latest") {
 
     fetch(url.toString(), {
       signal: ctrl.signal,
-      credentials: "include",              // ⬅️ importante para Sanctum
+      credentials: "include",              
       headers: { Accept: "application/json" },
     })
       .then(async (r) => {
@@ -70,7 +75,7 @@ export function useRecipe(id: number | string | null) {
 
     fetch(url, {
       signal: ctrl.signal,
-      credentials: "include",              // ⬅️ también acá
+      credentials: "include",              
       headers: { Accept: "application/json" },
     })
       .then(async (r) => {

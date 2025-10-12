@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useRecipes } from "@/lib/useRecipes";
 import RequireAuth from "@/components/RequireAuth";
 import Navigation from "@/components/navigation"
+import { getRecipeImageUrl } from "@/lib/image";
 
 export default function RecipesPage() {
   const [search, setSearch] = useState("");
@@ -65,7 +66,11 @@ export default function RecipesPage() {
               return (
                 <Card key={r.id} className="hover:shadow-lg transition-shadow overflow-hidden">
                   <div className="relative">
-                    <img src={r.image_url || "/placeholder.svg"} alt={r.title} className="w-full h-48 object-cover" />
+                    <img
+                      src={getRecipeImageUrl(r) || "/placeholder.svg"}
+                      alt={r.title}
+                      className="w-full h-48 object-cover"
+                    />
                     <Badge variant="secondary" className="absolute bottom-2 left-2 bg-white/90">
                       Public
                     </Badge>

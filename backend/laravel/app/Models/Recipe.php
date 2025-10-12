@@ -26,10 +26,6 @@ class Recipe extends Model
         'image_width' => 'integer', 'image_height' => 'integer',
     ];
 
-    // Exponer URLs derivadas automáticamente en la API
-    protected $appends = ['image_url', 'image_thumb_url', 'image_webp_url'];
-
-    /** Relaciones **/
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
 
     public function ingredients(): BelongsToMany
@@ -160,26 +156,4 @@ class Recipe extends Model
 
         return $slug;
     }
-
-    /* ============================= */
-    /* ======= ACCESSORS URL ======= */
-    /* ============================= */
-
-    // public function getImageUrlAttribute(): ?string
-    // {
-    //     if (!$this->image_disk || !$this->image_path) return null;
-    //     return Storage::disk($this->image_disk)->url($this->image_path);
-    // }
-
-    // public function getImageThumbUrlAttribute(): ?string
-    // {
-    //     if (!$this->image_disk || !$this->image_thumb_path) return null;
-    //     return Storage::disk($this->image_disk)->url($this->image_thumb_path);
-    // }
-
-    // public function getImageWebpUrlAttribute(): ?string
-    // {
-    //     if (!$this->image_disk || !$this->image_webp_path) return null;
-    //     return Storage::disk($this->image_disk)->url($this->image_webp_path);
-    // }
 }
