@@ -1,37 +1,57 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { RecipeDetail } from "./type";
-import { s } from "./sanitize";
+import { useEffect, useState } from "react";
+import { RecipeDetail } from "./type"; // ajustá el path a tu type.ts
 
-export function detailRecipe(id: string) {
+type State = {
+  data: RecipeDetail | null;
+  loading: boolean;
+  error: string | null;
+};
+
+const API =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+
+export function detailRecipe(id: string | number): State {
   const [data, setData] = useState<RecipeDetail | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refetch = useCallback(() => {
-    if (!id) return;
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    let cancelled = false;
 
-    const safeId = s.text(id, 100);
-    const url = `${
-      process.env.NEXT_PUBLIC_API_BASE_URL
-    }/api/recipes/${encodeURIComponent(safeId)}`;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    fetch(url)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(setData)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+        const res = await fetch(`${API}/api/recipes/${id}`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          throw new Error(
+            `HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`
+          );
+        }
+
+        const json = (await res.json()) as RecipeDetail;
+        if (!cancelled) setData(json);
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message ?? "Error fetching recipe");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { data, loading, error, refetch };
+  return { data, loading, error };
 }
