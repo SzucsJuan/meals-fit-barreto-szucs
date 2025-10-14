@@ -25,6 +25,7 @@ class RecipeController extends Controller
 
     $query = Recipe::query()
         ->with(['user:id,name', 'ingredients:id,name'])
+        ->withIsFavorited(optional(auth()->user())->id)
         ->withAvg('votes as avg_rating', 'rating')
         ->withCount(['votes', 'favoritedBy'])
         // públicas o del dueño
@@ -61,14 +62,24 @@ class RecipeController extends Controller
 }
 
     // GET
-    public function show(Recipe $recipe, Request $request)
+public function show(Recipe $recipe, Request $request)
 {
-    $isOwner = $recipe->user_id === $request->user()->id;
+    // evitar error si no hay sesión (recetas públicas)
+    $userId  = optional($request->user())->id;
+    $isOwner = $recipe->user_id === $userId;
+
     abort_unless($recipe->visibility === 'public' || $isOwner, 404);
 
-    return $recipe->load(['user:id,name', 'ingredients:id,name'])
-        ->loadCount(['votes', 'favoritedBy'])
-        ->loadAvg('votes as avg_rating', 'rating');
+    // IMPORTANTE: reconsultamos para poder aplicar el scope con el select extra
+    $recipe = \App\Models\Recipe::query()
+        ->whereKey($recipe->id)
+        ->withIsFavorited($userId)                  // <-- agrega la columna is_favorited
+        ->with(['user:id,name', 'ingredients:id,name'])
+        ->withCount(['votes', 'favoritedBy'])       // usa el nombre real de tu relación (favoritedBy o favoredBy)
+        ->withAvg('votes as avg_rating', 'rating')
+        ->firstOrFail();
+
+    return response()->json($recipe);
 }
 
     // POST

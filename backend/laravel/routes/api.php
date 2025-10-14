@@ -28,6 +28,12 @@ Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no
 
     Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show', 'store']);
 
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/recipes/{recipe}/favorite', [FavoriteController::class, 'store'])
+    ->whereNumber('recipe');
+    Route::delete('/recipes/{recipe}/favorite', [FavoriteController::class, 'destroy'])
+    ->whereNumber('recipe');
+
     Route::apiResource('meals', MealLogController::class)->only(['index', 'show', 'store']);
     Route::apiResource('meal-details', MealDetailController::class)->only(['destroy', 'update']);
     Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');

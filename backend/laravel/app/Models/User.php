@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Recipe;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
@@ -43,9 +44,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Recipe::class);
     }
-    public function favorites(): BelongsToMany
+    public function favorites()
     {
-        return $this->belongsToMany(Recipe::class, 'favorites')->withTimestamps();
+        return $this->belongsToMany(Recipe::class, 'favorites')
+            ->withPivot('created_at'); // sin ->using()
     }
 
     public function votes(): HasMany

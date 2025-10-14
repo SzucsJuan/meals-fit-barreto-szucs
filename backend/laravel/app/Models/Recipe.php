@@ -44,9 +44,23 @@ class Recipe extends Model
 
     public function votes(): HasMany { return $this->hasMany(Vote::class); }
 
-    public function favoritedBy(): BelongsToMany
+    public function favoredBy()
     {
-        return $this->belongsToMany(User::class, 'favorites')->withTimestamps();
+        return $this->belongsToMany(\App\Models\User::class, 'favorites')
+            ->withPivot('created_at'); 
+    }
+
+        public function scopeWithIsFavorited($query, ?int $userId)
+    {
+        return $query->when($userId, function ($q) use ($userId) {
+            $q->addSelect([
+                'is_favorited' => \App\Models\Favorite::query()
+                ->selectRaw('1')
+                ->whereColumn('favorites.recipe_id', 'recipes.id')
+                ->where('favorites.user_id', $userId)
+                ->limit(1)
+        ]);
+        });
     }
 
     public function scopePublic($q){ return $q->where('visibility','public'); }
