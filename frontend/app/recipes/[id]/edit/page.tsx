@@ -19,7 +19,7 @@ import { s } from "@/lib/sanitize";
 
 export default function EditRecipePage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { data: recipe, loading, error, refetch } = detailRecipe(params.id);
+  const { data: recipe, loading, error } = detailRecipe(params.id);
   const { data: ingredientOptions } = useIngredients("");
   const { updateRecipe, loading: saving, error: saveError } = useUpdateRecipe();
 
