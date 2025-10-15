@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\{
-    BelongsTo, BelongsToMany, HasMany
+    BelongsTo,
+    BelongsToMany,
+    HasMany
 };
 use InvalidArgumentException;
 use Illuminate\Support\Facades\Storage;
@@ -13,26 +15,48 @@ use Illuminate\Support\Facades\Storage;
 class Recipe extends Model
 {
     protected $fillable = [
-        'user_id','title','slug','description','steps','visibility',
-        'servings','prep_time_minutes','cook_time_minutes',
-        'image_disk','image_path','image_thumb_path','image_webp_path',
-        'image_width','image_height',
-        'calories','protein','carbs','fat'
+        'user_id',
+        'title',
+        'slug',
+        'description',
+        'steps',
+        'visibility',
+        'servings',
+        'prep_time_minutes',
+        'cook_time_minutes',
+        'image_disk',
+        'image_path',
+        'image_thumb_path',
+        'image_webp_path',
+        'image_width',
+        'image_height',
+        'calories',
+        'protein',
+        'carbs',
+        'fat'
     ];
 
     protected $casts = [
-        'calories' => 'float', 'protein' => 'float', 'carbs' => 'float', 'fat' => 'float',
-        'servings' => 'integer',
-        'image_width' => 'integer', 'image_height' => 'integer',
+        'calories'      => 'float',
+        'protein'       => 'float',
+        'carbs'         => 'float',
+        'fat'           => 'float',
+        'servings'      => 'integer',
+        'image_width'   => 'integer',
+        'image_height'  => 'integer',
+        'is_favorited'  => 'boolean',
     ];
 
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function ingredients(): BelongsToMany
     {
         return $this->belongsToMany(Ingredient::class, 'recipe_ingredient')
             ->using(RecipeIngredient::class)
-            ->withPivot(['quantity','unit','notes'])
+            ->withPivot(['quantity', 'unit', 'notes'])
             ->withTimestamps();
     }
 
@@ -42,30 +66,42 @@ class Recipe extends Model
             ->withPivot('rating')->withTimestamps();
     }
 
-    public function votes(): HasMany { return $this->hasMany(Vote::class); }
+    public function votes(): HasMany
+    {
+        return $this->hasMany(Vote::class);
+    }
 
     public function favoredBy()
     {
-        return $this->belongsToMany(\App\Models\User::class, 'favorites')
-            ->withPivot('created_at'); 
+        return $this->belongsToMany(User::class, 'favorites')
+            ->withPivot('created_at');
     }
 
-        public function scopeWithIsFavorited($query, ?int $userId)
+    public function scopeWithIsFavorited($query, ?int $userId)
     {
         return $query->when($userId, function ($q) use ($userId) {
             $q->addSelect([
                 'is_favorited' => \App\Models\Favorite::query()
-                ->selectRaw('1')
-                ->whereColumn('favorites.recipe_id', 'recipes.id')
-                ->where('favorites.user_id', $userId)
-                ->limit(1)
-        ]);
+                    ->selectRaw('1')
+                    ->whereColumn('favorites.recipe_id', 'recipes.id')
+                    ->where('favorites.user_id', $userId)
+                    ->limit(1)
+            ]);
         });
     }
 
-    public function scopePublic($q){ return $q->where('visibility','public'); }
-    public function scopeUnlisted($q){ return $q->where('visibility','unlisted'); }
-    public function scopePrivate($q){ return $q->where('visibility','private'); }
+    public function scopePublic($q)
+    {
+        return $q->where('visibility', 'public');
+    }
+    public function scopeUnlisted($q)
+    {
+        return $q->where('visibility', 'unlisted');
+    }
+    public function scopePrivate($q)
+    {
+        return $q->where('visibility', 'private');
+    }
 
     public function averageRating(): float
     {
@@ -78,40 +114,44 @@ class Recipe extends Model
 
     public function calculateMacros(bool $perServing = false, bool $ignoreUnitMismatch = false): array
     {
-        $this->loadMissing(['ingredients' => function ($q) {
-            $q->select('ingredients.id','name','serving_size','serving_unit','calories','protein','carbs','fat');
-        }]);
+        $this->loadMissing([
+            'ingredients' => function ($q) {
+                $q->select('ingredients.id', 'name', 'serving_size', 'serving_unit', 'calories', 'protein', 'carbs', 'fat');
+            }
+        ]);
 
-        $totals = ['calories'=>0.0,'protein'=>0.0,'carbs'=>0.0,'fat'=>0.0];
+        $totals = ['calories' => 0.0, 'protein' => 0.0, 'carbs' => 0.0, 'fat' => 0.0];
 
         foreach ($this->ingredients as $ing) {
-            $qty  = (float) ($ing->pivot->quantity ?? 0);
+            $qty = (float) ($ing->pivot->quantity ?? 0);
             $unit = (string) ($ing->pivot->unit ?? '');
 
             if ($unit !== $ing->serving_unit) {
-                if ($ignoreUnitMismatch) continue;
+                if ($ignoreUnitMismatch)
+                    continue;
                 throw new InvalidArgumentException(
                     "Unidad incompatible para {$ing->name}: en receta '{$unit}' vs ingrediente '{$ing->serving_unit}'"
                 );
             }
 
             $serving = (float) ($ing->serving_size ?: 1.0);
-            $factor  = $qty / $serving;
+            $factor = $qty / $serving;
 
-            $totals['calories'] += (float)$ing->calories * $factor;
-            $totals['protein']  += (float)$ing->protein  * $factor;
-            $totals['carbs']    += (float)$ing->carbs    * $factor;
-            $totals['fat']      += (float)$ing->fat      * $factor;
+            $totals['calories'] += (float) $ing->calories * $factor;
+            $totals['protein'] += (float) $ing->protein * $factor;
+            $totals['carbs'] += (float) $ing->carbs * $factor;
+            $totals['fat'] += (float) $ing->fat * $factor;
         }
 
-        if ($perServing && (int)$this->servings > 0) {
-            $totals['calories'] /= (int)$this->servings;
-            $totals['protein']  /= (int)$this->servings;
-            $totals['carbs']    /= (int)$this->servings;
-            $totals['fat']      /= (int)$this->servings;
+        if ($perServing && (int) $this->servings > 0) {
+            $totals['calories'] /= (int) $this->servings;
+            $totals['protein'] /= (int) $this->servings;
+            $totals['carbs'] /= (int) $this->servings;
+            $totals['fat'] /= (int) $this->servings;
         }
 
-        foreach ($totals as $k => $v) $totals[$k] = round((float)$v, 2);
+        foreach ($totals as $k => $v)
+            $totals[$k] = round((float) $v, 2);
         return $totals;
     }
 
@@ -129,7 +169,8 @@ class Recipe extends Model
     protected static function booted(): void
     {
         static::creating(function (Recipe $recipe) {
-            if (empty($recipe->slug)) $recipe->slug = static::makeUniqueSlug($recipe->title);
+            if (empty($recipe->slug))
+                $recipe->slug = static::makeUniqueSlug($recipe->title);
         });
 
         static::updating(function (Recipe $recipe) {
@@ -142,9 +183,10 @@ class Recipe extends Model
 
         // 🧹 Al borrar la receta, eliminar archivos asociados del storage
         static::deleting(function (Recipe $recipe) {
-            if (!$recipe->image_disk) return;
+            if (!$recipe->image_disk)
+                return;
             $disk = $recipe->image_disk;
-            foreach (['image_path','image_thumb_path','image_webp_path'] as $col) {
+            foreach (['image_path', 'image_thumb_path', 'image_webp_path'] as $col) {
                 $p = $recipe->{$col};
                 if ($p && Storage::disk($disk)->exists($p)) {
                     Storage::disk($disk)->delete($p);
@@ -156,7 +198,8 @@ class Recipe extends Model
     protected static function makeUniqueSlug(string $title, ?int $ignoreId = null): string
     {
         $base = Str::slug($title) ?: 'recipe';
-        $slug = $base; $i = 1;
+        $slug = $base;
+        $i = 1;
 
         while (
             static::query()

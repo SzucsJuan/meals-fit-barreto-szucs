@@ -9,6 +9,7 @@ import { Heart, Search, Clock, Users, Plus, Trash2, Binoculars } from "lucide-re
 import Link from "next/link"
 import Navigation from "@/components/navigation"
 import RequireAuth from "@/components/RequireAuth";   
+import FavoriteButton from "@/components/FavoriteButton";
 
 // Sample favorite recipes data
 const favoriteRecipes = [
@@ -157,11 +158,6 @@ export default function DiscoverPage() {
       }
     })
 
-  const handleRemoveFromFavorites = (recipeId: number) => {
-    // Here you would typically update the database
-    console.log("Removing recipe from favorites:", recipeId)
-  }
-
   const totalFavorites = favoriteRecipes.length
   const avgCalories = Math.round(favoriteRecipes.reduce((sum, recipe) => sum + recipe.calories, 0) / totalFavorites)
 
@@ -240,12 +236,21 @@ export default function DiscoverPage() {
                       className="w-full h-48 object-cover"
                     />
                     <Button
+                      asChild
+                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                       variant="ghost"
                       size="sm"
-                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                      onClick={() => handleRemoveFromFavorites(recipe.id)}
                     >
-                      <Heart className="h-4 w-4 text-destructive" />
+                      <span>
+                        <FavoriteButton
+                          recipeId={recipe.id}
+                          initialFavorited={false /* si tu list viene con is_favorited, ponelo aquí */}
+                          onChange={(isFav) => {
+                            // opcional: actualizar tu UI localmente (contadores, etc.)
+                            // p.ej. mostrar un toast “Agregado a favoritos”
+                          }}
+                        />
+                      </span>
                     </Button>
                     <Badge variant="secondary" className="absolute bottom-2 left-2 bg-white/90">
                       {recipe.category}
