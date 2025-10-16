@@ -11,7 +11,6 @@ import Navigation from "@/components/navigation"
 import RequireAuth from "@/components/RequireAuth";   
 import FavoriteButton from "@/components/FavoriteButton";
 
-// Sample favorite recipes data
 const favoriteRecipes = [
   {
     id: 1,
@@ -28,108 +27,6 @@ const favoriteRecipes = [
     difficulty: "Easy",
     dateAdded: "2024-01-10",
     timesUsed: 12,
-  },
-  {
-    id: 2,
-    name: "Grilled Chicken Salad",
-    description: "Fresh mixed greens with grilled chicken and avocado",
-    image: "/grilled-chicken-avocado-salad.png",
-    prepTime: "25 min",
-    servings: 2,
-    calories: 450,
-    protein: 35,
-    carbs: 12,
-    fats: 28,
-    category: "Lunch",
-    difficulty: "Medium",
-    dateAdded: "2024-01-08",
-    timesUsed: 8,
-  },
-  {
-    id: 3,
-    name: "Quinoa Power Bowl",
-    description: "Nutrient-dense bowl with quinoa, roasted vegetables, and tahini",
-    image: "/quinoa-power-bowl-with-roasted-vegetables.png",
-    prepTime: "35 min",
-    servings: 2,
-    calories: 520,
-    protein: 18,
-    carbs: 65,
-    fats: 22,
-    category: "Dinner",
-    difficulty: "Medium",
-    dateAdded: "2024-01-05",
-    timesUsed: 6,
-  },
-  {
-    id: 4,
-    name: "Greek Yogurt Parfait",
-    description: "Layered parfait with Greek yogurt, honey, and nuts",
-    image: "/greek-yogurt-parfait-with-berries-and-nuts.png",
-    prepTime: "5 min",
-    servings: 1,
-    calories: 280,
-    protein: 20,
-    carbs: 25,
-    fats: 8,
-    category: "Snack",
-    difficulty: "Easy",
-    dateAdded: "2024-01-12",
-    timesUsed: 15,
-  },
-  {
-    id: 5,
-    name: "Overnight Oats",
-    description: "Creamy overnight oats with chia seeds and fresh fruit",
-    image: "/overnight-oats-berries.png",
-    prepTime: "5 min",
-    servings: 1,
-    calories: 350,
-    protein: 12,
-    carbs: 58,
-    fats: 8,
-    category: "Breakfast",
-    difficulty: "Easy",
-    dateAdded: "2024-01-14",
-    timesUsed: 9,
-  },
-  {
-    id: 6,
-    name: "Salmon with Sweet Potato",
-    description: "Baked salmon with roasted sweet potato and asparagus",
-    image: "/baked-salmon-sweet-potato.png",
-    prepTime: "30 min",
-    servings: 1,
-    calories: 480,
-    protein: 35,
-    carbs: 32,
-    fats: 22,
-    category: "Dinner",
-    difficulty: "Medium",
-    dateAdded: "2024-01-07",
-    timesUsed: 5,
-  },
-]
-
-// Sample favorite meal combinations
-const favoriteMealCombos = [
-  {
-    id: 1,
-    name: "High Protein Day",
-    description: "Perfect for strength training days",
-    meals: ["Protein Smoothie Bowl", "Grilled Chicken Salad", "Salmon with Sweet Potato"],
-    totalCalories: 1250,
-    totalProtein: 95,
-    timesUsed: 4,
-  },
-  {
-    id: 2,
-    name: "Quick & Easy",
-    description: "Minimal prep time meals",
-    meals: ["Greek Yogurt Parfait", "Overnight Oats", "Quinoa Power Bowl"],
-    totalCalories: 1150,
-    totalProtein: 50,
-    timesUsed: 7,
   },
 ]
 
@@ -178,8 +75,8 @@ export default function DiscoverPage() {
                 <p className="text-muted-foreground">Explore unique community creations and find inspiration for your next meal</p>
               </div>
             </div>
-            <Link href="/home">
-              <Button variant="outline">Back to Home</Button>
+            <Link href="/recipes">
+              <Button variant="outline">Back to Recipes</Button>
             </Link>
           </div>
         </div>
@@ -295,17 +192,17 @@ export default function DiscoverPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Link href={`/recipes/${recipe.id}`} className="flex-1">
-                        <Button variant="outline" className="w-full bg-transparent" size="sm">
-                          View Recipe
-                        </Button>
-                      </Link>
-                      <Link href="/meals/add">
-                        <Button size="sm">
-                          <Plus className="h-4 w-4 mr-1" />
-                          Log
-                        </Button>
-                      </Link>
+                    <Link href={`/discover/${recipe.id}`} className="flex-1">
+                      <Button variant="outline" className="w-full bg-transparent" size="sm">
+                        View Recipe
+                      </Button>
+                    </Link>
+                    <Link href={`/meals/add?recipeId=${recipe.id}`}>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-1" />
+                        Log
+                      </Button>
+                    </Link>
                     </div>
                   </CardContent>
                 </Card>

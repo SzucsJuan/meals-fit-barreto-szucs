@@ -15,11 +15,13 @@ class FavoriteController extends Controller
         /** @var \App\Models\User $user */
         $user = $request->user(); // idéntico a Auth::user(), pero tipa mejor
 
+        $perPage = (int) $request->query('per_page', 12);
+
         $recipes = $user->favorites()
             ->select('recipes.*')
             ->with(['user:id,name'])
             ->orderBy('favorites.created_at', 'desc') // OK
-            ->paginate($request->integer('per_page', 12));
+            ->paginate($perPage);
 
         $recipes->getCollection()->transform(function ($r) {
             $r->is_favorited = true;

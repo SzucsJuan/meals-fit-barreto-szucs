@@ -1,127 +1,352 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ChefHat, Plus, Search, Clock, Users, Heart } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { useState } from "react";
-import { useRecipes } from "@/lib/useRecipes";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { Clock, Users, Plus, ChefHat } from "lucide-react";
+
 import RequireAuth from "@/components/RequireAuth";
-import Navigation from "@/components/navigation"
-import { getRecipeImageUrl } from "@/lib/image";
+import Navigation from "@/components/navigation";
+import FavoriteButton from "@/components/FavoriteButton";
+
+import { useMyRecipes } from "@/lib/useMyRecipes";
+import { useMyFavorites } from "@/lib/useMyFavorites";
+
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+function Pagination({
+  current,
+  last,
+  onPrev,
+  onNext,
+}: {
+  current: number;
+  last: number;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  if (!last || last <= 1) return null;
+  return (
+    <div className="flex items-center justify-center gap-2 mt-8">
+      <Button variant="outline" onClick={onPrev} disabled={current <= 1}>
+        Prev
+      </Button>
+      <span className="text-sm text-muted-foreground">
+        Page {current} of {last}
+      </span>
+      <Button variant="outline" onClick={onNext} disabled={current >= last}>
+        Next
+      </Button>
+    </div>
+  );
+}
+
+type OnFavChange = (recipe: any, isFav: boolean) => void;
+
+function RecipeGrid({
+  items,
+  emptyText,
+  onFavChange,
+}: {
+  items: any[];
+  emptyText: string;
+  onFavChange?: (recipe: any, isFav: boolean) => void;
+}) {
+  if (!items?.length) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center">
+          <CardTitle className="mb-2">No recipes</CardTitle>
+          <CardDescription>{emptyText}</CardDescription>
+          <div className="mt-4">
+            <Link href="/discover">
+              <Button>Go to Discover</Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {items.map((r: any) => (
+        <Card key={r.id} className="overflow-hidden hover:shadow">
+          <div className="relative">
+            <img
+              src={r.image_url || "/placeholder.svg"}
+              alt={r.title}
+              className="w-full h-48 object-cover"
+            />
+            <FavoriteButton
+              key={`${r.id}-${r.is_favorited ? "1" : "0"}`} // 🔁 remount si cambia fav
+              recipeId={r.id}
+              initialFavorited={Boolean(r.is_favorited)}
+              className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+              onChange={(isFav) => onFavChange?.(r, isFav)} // ✅ mantiene sincronización
+            />
+          </div>
+
+          <CardHeader>
+            <CardTitle className="text-lg">{r.title}</CardTitle>
+            <CardDescription className="text-sm line-clamp-2">
+              {r.description}
+            </CardDescription>
+
+            {/* --- INFO: tiempo + porciones --- */}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                {r.prep_time_minutes ?? 0} min
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                {r.servings ?? 1} serving{(r.servings ?? 1) > 1 ? "s" : ""}
+              </div>
+            </div>
+
+            {/* --- MACROS --- */}
+            <div className="grid grid-cols-4 gap-2 text-xs mt-3">
+              <div className="text-center">
+                <div className="font-semibold text-foreground">
+                  {Math.round(r.calories ?? 0)}
+                </div>
+                <div className="text-muted-foreground">cal</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-foreground">
+                  {Math.round(r.protein ?? 0)}g
+                </div>
+                <div className="text-muted-foreground">protein</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-foreground">
+                  {Math.round(r.carbs ?? 0)}g
+                </div>
+                <div className="text-muted-foreground">carbs</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-foreground">
+                  {Math.round(r.fat ?? 0)}g
+                </div>
+                <div className="text-muted-foreground">fats</div>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="flex gap-2">
+            <Link href={`/recipes/${r.id}`} className="flex-1">
+              <Button variant="outline" className="w-full">
+                View
+              </Button>
+            </Link>
+            <Link href={`/meals/add?fromRecipe=${r.id}`}>
+              <Button className="flex items-center gap-1">
+                <Plus className="h-4 w-4" />
+                Log
+              </Button>
+            </Link>
+            <Link href={`/recipes/${r.id}/edit`}>
+              <Button>Edit</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default function RecipesPage() {
-  const [search, setSearch] = useState("");
-  const { data: recipes, loading, error } = useRecipes(search);
+  const router = useRouter();
+  const sp = useSearchParams();
+
+  // tab actual (mine | fav)
+  const tab = sp.get("tab") === "fav" ? "fav" : "mine";
+
+  // paginación independiente por tab
+  const pageMine = Math.max(1, Number(sp.get("pageMine") || 1));
+  const pageFav = Math.max(1, Number(sp.get("pageFav") || 1));
+
+  const perPage = 12;
+
+  const { data: myRecipes, meta: metaMine, loading: loadingMine, error: errMine } =
+    useMyRecipes(perPage, pageMine);
+
+  const { data: favs, meta: metaFav, loading: loadingFav, error: errFav } =
+    useMyFavorites(perPage, pageFav);
+
+  interface PaginationMeta {
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+  }
+
+  // Estados locales sincronizados con el fetch
+  const [favData, setFavData] = useState<any[]>([]);
+  const [favMeta, setFavMeta] = useState<PaginationMeta | null>(null);
+
+  const [myData, setMyData] = useState<any[]>([]);
+  const [myMeta, setMyMeta] = useState<PaginationMeta | null>(null);
+
+  useEffect(() => {
+    setMyData(myRecipes ?? []);
+    setMyMeta(metaMine ?? null);
+  }, [myRecipes, metaMine]);
+
+  useEffect(() => {
+    setFavData(favs ?? []);
+    setFavMeta(metaFav ?? null);
+  }, [favs, metaFav]);
+
+  const setQuery = (patch: Record<string, string>) => {
+    const next = new URLSearchParams(sp);
+    Object.entries(patch).forEach(([k, v]) => next.set(k, v));
+    router.push(`/recipes?${next.toString()}`);
+  };
+
+  const onChangeTab = (value: string) => {
+    setQuery({ tab: value, ...(value === "mine" ? { pageMine: "1" } : { pageFav: "1" }) });
+  };
+
+  // helpers de sincronización entre tabs
+  function updateMyDataById(id: number, isFav: boolean) {
+    setMyData((prev) => prev.map((r) => (r.id === id ? { ...r, is_favorited: isFav } : r)));
+  }
+
+  function addToFavIfNeeded(recipe: any) {
+    setFavData((prev) => {
+      if (prev.some((x) => x.id === recipe.id)) return prev;
+      // si estamos en la página 1, lo mostramos arriba
+      if ((favMeta?.current_page ?? 1) === 1) return [{ ...recipe, is_favorited: true }, ...prev];
+      return prev;
+    });
+    setFavMeta((m) => (m ? { ...m, total: (m.total ?? 0) + 1 } : m));
+  }
+
+  function removeFromFavIfPresent(id: number) {
+    setFavData((prev) => {
+      const next = prev.filter((x) => x.id !== id);
+      // si queda vacía la página y hay anteriores, navegamos a la previa
+      if (next.length === 0 && (favMeta?.current_page ?? 1) > 1) {
+        setQuery({ tab: "fav", pageFav: String((favMeta!.current_page as number) - 1) });
+      }
+      return next;
+    });
+    setFavMeta((m) => (m ? { ...m, total: Math.max(0, (m.total ?? 0) - 1) } : m));
+  }
+
+  // callback central: sincroniza ambas listas
+  function handleFavoriteChange(recipe: any, isFav: boolean) {
+    // 1) reflejar en “Creadas por mí” si esa receta está en esa lista
+    updateMyDataById(recipe.id, isFav);
+
+    // 2) actualizar la lista de “Favoritos”
+    if (isFav) addToFavIfNeeded(recipe);
+    else removeFromFavIfPresent(recipe.id);
+  }
 
   return (
     <RequireAuth>
       <div className="min-h-screen bg-background">
         <Navigation />
-        {/* Header */}
-        <div className="border-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <ChefHat className="h-8 w-8" style={{ color: "#FF9800" }} />
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Collection</h1>
-                  <p className="text-muted-foreground">Find your favorite recipes</p>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <Link href="/recipes/create" className="w-full sm:w-auto">
-                  <Button className="flex items-center gap-2 w-full sm:w-auto">
-                    <Plus className="h-4 w-4" />
-                    Create Recipe
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Search */}
-          <div className="flex flex-col gap-4 mb-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search recipes..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border border-gray-300 focus-visible:border-[#F7D86C] focus-visible:ring-[#FF9800]/50 pl-10"
-              />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <ChefHat className="h-8 w-8" style={{ color: "#FF9800" }} />
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">My Recipes</h1>
+                <p className="text-muted-foreground">Manage your recipes</p>
+              </div>
             </div>
+            <Link href="/recipes/create">
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create Recipe
+              </Button>
+            </Link>
           </div>
 
-          {loading && <div className="text-sm text-muted-foreground">Loading...</div>}
-          {error && <div className="text-sm text-red-600">Error: {error}</div>}
+          <Tabs value={tab} onValueChange={onChangeTab} className="w-full">
+            <TabsList>
+              <TabsTrigger value="mine">Created by me</TabsTrigger>
+              <TabsTrigger value="fav">My Favorites</TabsTrigger>
+            </TabsList>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {recipes.map((r) => {
-              const totalMinutes = (r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0);
-              return (
-                <Card key={r.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-                  <div className="relative">
-                    <img
-                      src={getRecipeImageUrl(r) || "/placeholder.svg"}
-                      alt={r.title}
-                      className="w-full h-48 object-cover"
-                    />
-                    <Badge variant="secondary" className="absolute bottom-2 left-2 bg-white/90">
-                      Public
-                    </Badge>
-                  </div>
+            {/* Tab: Creadas por mí */}
+            <TabsContent value="mine" className="mt-6">
+              {loadingMine && <div className="text-sm text-muted-foreground">Loading...</div>}
+              {errMine && <div className="text-sm text-red-600">Error: {errMine}</div>}
 
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">{r.title}</CardTitle>
-                    <CardDescription className="text-sm line-clamp-2">{r.description}</CardDescription>
-                  </CardHeader>
+              {!loadingMine && !errMine && (
+                <>
+                  <RecipeGrid
+                    items={myData}
+                    emptyText="You haven't created any recipes yet."
+                    onFavChange={handleFavoriteChange}
+                  />
 
-                  <CardContent className="pt-0">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {totalMinutes} min
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {r.servings} serving{r.servings > 1 ? "s" : ""}
-                      </div>
-                    </div>
+                  <Pagination
+                    current={myMeta?.current_page ?? 1}
+                    last={myMeta?.last_page ?? 1}
+                    onPrev={() =>
+                      setQuery({
+                        tab: "mine",
+                        pageMine: String(Math.max(1, (myMeta?.current_page ?? 1) - 1)),
+                      })
+                    }
+                    onNext={() =>
+                      setQuery({
+                        tab: "mine",
+                        pageMine: String(
+                          Math.min(myMeta?.last_page ?? 1, (myMeta?.current_page ?? 1) + 1)
+                        ),
+                      })
+                    }
+                  />
+                </>
+              )}
+            </TabsContent>
 
-                    <div className="grid grid-cols-4 gap-2 text-xs mb-4">
-                      <div className="text-center">
-                        <div className="font-semibold text-foreground">{Math.round(r.calories)}</div>
-                        <div className="text-muted-foreground">cal</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold text-foreground">{Math.round(r.protein)}g</div>
-                        <div className="text-muted-foreground">protein</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold text-foreground">{Math.round(r.carbs)}g</div>
-                        <div className="text-muted-foreground">carbs</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold text-foreground">{Math.round(r.fat)}g</div>
-                        <div className="text-muted-foreground">fats</div>
-                      </div>
-                    </div>
+            {/* Tab: Favoritos */}
+            <TabsContent value="fav" className="mt-6">
+              {loadingFav && <div className="text-sm text-muted-foreground">Loading...</div>}
+              {errFav && <div className="text-sm text-red-600">Error: {errFav}</div>}
 
-                    <Link href={`/recipes/${r.id}`}>
-                      <Button variant="outline" className="w-full bg-transparent">
-                        View Recipe
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+              {!loadingFav && !errFav && (
+                <>
+                  <RecipeGrid
+                    items={favData}
+                    emptyText="Add recipes to your favorites to see them here."
+                    onFavChange={handleFavoriteChange}
+                  />
+
+                  {/* Paginación usando meta local si existe */}
+                  <Pagination
+                    current={(favMeta?.current_page ?? 1)}
+                    last={(favMeta?.last_page ?? 1)}
+                    onPrev={() =>
+                      setQuery({
+                        tab: "fav",
+                        pageFav: String(Math.max(1, (favMeta?.current_page ?? 1) - 1)),
+                      })
+                    }
+                    onNext={() =>
+                      setQuery({
+                        tab: "fav",
+                        pageFav: String(
+                          Math.min(favMeta?.last_page ?? 1, (favMeta?.current_page ?? 1) + 1)
+                        ),
+                      })
+                    }
+                  />
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </RequireAuth>

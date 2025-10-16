@@ -44,6 +44,10 @@ class RecipeController extends Controller
             });
         }
 
+        if ($request->boolean('mine')) {
+            $query->where('user_id', $user->id);
+        }
+
         switch ($order) {
             case 'rating':
                 $query->orderByDesc('avg_rating')->orderByDesc('id');
@@ -70,12 +74,14 @@ class RecipeController extends Controller
 
         abort_unless($recipe->visibility === 'public' || $isOwner, 404);
 
-        // IMPORTANTE: reconsultamos para poder aplicar el scope con el select extra
         $recipe = Recipe::query()
             ->whereKey($recipe->id)
-            ->withIsFavorited($userId)                  // <-- agrega la columna is_favorited
-            ->with(['user:id,name', 'ingredients:id,name'])
-            ->withCount(['votes', 'favoredBy'])       // usa el nombre real de tu relación (favoritedBy o favoredBy)
+            ->withIsFavorited($userId)                  
+            ->with([
+                'user:id,name',
+                'ingredients:id,name,serving_size,serving_unit,calories,protein,carbs,fat',
+            ])
+            ->withCount(['votes', 'favoredBy'])       
             ->withAvg('votes as avg_rating', 'rating')
             ->firstOrFail();
 

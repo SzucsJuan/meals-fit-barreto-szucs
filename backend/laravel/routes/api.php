@@ -21,6 +21,9 @@ Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no
 // Si usás registro por API pública:
 Route::post('register', [AuthController::class, 'register']);
 
+// Forzamos que el parámetro {recipe} sea numérico en TODOS los endpoints
+Route::pattern('recipe', '[0-9]+');
+
 // ===================== RUTAS PROTEGIDAS =====================
 Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no-store'])->group(function () {
 

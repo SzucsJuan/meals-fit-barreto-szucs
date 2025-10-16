@@ -1,59 +1,98 @@
-// lib/useCreateRecipe.ts
-import { useState } from 'react';
-import { s } from './sanitize';
+"use client";
+import { useState } from "react";
 
-export type Unit = 'g'|'ml'|'unit';
+export type Unit = "g" | "ml" | "unit" | ""; 
 
-export interface FormRow {
+export type FormRow = {
   tempId: number;
   ingredient_id: number | null;
   quantity: string;
-  unit: Unit | '';
+  unit: Unit | "";
   notes?: string;
+};
+
+const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+
+function readCookie(name: string): string | null {
+  const m = document.cookie.match(
+    new RegExp("(?:^|; )" + name.replace(/([$?*|{}\]\\^])/g, "\\$1") + "=([^;]*)")
+  );
+  return m ? m[1] : null;
+}
+
+async function ensureCsrfCookie() {
+  await fetch(`${API}/sanctum/csrf-cookie`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
 }
 
 export function useCreateRecipe() {
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string|null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function createRecipe(input: {
+  async function createRecipe(payload: {
     title: string;
-    description?: string;
-    stepsList?: string[];
-    visibility: 'public'|'unlisted'|'private';
-    servings: string|number;
-    prepTime?: string|number;
-    cookTime?: string|number;
+    description: string;
+    stepsList: string[];
+    visibility: "public" | "unlisted" | "private";
+    servings: string;
+    prepTime: string;
+    cookTime: string;
     rows: FormRow[];
   }) {
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
+
     try {
-      const payload = {
-        title: s.text(input.title, 255),
-        description: s.text(input.description ?? '', 2000) || undefined,
-        steps: (input.stepsList ?? []).map(t => s.text(t, 1000)).filter(Boolean).join('\n') || undefined,
-        visibility: input.visibility,
-        servings: s.int(input.servings, 1) || 1,
-        prep_time_minutes: s.int(input.prepTime ?? '', 0),
-        cook_time_minutes: s.int(input.cookTime ?? '', 0),
-        ingredients: input.rows
-          .filter(r => r.ingredient_id && s.unit(r.unit))
-          .map(r => ({
-            ingredient_id: r.ingredient_id as number,
-            quantity: s.float(r.quantity, 0),
-            unit: s.unit(r.unit) as Unit,
-            notes: s.text(r.notes ?? '', 255) || undefined,
-          }))
-          .filter(r => r.quantity > 0),
+      await ensureCsrfCookie();
+      const xsrf = readCookie("XSRF-TOKEN");
+
+      const ingredients = payload.rows
+        .filter((r) => r.ingredient_id && r.quantity && r.unit)
+        .map((r) => ({
+          ingredient_id: r.ingredient_id!,
+          quantity: Number(r.quantity),
+          unit: r.unit as Unit,
+          notes: r.notes?.trim() || undefined,
+        }));
+
+      const steps = payload.stepsList.map((s) => s.trim()).filter(Boolean).join("\n");
+
+      const body = {
+        title: payload.title,
+        description: payload.description || null,
+        steps,
+        visibility: payload.visibility,
+        servings: Number(payload.servings || 1),
+        prep_time_minutes: Number(payload.prepTime || 0),
+        cook_time_minutes: Number(payload.cookTime || 0),
+        ingredients,
       };
 
-      // Importación lazzy para evitar ciclo
-      const { apiRecipes } = await import('./api');
-      const out = await apiRecipes.create(payload);
-      return out;
-    } catch (e: any) {
-      setError(e.message || 'Error creating recipe');
-      throw e;
+      const res = await fetch(`${API}/api/recipes`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-XSRF-TOKEN": xsrf ? decodeURIComponent(xsrf) : "",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const e = await res.json();
+          if (e?.message) msg += ` - ${e.message}`;
+        } catch {}
+        setError(msg);
+        throw new Error(msg);
+      }
+
+      return await res.json(); // ✅ devuelve la receta creada
     } finally {
       setLoading(false);
     }

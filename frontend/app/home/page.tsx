@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,10 +12,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Home, ChefHat, Plus, Calendar, Heart, Target, TrendingUp, Trophy, Award, Star, Flame, Share2, Binoculars, UtensilsCrossed } from "lucide-react"
+import { Home, ChefHat, Plus, Heart, Target, TrendingUp, Trophy, Award, Star, Flame, Share2, Binoculars, UtensilsCrossed } from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/navigation"
 import RequireAuth from "@/components/RequireAuth"
+import { useMyFavorites } from "@/lib/useMyFavorites"
 
 export default function HomePage() {
   const achievements = [
@@ -77,6 +80,9 @@ export default function HomePage() {
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length
   const totalCount = achievements.length
+
+  // ← NUEVO: traemos favoritos reales (3 más recientes)
+  const { data: favorites = [], loading: favLoading, error: favError } = useMyFavorites(3, 1)
 
   return (
     <RequireAuth>
@@ -162,9 +168,6 @@ export default function HomePage() {
 
                                         {achievement.unlocked ? (
                                           <div className="flex items-center justify-between gap-2">
-                                            {/* <span className="text-xs text-muted-foreground truncate">
-                                            Unlocked {new Date(achievement.unlockedDate).toLocaleDateString()}
-                                          </span> */}
                                             <Button size="sm" variant="ghost" className="h-6 px-2 text-xs flex-shrink-0">
                                               <Share2 className="h-3 w-3 mr-1" />
                                               Share
@@ -228,64 +231,68 @@ export default function HomePage() {
                     <CardDescription>Your most loved meal recipes</CardDescription>
                   </div>
                 </div>
-                <Link href="/recipes">
+                <Link href="/recipes?tab=fav">
                   <Button variant="ghost" size="sm" className="w-full sm:w-auto">
-                    View your recipes
+                    View your favorites
                   </Button>
                 </Link>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Sample favorite recipes */}
-                <Link href="/recipes/1">
-                  <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-foreground">Protein Smoothie Bowl</h4>
-                      <Badge variant="secondary">Breakfast</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">High protein, low carb</p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>320 cal</span>
-                      <span>25g protein</span>
-                      <span>15g carbs</span>
-                    </div>
-                  </div>
-                </Link>
+              {favLoading && (
+                <div className="text-sm text-muted-foreground">Loading favorites…</div>
+              )}
+              {favError && (
+                <div className="text-sm text-red-600">Error loading favorites</div>
+              )}
 
-                <Link href="/recipes/2">
-                  <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-foreground">Grilled Chicken Salad</h4>
-                      <Badge variant="secondary">Lunch</Badge>
+              {!favLoading && !favError && (
+                <>
+                  {favorites.length === 0 ? (
+                    <Card className="border-dashed">
+                      <CardContent className="py-8 text-center">
+                        <CardTitle className="mb-2">No favorites yet</CardTitle>
+                        <CardDescription>
+                          Add recipes to your favorites to see them here.
+                        </CardDescription>
+                        <div className="mt-4">
+                          <Link href="/discover">
+                            <Button>Discover recipes</Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {favorites.map((r: any) => (
+                        <Link key={r.id} href={`/recipes/${r.id}`}>
+                          <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium text-foreground line-clamp-1">{r.title}</h4>
+                              {/* Si querés categoría, podrías usar un Badge con r.visibility o similar */}
+                              <Badge variant="secondary" className="capitalize">
+                                {r.visibility}
+                              </Badge>
+                            </div>
+                            {r.description && (
+                              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                                {r.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <span>{Math.round(r.calories ?? 0)} cal</span>
+                              <span>{Math.round(r.protein ?? 0)}g protein</span>
+                              <span>{Math.round(r.carbs ?? 0)}g carbs</span>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">Lean protein, fresh veggies</p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>450 cal</span>
-                      <span>35g protein</span>
-                      <span>12g carbs</span>
-                    </div>
-                  </div>
-                </Link>
-
-                <Link href="/recipes/3">
-                  <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-foreground">Quinoa Power Bowl</h4>
-                      <Badge variant="secondary">Dinner</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">Complete amino acids</p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>520 cal</span>
-                      <span>18g protein</span>
-                      <span>65g carbs</span>
-                    </div>
-                  </div>
-                </Link>
-              </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
-
 
           {/* Main Action Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
