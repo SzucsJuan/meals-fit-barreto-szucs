@@ -131,10 +131,16 @@ class RecipeController extends Controller
     }
 
     // DELETE
-    public function destroy(Recipe $recipe)
+    public function destroy(Request $request, Recipe $recipe)
     {
-        // $this->authorize('delete', $recipe); // descomentar con auth
+        
+        $user = $request->user();
+
+        abort_unless($user && ($user->id === $recipe -> user_id || $user->is_admin()), 403);
+
         $recipe->delete();
+
         return response()->noContent();
+
     }
 }

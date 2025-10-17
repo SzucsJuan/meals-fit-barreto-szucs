@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RecipeDetail } from "./type"; // ajustá el path a tu type.ts
+import { RecipeDetail } from "./type"; 
 
 type State = {
   data: RecipeDetail | null;
