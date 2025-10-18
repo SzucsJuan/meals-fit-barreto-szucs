@@ -37,15 +37,21 @@ class Recipe extends Model
     ];
 
     protected $casts = [
-        'calories'      => 'float',
-        'protein'       => 'float',
-        'carbs'         => 'float',
-        'fat'           => 'float',
-        'servings'      => 'integer',
-        'image_width'   => 'integer',
-        'image_height'  => 'integer',
-        'is_favorited'  => 'boolean',
+        'calories'          => 'float',
+        'protein'           => 'float',
+        'carbs'             => 'float',
+        'fat'               => 'float',
+        'servings'          => 'integer',
+        'image_width'       => 'integer',
+        'image_height'      => 'integer',
+        'is_favorited'      => 'boolean',
     ];
+
+    protected $hidden = [
+        'image_disk', 'image_path', 'image_thumb_path', 'image_webp_path',
+    ];
+
+    protected $appends = ['image_url', 'image_thumb_url', 'image_webp_url'];
 
     public function user(): BelongsTo
     {
@@ -212,5 +218,30 @@ class Recipe extends Model
         }
 
         return $slug;
+    }
+
+    
+    /* ============================= */
+    /* ======= ACCESSORS URL ======= */
+    /* ============================= */
+
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image_disk || !$this->image_path)
+            return null;
+        return \Storage::disk($this->image_disk)->url($this->image_path);
+    }
+    public function getImageThumbUrlAttribute(): ?string
+    {
+        if (!$this->image_disk || !$this->image_thumb_path)
+            return null;
+        return \Storage::disk($this->image_disk)->url($this->image_thumb_path);
+    }
+    public function getImageWebpUrlAttribute(): ?string
+    {
+        if (!$this->image_disk || !$this->image_webp_path)
+            return null;
+        return \Storage::disk($this->image_disk)->url($this->image_webp_path);
     }
 }

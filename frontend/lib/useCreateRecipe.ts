@@ -92,7 +92,7 @@ export function useCreateRecipe() {
         throw new Error(msg);
       }
 
-      return await res.json(); // ✅ devuelve la receta creada
+      return await res.json();
     } finally {
       setLoading(false);
     }

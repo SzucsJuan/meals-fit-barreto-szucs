@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { useIngredients as useIngredientsHook } from "@/lib/useIngredients";
 import { useCreateRecipe, type FormRow, type Unit } from "@/lib/useCreateRecipe";
 import RequireAuth from "@/components/RequireAuth";
+import Image from "next/image";
+import { apiRecipeImages } from "@/lib/api";
 
 export default function CreateRecipePage() {
   const router = useRouter();
@@ -27,6 +29,10 @@ export default function CreateRecipePage() {
   const [prepTime, setPrepTime] = useState("");
   const [cookTime, setCookTime] = useState("");
   const [servings, setServings] = useState("");
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const [rows, setRows] = useState<FormRow[]>([
     { tempId: 1, ingredient_id: null, quantity: "", unit: "" }
@@ -64,6 +70,22 @@ export default function CreateRecipePage() {
     setSteps(steps.map(s => s.id === id ? { ...s, step } : s));
   };
 
+    function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return alert("Formato no soportado (usa JPG/PNG/WebP).");
+    if (f.size > 5 * 1024 * 1024) return alert("Máximo 5MB.");
+    setImageFile(f);
+    const url = URL.createObjectURL(f);
+    setImagePreview(url);
+  }
+
+  function clearImage() {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    setImageFile(null);
+  }
+
   const handleSave = async () => {
     const normalized = rows.map(r => ({
       ...r,
@@ -71,7 +93,7 @@ export default function CreateRecipePage() {
     }));
 
     try {
-      await createRecipe({
+      const created = await createRecipe({
         title,
         description,
         stepsList: steps.map(s => s.step),
@@ -81,6 +103,17 @@ export default function CreateRecipePage() {
         cookTime,
         rows: normalized,
       });
+
+      if (created?.id && imageFile) {
+        try {
+          await apiRecipeImages.upload(created.id, imageFile);
+        } catch (e: any) {
+          console.error(e);
+        } finally {
+          clearImage();
+        }
+      }
+
       router.push("/recipes");
     } catch {
     }
@@ -113,10 +146,6 @@ export default function CreateRecipePage() {
           <div className="space-y-8">
             {/* Basic Information */}
             <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-                <CardDescription>Tell us about your recipe</CardDescription>
-              </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -160,7 +189,7 @@ export default function CreateRecipePage() {
 
             {/* Ingredients */}
             <Card>
-              <CardHeader>
+              <CardHeader className="pt-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Ingredients</CardTitle>
@@ -240,7 +269,7 @@ export default function CreateRecipePage() {
 
             {/* Instructions */}
             <Card>
-              <CardHeader>
+              <CardHeader className="pt-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Instructions</CardTitle>
@@ -261,6 +290,114 @@ export default function CreateRecipePage() {
                     </Button>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pt-4">
+                <CardTitle>Recipe Image</CardTitle>
+                <CardDescription>Subí una imagen (JPG/PNG/WebP · máx 5MB)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className={[
+                    "rounded-2xl border border-dashed p-4 md:p-5",
+                    dragOver ? "border-orange-400 ring-2 ring-orange-300/50" : "border-muted"
+                  ].join(" ")}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const f = e.dataTransfer.files?.[0];
+                    if (!f) return;
+                    if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return alert("Formato no soportado.");
+                    if (f.size > 5 * 1024 * 1024) return alert("Máximo 5MB.");
+                    setImageFile(f);
+                    const url = URL.createObjectURL(f);
+                    setImagePreview(url);
+                  }}
+                >
+                  <div className="flex flex-col md:flex-row gap-5">
+                    {/* Preview cuadrado */}
+                    <div className="relative w-full md:w-64 rounded-xl overflow-hidden border bg-neutral-100 dark:bg-neutral-900">
+                      <div className="aspect-square relative">
+                        {imagePreview ? (
+                          <Image
+                            src={imagePreview}
+                            alt="Preview"
+                            fill
+                            sizes="256px"
+                            style={{ objectFit: "cover" }}
+                            priority
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById("create-image-input")?.click()}
+                            className="absolute inset-0 grid place-items-center text-center text-sm text-neutral-500 hover:text-neutral-700 dark:text-neutral-400"
+                          >
+                            <div className="flex flex-col items-center gap-2 px-6">
+                              <svg width="24" height="24" viewBox="0 0 24 24" className="opacity-70"><path d="M12 5v14m7-7H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                              <span>
+                                Arrastrá una imagen acá, o <span className="text-orange-600 underline">explorá</span>
+                              </span>
+                              <span className="text-xs opacity-70">JPG, PNG o WebP · Máx 5MB</span>
+                            </div>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Botones */}
+                    <div className="flex-1 flex flex-col justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          id="create-image-input"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={pickFile}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById("create-image-input")?.click()}
+                          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium
+                                    bg-orange-600 text-white hover:bg-orange-700"
+                        >
+                          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor">
+                            <path strokeWidth="1.5" d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7Z" />
+                            <path strokeWidth="1.5" d="m7 17 3.5-3.5a1 1 0 0 1 1.4 0L15 16l2-2 2 2" />
+                            <circle cx="9" cy="9" r="1.25" />
+                          </svg>
+                          {imagePreview ? "Cambiar imagen" : "Subir imagen"}
+                        </button>
+
+                        {imagePreview && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm("¿Quitar la imagen seleccionada?")) clearImage();
+                            }}
+                            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium
+                                      border border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                          >
+                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor">
+                              <path strokeWidth="1.5" strokeLinecap="round" d="M4 7h16M10 11v6M14 11v6M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+                            </svg>
+                            Quitar
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                        {imagePreview
+                          ? "La imagen se subirá automáticamente al guardar la receta."
+                          : "Opcional: podés seleccionar una imagen ahora y se subirá al guardar."}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 

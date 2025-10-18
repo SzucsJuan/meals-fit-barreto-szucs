@@ -30,8 +30,10 @@ class RecipeController extends Controller
             ->withCount(['votes', 'favoredBy'])
             // públicas o del dueño
             ->where(function ($w) use ($user) {
-                $w->where('visibility', 'public')
-                    ->orWhere('user_id', $user->id);
+                $w->where('visibility', 'public');
+                if ($user) {
+                    $w->orWhere('user_id', $user->id);
+                }
             });
 
         if ($q !== '') {

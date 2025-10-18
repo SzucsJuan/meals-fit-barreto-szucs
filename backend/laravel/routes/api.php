@@ -11,6 +11,7 @@ use App\Http\Controllers\{
     IngredientController,
     RecipeController,
     AuthController,
+    RecipeImageController,
 };
 
 // --------- Auth de SPA (cookie de sesión) -----------
@@ -28,6 +29,11 @@ Route::pattern('recipe', '[0-9]+');
 Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no-store'])->group(function () {
 
     Route::apiResource('recipes', RecipeController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+
+    Route::post('/recipes/{recipe}/image', [RecipeImageController::class, 'store'])
+        ->whereNumber('recipe');
+    Route::delete('/recipes/{recipe}/image', [RecipeImageController::class, 'destroy'])
+        ->whereNumber('recipe');
 
     Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show', 'store']);
 

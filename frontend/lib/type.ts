@@ -28,3 +28,4 @@ export interface RecipeDetail {
   votes_count?: number;
   favorited_by_count?: number;
 }
+

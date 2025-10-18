@@ -82,11 +82,11 @@ function RecipeGrid({
               className="w-full h-48 object-cover"
             />
             <FavoriteButton
-              key={`${r.id}-${r.is_favorited ? "1" : "0"}`} // 🔁 remount si cambia fav
+              key={`${r.id}-${r.is_favorited ? "1" : "0"}`}
               recipeId={r.id}
               initialFavorited={Boolean(r.is_favorited)}
               className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-              onChange={(isFav) => onFavChange?.(r, isFav)} // ✅ mantiene sincronización
+              onChange={(isFav) => onFavChange?.(r, isFav)}
             />
           </div>
 

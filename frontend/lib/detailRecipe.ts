@@ -1,19 +1,17 @@
+// lib/detailRecipe.ts
 "use client";
 
 import { useEffect, useState } from "react";
-import { RecipeDetail } from "./type"; 
+import { apiRecipes, type RecipeDTO } from "@/lib/api";
 
 type State = {
-  data: RecipeDetail | null;
+  data: RecipeDTO | null;
   loading: boolean;
   error: string | null;
 };
 
-const API =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
-
 export function detailRecipe(id: string | number): State {
-  const [data, setData] = useState<RecipeDetail | null>(null);
+  const [data, setData] = useState<RecipeDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,22 +22,7 @@ export function detailRecipe(id: string | number): State {
       try {
         setLoading(true);
         setError(null);
-
-        const res = await fetch(`${API}/api/recipes/${id}`, {
-          method: "GET",
-          headers: { Accept: "application/json" },
-          credentials: "include",
-          cache: "no-store",
-        });
-
-        if (!res.ok) {
-          const txt = await res.text().catch(() => "");
-          throw new Error(
-            `HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`
-          );
-        }
-
-        const json = (await res.json()) as RecipeDetail;
+        const json = await apiRecipes.show(id); // ✅ usa el cliente central
         if (!cancelled) setData(json);
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? "Error fetching recipe");
@@ -48,9 +31,7 @@ export function detailRecipe(id: string | number): State {
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id]);
 
   return { data, loading, error };

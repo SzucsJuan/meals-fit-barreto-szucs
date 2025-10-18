@@ -1,12 +1,16 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+// lib/api.ts
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
+/* =======================
+   Helpers base (CSRF, errores)
+   ======================= */
 
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
-  return match ? decodeURIComponent(match[2]) : null;
+  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
+  return m ? decodeURIComponent(m[2]) : null;
 }
 
-/** Llama al endpoint que setea la cookie XSRF-TOKEN (obligatorio antes de mutaciones) */
 export async function ensureCsrf() {
   await fetch(`${BASE}/sanctum/csrf-cookie`, {
     method: "GET",
@@ -23,7 +27,6 @@ function isMutating(method?: string) {
 function parseError(status: number, body: any): string {
   if (body?.message && !body?.errors) return body.message;
   if (body?.errors && typeof body.errors === "object") {
-    // Une los mensajes de validación
     const all = Object.entries(body.errors)
       .flatMap(([field, msgs]) =>
         Array.isArray(msgs) ? msgs.map((m) => `${field}: ${m}`) : String(msgs)
@@ -39,7 +42,6 @@ export async function api<T>(
   path: string,
   init: RequestInit & { json?: any } = {}
 ): Promise<T> {
-  // Asegura CSRF antes de mutaciones
   if (isMutating(init.method)) {
     await ensureCsrf();
   }
@@ -47,6 +49,7 @@ export async function api<T>(
   const headers = new Headers(init.headers || {});
   headers.set("Accept", "application/json");
 
+  // Para JSON, seteamos Content-Type; para FormData, NO.
   if (init.json !== undefined) {
     headers.set("Content-Type", "application/json");
   }
@@ -68,6 +71,7 @@ export async function api<T>(
   try {
     body = await res.json();
   } catch {
+    // respuesta sin JSON
   }
 
   if (!res.ok) {
@@ -78,30 +82,31 @@ export async function api<T>(
 }
 
 /* =======================
-   Endpoints de autenticación
+   Auth
    ======================= */
+
 export type UserDTO = { id: number; name: string; email: string };
 
 export const authApi = {
-  // Tu backend tiene register en api.php => /api/register
-  register: (payload: { name: string; email: string; password: string; password_confirmation: string }) =>
-    api<{ user: UserDTO; token: string }>("/api/register", {
-      method: "POST",
-      json: payload,
-    }),
+  register: (payload: {
+    name: string; email: string; password: string; password_confirmation: string;
+  }) => api<{ user: UserDTO; token: string }>("/api/register", {
+    method: "POST", json: payload,
+  }),
 
-  // Tu backend tiene login en web.php => /login
   login: (payload: { email: string; password: string }) =>
     api<{ message: string; user: UserDTO }>("/login", {
-      method: "POST",
-      json: payload,
+      method: "POST", json: payload,
     }),
 
-  // web.php => /logout (requiere estar autenticado)
   logout: () => api<{ message?: string }>("/logout", { method: "POST" }),
 
   me: () => api<UserDTO>("/api/user", { method: "GET" }),
 };
+
+/* =======================
+   Recetas
+   ======================= */
 
 export type RecipeDTO = {
   id: number;
@@ -112,15 +117,25 @@ export type RecipeDTO = {
   servings: number;
   prep_time_minutes?: number | null;
   cook_time_minutes?: number | null;
+
   image_url?: string | null;
+  image_thumb_url?: string | null;
+  image_webp_url?: string | null;
+  image_width?: number | null;
+  image_height?: number | null;
+
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
+
   avg_rating?: number;
   votes_count?: number;
   favorited_by_count?: number;
+  is_favorited?: boolean;
+
   user?: { id: number; name: string };
+
   ingredients: Array<{
     id: number;
     name: string;
@@ -133,9 +148,38 @@ export type RecipeDTO = {
 };
 
 export const apiRecipes = {
-  create: (payload: any) =>
-    api("/api/recipes", { method: "POST", json: payload }),
+  create: (payload: any) => api<RecipeDTO>("/api/recipes", {
+    method: "POST", json: payload,
+  }),
   show: (id: number | string) => api<RecipeDTO>(`/api/recipes/${id}`),
-  update: (id: number | string, payload: any) =>
-    api(`/api/recipes/${id}`, { method: "PUT", json: payload }),
+  update: (id: number | string, payload: any) => api<RecipeDTO>(`/api/recipes/${id}`, {
+    method: "PUT", json: payload,
+  }),
+  // si necesitás index:
+  // index: (query?: string) => api<Paginated<RecipeDTO>>(`/api/recipes?q=${encodeURIComponent(query||"")}`)
+};
+
+/* =======================
+   Imágenes de recetas
+   ======================= */
+
+export type UploadRecipeImageResponse = {
+  image_url: string;
+  image_thumb_url: string | null;
+  image_webp_url: string | null;
+  width: number;
+  height: number;
+};
+
+export const apiRecipeImages = {
+  upload: (id: number | string, file: File) => {
+    const form = new FormData();
+    form.append("image", file);
+    return api<UploadRecipeImageResponse>(`/api/recipes/${id}/image`, {
+      method: "POST",
+      body: form, // NO seteamos Content-Type manualmente
+    });
+  },
+  remove: (id: number | string) =>
+    api<void>(`/api/recipes/${id}/image`, { method: "DELETE" }),
 };
