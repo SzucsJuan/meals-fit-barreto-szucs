@@ -12,15 +12,37 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Home, ChefHat, Plus, Heart, Target, TrendingUp, Trophy, Award, Star, Flame, Share2, Binoculars, UtensilsCrossed } from "lucide-react"
+import {
+  ChefHat,
+  Plus,
+  Calendar,
+  Heart,
+  Target,
+  TrendingUp,
+  Trophy,
+  Award,
+  Star,
+  Flame,
+  Share2,
+  User,
+  UtensilsCrossed,
+  Binoculars,
+  Home,
+} from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/navigation"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import RequireAuth from "@/components/RequireAuth"
 import { useMyFavorites } from "@/lib/useMyFavorites"
-import React from "react";
+import React, { useState } from "react";
 
 export default function HomePage() {
   const [selectedRoutine, setSelectedRoutine] = React.useState<"maintain" | "lose" | "gain">("maintain")
+    const [experienceLevel, setExperienceLevel] = useState<"beginner" | "advanced" | "professional">("beginner")
+  const [weight, setWeight] = useState("")
+  const [height, setHeight] = useState("")
+  const [age, setAge] = useState("")
   const achievements = [
     {
       id: 1,
@@ -264,10 +286,12 @@ export default function HomePage() {
               <Target className="h-5 w-5 text-primary" />
               Your Fitness Goal
             </CardTitle>
-            <CardDescription>Choose your routine type to customize your nutrition targets</CardDescription>
+             <CardDescription>
+              Choose your routine type and complete your profile for personalized nutrition targets
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {/* Maintain Option */}
               <button
                 onClick={() => setSelectedRoutine("maintain")}
@@ -354,6 +378,122 @@ export default function HomePage() {
                   </div>
                 </div>
               </button>
+            </div>
+            <div className="border-t border-border pt-6 mt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <User className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-lg text-foreground">Personal Information</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                Help us calculate your personalized nutrition targets based on your body metrics and fitness level
+              </p>
+
+              {/* Personal Stats Inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="space-y-2">
+                  <Label htmlFor="weight" className="text-sm font-medium">
+                    Weight (kg)
+                  </Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    placeholder="70"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="height" className="text-sm font-medium">
+                    Height (cm)
+                  </Label>
+                  <Input
+                    id="height"
+                    type="number"
+                    placeholder="175"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="age" className="text-sm font-medium">
+                    Age (years)
+                  </Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    placeholder="25"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Experience Level Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Experience Level</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <button
+                    onClick={() => setExperienceLevel("beginner")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      experienceLevel === "beginner"
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-foreground">Beginner</h4>
+                      {experienceLevel === "beginner" && (
+                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">New to fitness and nutrition tracking</p>
+                  </button>
+
+                  <button
+                    onClick={() => setExperienceLevel("advanced")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      experienceLevel === "advanced"
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-foreground">Advanced</h4>
+                      {experienceLevel === "advanced" && (
+                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Regular training with good knowledge</p>
+                  </button>
+
+                  <button
+                    onClick={() => setExperienceLevel("professional")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      experienceLevel === "professional"
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-foreground">Professional</h4>
+                      {experienceLevel === "professional" && (
+                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Athlete or fitness professional</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="mt-6 flex justify-end">
+                <Button className="w-full sm:w-auto">Save Profile Settings</Button>
+              </div>
             </div>
           </CardContent>
         </Card>
