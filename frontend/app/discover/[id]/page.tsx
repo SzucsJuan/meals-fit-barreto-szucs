@@ -104,7 +104,7 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
 
               {/* Nutrition */}
               <Card className="mb-8">
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <CardTitle>Nutrition Information</CardTitle>
                   <CardDescription>
                     Total (recipe) – por porción dividí por {r.servings}
@@ -135,7 +135,7 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
               {/* Ingredients & Instructions */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pt-4">
                     <CardTitle>Ingredients</CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -151,7 +151,7 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
                 </Card>
 
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pt-4">
                     <CardTitle>Instructions</CardTitle>
                   </CardHeader>
                   <CardContent>

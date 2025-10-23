@@ -428,7 +428,7 @@ export default function MealsPage() {
               {/* Daily Overview */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card>
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-2 pt-4">
                     <CardTitle className="text-sm font-medium text-muted-foreground">Calories</CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -439,7 +439,7 @@ export default function MealsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-2 pt-4">
                     <CardTitle className="text-sm font-medium text-muted-foreground">Protein</CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -450,7 +450,7 @@ export default function MealsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-2 pt-4">
                     <CardTitle className="text-sm font-medium text-muted-foreground">Carbs</CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -461,7 +461,7 @@ export default function MealsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-2 pt-4">
                     <CardTitle className="text-sm font-medium text-muted-foreground">Fats</CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -475,7 +475,7 @@ export default function MealsPage() {
               {/* Macro Distribution / Calorie Progress */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pt-4">
                     <CardTitle>Macro Distribution</CardTitle>
                     <CardDescription>Today's macronutrient breakdown</CardDescription>
                   </CardHeader>
@@ -504,7 +504,7 @@ export default function MealsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pt-4">
                     <CardTitle>Calorie Progress</CardTitle>
                     <CardDescription>Daily calorie intake vs goal</CardDescription>
                   </CardHeader>
@@ -620,7 +620,7 @@ export default function MealsPage() {
             // Weekly View
             <div className="space-y-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle>Weekly Nutrition Trends</CardTitle>
@@ -652,7 +652,7 @@ export default function MealsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
-                  <CardHeader>
+                  <CardHeader  className="pt-4">
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-primary" />
                       Weekly Average
@@ -673,14 +673,14 @@ export default function MealsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pt-4">
                     <CardTitle>Goals Met</CardTitle>
                   </CardHeader>
                   <CardContent>Conectaremos luego</CardContent>
                 </Card>
 
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pt-4">
                     <CardTitle>Streak</CardTitle>
                   </CardHeader>
                   <CardContent>Conectaremos luego</CardContent>

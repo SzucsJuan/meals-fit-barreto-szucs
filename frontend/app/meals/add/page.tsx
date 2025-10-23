@@ -288,7 +288,7 @@ export default function AddMealPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <CardTitle>Meal Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -312,7 +312,7 @@ export default function AddMealPage() {
               </Card>
 
               <Card>
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <CardTitle>Search Foods</CardTitle>
                   <CardDescription>Find and add foods to your meal</CardDescription>
                 </CardHeader>
@@ -367,7 +367,7 @@ export default function AddMealPage() {
             {/* Right Column - Selected Foods and Summary */}
             <div className="space-y-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <CardTitle>Selected Foods</CardTitle>
                   <CardDescription>
                     {selectedFoods.length} item{selectedFoods.length !== 1 ? "s" : ""} selected
@@ -411,7 +411,7 @@ export default function AddMealPage() {
               </Card>
 
               <Card>
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <CardTitle>Nutrition Summary</CardTitle>
                   <CardDescription>Total nutritional values for this meal</CardDescription>
                 </CardHeader>

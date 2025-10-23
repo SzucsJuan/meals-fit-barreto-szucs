@@ -39,7 +39,7 @@ import React, { useState } from "react";
 
 export default function HomePage() {
   const [selectedRoutine, setSelectedRoutine] = React.useState<"maintain" | "lose" | "gain">("maintain")
-    const [experienceLevel, setExperienceLevel] = useState<"beginner" | "advanced" | "professional">("beginner")
+  const [experienceLevel, setExperienceLevel] = useState<"beginner" | "advanced" | "professional">("beginner")
   const [weight, setWeight] = useState("")
   const [height, setHeight] = useState("")
   const [age, setAge] = useState("")
@@ -102,7 +102,7 @@ export default function HomePage() {
     },
   ]
 
-    const routineTypes = {
+  const routineTypes = {
     maintain: {
       title: "Maintain",
       description: "Keep your current weight and build healthy habits",
@@ -279,115 +279,22 @@ export default function HomePage() {
             </div>
           </div>
 
-           {/* Routine Type Selection Card */}
-        <Card className="mb-8 overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              Your Fitness Goal
-            </CardTitle>
-             <CardDescription>
-              Choose your routine type and complete your profile for personalized nutrition targets
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {/* Maintain Option */}
-              <button
-                onClick={() => setSelectedRoutine("maintain")}
-                className={`p-6 rounded-xl border-2 transition-all text-left ${
-                  selectedRoutine === "maintain"
-                    ? "border-blue-500 bg-blue-50 shadow-lg scale-105"
-                    : "border-border hover:border-blue-300 hover:bg-blue-50/50"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="text-3xl">{routineTypes.maintain.icon}</div>
-                  <div>
-                    <h3 className="font-bold text-lg text-foreground">{routineTypes.maintain.title}</h3>
-                    {selectedRoutine === "maintain" && <Badge className="bg-blue-500 text-white text-xs">Active</Badge>}
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">{routineTypes.maintain.description}</p>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Daily Calories:</span>
-                    <span className="font-medium text-foreground">{routineTypes.maintain.calories}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Protein:</span>
-                    <span className="font-medium text-foreground">{routineTypes.maintain.protein}g</span>
-                  </div>
-                </div>
-              </button>
-
-              {/* Lose Option */}
-              <button
-                onClick={() => setSelectedRoutine("lose")}
-                className={`p-6 rounded-xl border-2 transition-all text-left ${
-                  selectedRoutine === "lose"
-                    ? "border-rose-500 bg-rose-50 shadow-lg scale-105"
-                    : "border-border hover:border-rose-300 hover:bg-rose-50/50"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="text-3xl">{routineTypes.lose.icon}</div>
-                  <div>
-                    <h3 className="font-bold text-lg text-foreground">{routineTypes.lose.title}</h3>
-                    {selectedRoutine === "lose" && <Badge className="bg-rose-500 text-white text-xs">Active</Badge>}
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">{routineTypes.lose.description}</p>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Daily Calories:</span>
-                    <span className="font-medium text-foreground">{routineTypes.lose.calories}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Protein:</span>
-                    <span className="font-medium text-foreground">{routineTypes.lose.protein}g</span>
-                  </div>
-                </div>
-              </button>
-
-              {/* Gain Option */}
-              <button
-                onClick={() => setSelectedRoutine("gain")}
-                className={`p-6 rounded-xl border-2 transition-all text-left ${
-                  selectedRoutine === "gain"
-                    ? "border-green-500 bg-green-50 shadow-lg scale-105"
-                    : "border-border hover:border-green-300 hover:bg-green-50/50"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="text-3xl">{routineTypes.gain.icon}</div>
-                  <div>
-                    <h3 className="font-bold text-lg text-foreground">{routineTypes.gain.title}</h3>
-                    {selectedRoutine === "gain" && <Badge className="bg-green-500 text-white text-xs">Active</Badge>}
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">{routineTypes.gain.description}</p>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Daily Calories:</span>
-                    <span className="font-medium text-foreground">{routineTypes.gain.calories}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Protein:</span>
-                    <span className="font-medium text-foreground">{routineTypes.gain.protein}g</span>
-                  </div>
-                </div>
-              </button>
-            </div>
-            <div className="border-t border-border pt-6 mt-6">
-              <div className="flex items-center gap-2 mb-4">
+          {/* Routine Type Selection Card */}
+          <Card className="mb-8 overflow-hidden">
+            <CardHeader className="pt-4">
+              <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" />
                 <h3 className="font-semibold text-lg text-foreground">Personal Information</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Help us calculate your personalized nutrition targets based on your body metrics and fitness level
-              </p>
+              </CardTitle>
+              <CardDescription>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Help us calculate your personalized nutrition targets based on your body metrics and fitness level
+                </p>
 
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="pt-2">
               {/* Personal Stats Inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="space-y-2">
@@ -434,16 +341,15 @@ export default function HomePage() {
               </div>
 
               {/* Experience Level Selection */}
-              <div className="space-y-3">
+              <div className="space-y-3 border-b border-border pb-6 mb-8">
                 <Label className="text-sm font-medium">Experience Level</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     onClick={() => setExperienceLevel("beginner")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      experienceLevel === "beginner"
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "beginner"
+                      ? "border-primary bg-primary/10 shadow-md"
+                      : "border-border hover:border-primary/50 hover:bg-primary/5"
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-sm text-foreground">Beginner</h4>
@@ -456,11 +362,10 @@ export default function HomePage() {
 
                   <button
                     onClick={() => setExperienceLevel("advanced")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      experienceLevel === "advanced"
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "advanced"
+                      ? "border-primary bg-primary/10 shadow-md"
+                      : "border-border hover:border-primary/50 hover:bg-primary/5"
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-sm text-foreground">Advanced</h4>
@@ -473,11 +378,10 @@ export default function HomePage() {
 
                   <button
                     onClick={() => setExperienceLevel("professional")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      experienceLevel === "professional"
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "professional"
+                      ? "border-primary bg-primary/10 shadow-md"
+                      : "border-border hover:border-primary/50 hover:bg-primary/5"
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-sm text-foreground">Professional</h4>
@@ -490,17 +394,114 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Save Button */}
-              <div className="mt-6 flex justify-end">
-                <Button className="w-full sm:w-auto">Save Profile Settings</Button>
+              {/* Your Fitness Goal */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Target className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-lg text-foreground">Your Fitness Goal</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Choose your routine type and complete your profile for personalized nutrition targets
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {/* Maintain Option */}
+                  <button
+                    onClick={() => setSelectedRoutine("maintain")}
+                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "maintain"
+                      ? "border-blue-500 bg-blue-50 shadow-lg scale-105"
+                      : "border-border hover:border-blue-300 hover:bg-blue-50/50"
+                      }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="text-3xl">{routineTypes.maintain.icon}</div>
+                      <div>
+                        <h3 className="font-bold text-lg text-foreground">{routineTypes.maintain.title}</h3>
+                        {selectedRoutine === "maintain" && <Badge className="bg-blue-500 text-white text-xs">Active</Badge>}
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">{routineTypes.maintain.description}</p>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Daily Calories:</span>
+                        <span className="font-medium text-foreground">{routineTypes.maintain.calories}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Protein:</span>
+                        <span className="font-medium text-foreground">{routineTypes.maintain.protein}g</span>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Lose Option */}
+                  <button
+                    onClick={() => setSelectedRoutine("lose")}
+                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "lose"
+                      ? "border-rose-500 bg-rose-50 shadow-lg scale-105"
+                      : "border-border hover:border-rose-300 hover:bg-rose-50/50"
+                      }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="text-3xl">{routineTypes.lose.icon}</div>
+                      <div>
+                        <h3 className="font-bold text-lg text-foreground">{routineTypes.lose.title}</h3>
+                        {selectedRoutine === "lose" && <Badge className="bg-rose-500 text-white text-xs">Active</Badge>}
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">{routineTypes.lose.description}</p>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Daily Calories:</span>
+                        <span className="font-medium text-foreground">{routineTypes.lose.calories}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Protein:</span>
+                        <span className="font-medium text-foreground">{routineTypes.lose.protein}g</span>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Gain Option */}
+                  <button
+                    onClick={() => setSelectedRoutine("gain")}
+                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "gain"
+                      ? "border-green-500 bg-green-50 shadow-lg scale-105"
+                      : "border-border hover:border-green-300 hover:bg-green-50/50"
+                      }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="text-3xl">{routineTypes.gain.icon}</div>
+                      <div>
+                        <h3 className="font-bold text-lg text-foreground">{routineTypes.gain.title}</h3>
+                        {selectedRoutine === "gain" && <Badge className="bg-green-500 text-white text-xs">Active</Badge>}
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">{routineTypes.gain.description}</p>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Daily Calories:</span>
+                        <span className="font-medium text-foreground">{routineTypes.gain.calories}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Protein:</span>
+                        <span className="font-medium text-foreground">{routineTypes.gain.protein}g</span>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Save Button */}
+                <div className="mt-6 flex justify-end">
+                  <Button className="w-full sm:w-auto">Save Profile Settings</Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
 
           {/* Favorites Section */}
           <Card className="mb-8">
-            <CardHeader>
+            <CardHeader className="pt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <Heart className="h-6 w-6" style={{ color: "#FF9800" }} />
@@ -577,7 +578,7 @@ export default function HomePage() {
             {/* Create New Recipe */}
             <Link href="/recipes/create">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2">
                       <ChefHat className="h-6 w-6" style={{ color: "#FF9800" }} />
@@ -600,7 +601,7 @@ export default function HomePage() {
             {/* Add Meals */}
             <Link href="/meals/add">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2">
                       <Target className="h-6 w-6" style={{ color: "#FF9800" }} />
@@ -623,7 +624,7 @@ export default function HomePage() {
             {/* Discover */}
             <Link href="/discover">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2">
                       <Binoculars className="h-6 w-6" style={{ color: "#FF9800" }} />
@@ -647,14 +648,14 @@ export default function HomePage() {
           {/* Quick Stats */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
-              <CardHeader>
+              <CardHeader className="pt-4">
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-6 w-6" style={{ color: "#FF9800" }} />
                   Weekly Progress
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Avg Daily Calories</span>
                     <span className="font-medium">1,923</span>
@@ -672,7 +673,7 @@ export default function HomePage() {
             </Card>
 
             <Card>
-              <CardHeader>
+              <CardHeader className="pt-4">
                 <CardTitle>Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>

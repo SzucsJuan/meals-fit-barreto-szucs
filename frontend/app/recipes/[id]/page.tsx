@@ -169,7 +169,7 @@ export default function RecipeDetailPage() {
 
             {/* Nutrition */}
             <Card className="mb-8">
-              <CardHeader>
+              <CardHeader className="pt-4">
                 <CardTitle>Nutrition Information</CardTitle>
                 <CardDescription>
                   Total (recipe) – si querés por porción dividí por {r.servings}
@@ -210,7 +210,7 @@ export default function RecipeDetailPage() {
             {/* Ingredients & Instructions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <Card>
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <CardTitle>Ingredients</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -226,7 +226,7 @@ export default function RecipeDetailPage() {
               </Card>
 
               <Card>
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <CardTitle>Instructions</CardTitle>
                 </CardHeader>
                 <CardContent>
