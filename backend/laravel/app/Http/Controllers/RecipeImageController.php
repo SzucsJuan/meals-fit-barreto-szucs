@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Facades\Image; // v2
 
+
 class RecipeImageController extends Controller
 {
+    
     public function store(Request $request, Recipe $recipe)
     {
         // $this->authorize('update', $recipe);

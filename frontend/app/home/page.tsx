@@ -17,8 +17,10 @@ import Link from "next/link"
 import Navigation from "@/components/navigation"
 import RequireAuth from "@/components/RequireAuth"
 import { useMyFavorites } from "@/lib/useMyFavorites"
+import React from "react";
 
 export default function HomePage() {
+  const [selectedRoutine, setSelectedRoutine] = React.useState<"maintain" | "lose" | "gain">("maintain")
   const achievements = [
     {
       id: 1,
@@ -77,6 +79,41 @@ export default function HomePage() {
       category: "Nutrition Goals",
     },
   ]
+
+    const routineTypes = {
+    maintain: {
+      title: "Maintain",
+      description: "Keep your current weight and build healthy habits",
+      icon: "⚖️",
+      calories: 2200,
+      protein: 165,
+      carbs: 275,
+      fats: 73,
+      color: "blue",
+    },
+    lose: {
+      title: "Lose",
+      description: "Create a calorie deficit to lose weight sustainably",
+      icon: "📉",
+      calories: 1800,
+      protein: 180,
+      carbs: 180,
+      fats: 60,
+      color: "rose",
+    },
+    gain: {
+      title: "Gain",
+      description: "Build muscle with a calorie surplus and high protein",
+      icon: "📈",
+      calories: 2800,
+      protein: 210,
+      carbs: 350,
+      fats: 93,
+      color: "green",
+    },
+  }
+
+  const currentRoutine = routineTypes[selectedRoutine]
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length
   const totalCount = achievements.length
@@ -219,6 +256,107 @@ export default function HomePage() {
               </Dialog>
             </div>
           </div>
+
+           {/* Routine Type Selection Card */}
+        <Card className="mb-8 overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Your Fitness Goal
+            </CardTitle>
+            <CardDescription>Choose your routine type to customize your nutrition targets</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Maintain Option */}
+              <button
+                onClick={() => setSelectedRoutine("maintain")}
+                className={`p-6 rounded-xl border-2 transition-all text-left ${
+                  selectedRoutine === "maintain"
+                    ? "border-blue-500 bg-blue-50 shadow-lg scale-105"
+                    : "border-border hover:border-blue-300 hover:bg-blue-50/50"
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="text-3xl">{routineTypes.maintain.icon}</div>
+                  <div>
+                    <h3 className="font-bold text-lg text-foreground">{routineTypes.maintain.title}</h3>
+                    {selectedRoutine === "maintain" && <Badge className="bg-blue-500 text-white text-xs">Active</Badge>}
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">{routineTypes.maintain.description}</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Daily Calories:</span>
+                    <span className="font-medium text-foreground">{routineTypes.maintain.calories}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Protein:</span>
+                    <span className="font-medium text-foreground">{routineTypes.maintain.protein}g</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Lose Option */}
+              <button
+                onClick={() => setSelectedRoutine("lose")}
+                className={`p-6 rounded-xl border-2 transition-all text-left ${
+                  selectedRoutine === "lose"
+                    ? "border-rose-500 bg-rose-50 shadow-lg scale-105"
+                    : "border-border hover:border-rose-300 hover:bg-rose-50/50"
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="text-3xl">{routineTypes.lose.icon}</div>
+                  <div>
+                    <h3 className="font-bold text-lg text-foreground">{routineTypes.lose.title}</h3>
+                    {selectedRoutine === "lose" && <Badge className="bg-rose-500 text-white text-xs">Active</Badge>}
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">{routineTypes.lose.description}</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Daily Calories:</span>
+                    <span className="font-medium text-foreground">{routineTypes.lose.calories}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Protein:</span>
+                    <span className="font-medium text-foreground">{routineTypes.lose.protein}g</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Gain Option */}
+              <button
+                onClick={() => setSelectedRoutine("gain")}
+                className={`p-6 rounded-xl border-2 transition-all text-left ${
+                  selectedRoutine === "gain"
+                    ? "border-green-500 bg-green-50 shadow-lg scale-105"
+                    : "border-border hover:border-green-300 hover:bg-green-50/50"
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="text-3xl">{routineTypes.gain.icon}</div>
+                  <div>
+                    <h3 className="font-bold text-lg text-foreground">{routineTypes.gain.title}</h3>
+                    {selectedRoutine === "gain" && <Badge className="bg-green-500 text-white text-xs">Active</Badge>}
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">{routineTypes.gain.description}</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Daily Calories:</span>
+                    <span className="font-medium text-foreground">{routineTypes.gain.calories}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Protein:</span>
+                    <span className="font-medium text-foreground">{routineTypes.gain.protein}g</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
 
           {/* Favorites Section */}
           <Card className="mb-8">
