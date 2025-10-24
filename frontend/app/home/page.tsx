@@ -38,8 +38,11 @@ import { useMyFavorites } from "@/lib/useMyFavorites"
 import React, { useState } from "react";
 
 export default function HomePage() {
-  const [selectedRoutine, setSelectedRoutine] = React.useState<"maintain" | "lose" | "gain">("maintain")
-  const [experienceLevel, setExperienceLevel] = useState<"beginner" | "advanced" | "professional">("beginner")
+  const [selectedRoutine, setSelectedRoutine] =
+    React.useState<"maintain" | "lose" | "gain" | null>(null)
+
+  const [experienceLevel, setExperienceLevel] =
+    useState<"beginner" | "advanced" | "professional" | null>(null)
   const [weight, setWeight] = useState("")
   const [height, setHeight] = useState("")
   const [age, setAge] = useState("")
@@ -135,10 +138,11 @@ export default function HomePage() {
     },
   }
 
-  const currentRoutine = routineTypes[selectedRoutine]
+  const currentRoutine = selectedRoutine ? routineTypes[selectedRoutine] : null
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length
   const totalCount = achievements.length
+  const canSave = !!selectedRoutine && !!experienceLevel;
 
   // ← NUEVO: traemos favoritos reales (3 más recientes)
   const { data: favorites = [], loading: favLoading, error: favError } = useMyFavorites(3, 1)
@@ -492,7 +496,11 @@ export default function HomePage() {
 
                 {/* Save Button */}
                 <div className="mt-6 flex justify-end">
-                  <Button className="w-full sm:w-auto">Save Profile Settings</Button>
+                  <Button
+                    className="w-full sm:w-auto"
+                    disabled={!canSave}>
+                    Save Profile Settings
+                  </Button>
                 </div>
               </div>
             </CardContent>
