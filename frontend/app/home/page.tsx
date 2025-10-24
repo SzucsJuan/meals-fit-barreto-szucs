@@ -44,6 +44,9 @@ export default function HomePage() {
   const [experienceLevel, setExperienceLevel] =
     useState<"beginner" | "advanced" | "professional" | null>(null)
   const [weight, setWeight] = useState("")
+    const [activityLevel, setActivityLevel] = useState<"sedentary" | "light" | "moderate" | "high" | "athlete">(
+    "moderate",
+  )
   const [height, setHeight] = useState("")
   const [age, setAge] = useState("")
   const achievements = [
@@ -493,6 +496,99 @@ export default function HomePage() {
                     </div>
                   </button>
                 </div>
+                {/* Activity Level Selection */}
+              <div className="space-y-3 mt-6">
+                <Label className="text-sm font-medium">Activity Level</Label>
+                <p className="text-xs text-muted-foreground mb-3">
+                  How active are you throughout the day? This helps calculate your daily calorie needs.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <button
+                    onClick={() => setActivityLevel("sedentary")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      activityLevel === "sedentary"
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-foreground">Sedentary</h4>
+                      {activityLevel === "sedentary" && (
+                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Little to no exercise, desk job</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActivityLevel("light")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      activityLevel === "light"
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-foreground">Light</h4>
+                      {activityLevel === "light" && (
+                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Exercise 1-3 days/week</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActivityLevel("moderate")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      activityLevel === "moderate"
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-foreground">Moderate</h4>
+                      {activityLevel === "moderate" && (
+                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Exercise 3-5 days/week</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActivityLevel("high")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      activityLevel === "high"
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-foreground">High</h4>
+                      {activityLevel === "high" && (
+                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Exercise 6-7 days/week</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActivityLevel("athlete")}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      activityLevel === "athlete"
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm text-foreground">Athlete</h4>
+                      {activityLevel === "athlete" && (
+                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Intense training 2x/day</p>
+                  </button>
+                </div>
+              </div>
 
                 {/* Save Button */}
                 <div className="mt-6 flex justify-end">

@@ -60,6 +60,11 @@ class User extends Authenticatable
         return $this->hasMany(MealLog::class);
     }
 
+    public function nutritionPlans()
+    {
+        return $this->hasMany(\App\Models\UserNutritionPlan::class);
+    }
+
     public function messagesSent(): HasMany
     {
         return $this->hasMany(Message::class, 'sender_id');

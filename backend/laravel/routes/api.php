@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use App\Http\Controllers\{
     FavoriteController,
+    GoalsController,
     VoteController,
     MealLogController,
     MealDetailController,
@@ -36,6 +37,9 @@ Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no
         ->whereNumber('recipe');
 
     Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show', 'store']);
+
+    Route::post('/me/goals', [GoalsController::class, 'store']);      
+    Route::get('/me/goals/latest', [GoalsController::class, 'latest']); 
 
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/recipes/{recipe}/favorite', [FavoriteController::class, 'store'])
