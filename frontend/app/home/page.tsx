@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -11,11 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   ChefHat,
   Plus,
-  Calendar,
   Heart,
   Target,
   TrendingUp,
@@ -28,127 +27,190 @@ import {
   UtensilsCrossed,
   Binoculars,
   Home,
-} from "lucide-react"
-import Link from "next/link"
-import Navigation from "@/components/navigation"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import RequireAuth from "@/components/RequireAuth"
-import { useMyFavorites } from "@/lib/useMyFavorites"
-import React, { useState } from "react";
+  Droplets,
+  Dumbbell,
+  Activity,
+  Gauge,
+  Scale,
+  FlameKindling,
+} from "lucide-react";
+import Link from "next/link";
+import Navigation from "@/components/navigation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import RequireAuth from "@/components/RequireAuth";
+import { useMyFavorites } from "@/lib/useMyFavorites";
+import React, { useEffect, useState } from "react";
+
+/** ----- Sanctum helpers (CSRF para SPA) ----- */
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// Debe ejecutarse al menos una vez por sesión antes del primer POST/PUT/PATCH/DELETE
+async function ensureCsrf() {
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+  await fetch(`${BASE}/sanctum/csrf-cookie`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+}
+
+type Plan = {
+  id: number;
+  mode: "maintenance" | "gain" | "loss";
+  experience: "beginner" | "advanced" | "professional";
+  activity_level: "sedentary" | "light" | "moderate" | "high" | "athlete";
+  bmr: number;
+  tdee: number;
+  calorie_target: number;
+  protein_g: number;
+  fat_g: number;
+  carbs_g: number;
+  fiber_g: number;
+  water_l: number;
+  version?: number;
+};
 
 export default function HomePage() {
   const [selectedRoutine, setSelectedRoutine] =
-    React.useState<"maintain" | "lose" | "gain" | null>(null)
+    React.useState<"maintain" | "lose" | "gain" | null>(null);
 
   const [experienceLevel, setExperienceLevel] =
-    useState<"beginner" | "advanced" | "professional" | null>(null)
-  const [weight, setWeight] = useState("")
-    const [activityLevel, setActivityLevel] = useState<"sedentary" | "light" | "moderate" | "high" | "athlete">(
-    "moderate",
-  )
-  const [height, setHeight] = useState("")
-  const [age, setAge] = useState("")
+    useState<"beginner" | "advanced" | "professional" | null>(null);
+  const [weight, setWeight] = useState("");
+  const [activityLevel, setActivityLevel] = useState<"sedentary" | "light" | "moderate" | "high" | "athlete">(
+    "moderate"
+  );
+  const [height, setHeight] = useState("");
+  const [age, setAge] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+
+  // Plan actual
+  const [latestPlan, setLatestPlan] = useState<Plan | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<boolean>(true);
+  const [planError, setPlanError] = useState<string | null>(null);
+
   const achievements = [
-    {
-      id: 1,
-      title: "First Steps",
-      description: "Log your first meal",
-      icon: Target,
-      unlocked: true,
-      unlockedDate: "2024-01-15",
-      category: "Getting Started",
-    },
-    {
-      id: 2,
-      title: "Recipe Creator",
-      description: "Create your first custom recipe",
-      icon: ChefHat,
-      unlocked: true,
-      unlockedDate: "2024-01-18",
-      category: "Creativity",
-    },
-    {
-      id: 3,
-      title: "Protein Champion",
-      description: "Hit your protein goal for 7 consecutive days",
-      icon: Award,
-      unlocked: true,
-      unlockedDate: "2024-01-25",
-      category: "Nutrition Goals",
-    },
-    {
-      id: 4,
-      title: "Streak Master",
-      description: "Log meals for 30 consecutive days",
-      icon: Flame,
-      unlocked: false,
-      progress: 23,
-      total: 30,
-      category: "Consistency",
-    },
-    {
-      id: 5,
-      title: "Recipe Collector",
-      description: "Create 10 different recipes",
-      icon: Star,
-      unlocked: false,
-      progress: 6,
-      total: 10,
-      category: "Creativity",
-    },
-    {
-      id: 6,
-      title: "Macro Master",
-      description: "Hit all macro goals in a single day",
-      icon: Trophy,
-      unlocked: true,
-      unlockedDate: "2024-01-20",
-      category: "Nutrition Goals",
-    },
-  ]
+    { id: 1, title: "First Steps", description: "Log your first meal", icon: Target, unlocked: true,  unlockedDate: "2024-01-15", category: "Getting Started" },
+    { id: 2, title: "Recipe Creator", description: "Create your first custom recipe", icon: ChefHat, unlocked: true,  unlockedDate: "2024-01-18", category: "Creativity" },
+    { id: 3, title: "Protein Champion", description: "Hit your protein goal for 7 consecutive days", icon: Award, unlocked: true,  unlockedDate: "2024-01-25", category: "Nutrition Goals" },
+    { id: 4, title: "Streak Master", description: "Log meals for 30 consecutive days", icon: Flame, unlocked: false, progress: 23, total: 30, category: "Consistency" },
+    { id: 5, title: "Recipe Collector", description: "Create 10 different recipes", icon: Star, unlocked: false, progress: 6, total: 10, category: "Creativity" },
+    { id: 6, title: "Macro Master", description: "Hit all macro goals in a single day", icon: Trophy, unlocked: true,  unlockedDate: "2024-01-20", category: "Nutrition Goals" },
+  ];
 
   const routineTypes = {
-    maintain: {
-      title: "Maintain",
-      description: "Keep your current weight and build healthy habits",
-      icon: "⚖️",
-      calories: 2200,
-      protein: 165,
-      carbs: 275,
-      fats: 73,
-      color: "blue",
-    },
-    lose: {
-      title: "Lose",
-      description: "Create a calorie deficit to lose weight sustainably",
-      icon: "📉",
-      calories: 1800,
-      protein: 180,
-      carbs: 180,
-      fats: 60,
-      color: "rose",
-    },
-    gain: {
-      title: "Gain",
-      description: "Build muscle with a calorie surplus and high protein",
-      icon: "📈",
-      calories: 2800,
-      protein: 210,
-      carbs: 350,
-      fats: 93,
-      color: "green",
-    },
-  }
+    maintain: { title: "Maintain", description: "Keep your current weight and build healthy habits", icon: "⚖️", calories: 2200, protein: 165, carbs: 275, fats: 73, color: "blue" },
+    lose:     { title: "Lose",     description: "Create a calorie deficit to lose weight sustainably", icon: "📉", calories: 1800, protein: 180, carbs: 180, fats: 60, color: "rose" },
+    gain:     { title: "Gain",     description: "Build muscle with a calorie surplus and high protein", icon: "📈", calories: 2800, protein: 210, carbs: 350, fats: 93, color: "green" },
+  };
 
-  const currentRoutine = selectedRoutine ? routineTypes[selectedRoutine] : null
+  const currentRoutine = selectedRoutine ? routineTypes[selectedRoutine] : null;
 
-  const unlockedCount = achievements.filter((a) => a.unlocked).length
-  const totalCount = achievements.length
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const totalCount = achievements.length;
   const canSave = !!selectedRoutine && !!experienceLevel;
 
-  // ← NUEVO: traemos favoritos reales (3 más recientes)
-  const { data: favorites = [], loading: favLoading, error: favError } = useMyFavorites(3, 1)
+  // Favoritos reales (3 más recientes)
+  const { data: favorites = [], loading: favLoading, error: favError } = useMyFavorites(3, 1);
+
+  function mapMode(m: "maintain" | "lose" | "gain"): "maintenance" | "loss" | "gain" {
+    return m === "maintain" ? "maintenance" : m === "lose" ? "loss" : "gain";
+  }
+
+  // ---- Cargar plan actual ----
+  async function loadLatestPlan() {
+    try {
+      setLoadingPlan(true);
+      setPlanError(null);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals/latest`, {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error("Failed to load plan");
+      const data = await res.json();
+      setLatestPlan(data?.plan ?? null);
+    } catch (e: any) {
+      setPlanError(e?.message || "Unexpected error");
+      setLatestPlan(null);
+    } finally {
+      setLoadingPlan(false);
+    }
+  }
+
+  useEffect(() => {
+    loadLatestPlan();
+  }, []);
+
+  async function handleSave() {
+    setSaveMsg(null);
+
+    if (!selectedRoutine || !experienceLevel) {
+      setSaveMsg("Select your goal and experience level.");
+      return;
+    }
+    if (!weight || !height || !age) {
+      setSaveMsg("Complete weight, height and age.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      // Paso 1: asegurar cookies de sesión + XSRF-TOKEN
+      await ensureCsrf();
+      const xsrf = getCookie("XSRF-TOKEN") || "";
+
+      // Paso 2: POST protegido con header X-XSRF-TOKEN y credenciales
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals?source=ai`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": xsrf,
+        },
+        body: JSON.stringify({
+          mode: mapMode(selectedRoutine),
+          experience: experienceLevel,
+          activity_level: activityLevel,
+          age: Number(age),
+          weight: Number(weight),
+          height: Number(height),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || "Failed to save goals");
+      }
+
+      const data = await res.json();
+      setSaveMsg("Profile & goals saved. Plan version " + (data?.plan?.version ?? "?"));
+
+      // refrescar resumen del plan
+      setLatestPlan(data?.plan ?? null); // inmediato con respuesta del POST
+    } catch (e: any) {
+      setSaveMsg(e?.message || "Unexpected error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // helpers visuales
+  const TitleCap = ({ children }: { children: React.ReactNode }) => (
+    <span className="capitalize">{children as any}</span>
+  );
+  const fmtInt = (n?: number) => (typeof n === "number" ? Math.round(n) : "-");
+  const fmtOneDec = (n?: number) => (typeof n === "number" ? (Math.round(n * 10) / 10).toFixed(1) : "-");
 
   return (
     <RequireAuth>
@@ -193,13 +255,13 @@ export default function HomePage() {
 
                   <div className="mt-4 sm:mt-6 space-y-6 sm:space-y-8">
                     {["Getting Started", "Nutrition Goals", "Creativity", "Consistency"].map((category) => {
-                      const categoryAchievements = achievements.filter((a) => a.category === category)
+                      const categoryAchievements = achievements.filter((a) => a.category === category);
                       return (
                         <div key={category} className="space-y-3 sm:space-y-4">
                           <h3 className="text-base sm:text-lg font-semibold text-foreground">{category}</h3>
                           <div className="grid grid-cols-1 gap-3 sm:gap-4">
                             {categoryAchievements.map((achievement) => {
-                              const IconComponent = achievement.icon
+                              const IconComponent = achievement.icon;
                               return (
                                 <Card
                                   key={achievement.id}
@@ -207,31 +269,19 @@ export default function HomePage() {
                                 >
                                   <CardContent className="p-3 sm:p-4">
                                     <div className="flex items-start gap-3">
-                                      <div
-                                        className={`p-2 rounded-lg flex-shrink-0 ${achievement.unlocked ? "bg-yellow-100" : "bg-muted"}`}
-                                      >
-                                        <IconComponent
-                                          className={`h-5 w-5 sm:h-6 sm:w-6 ${achievement.unlocked ? "text-yellow-600" : "text-muted-foreground"}`}
-                                        />
+                                      <div className={`p-2 rounded-lg flex-shrink-0 ${achievement.unlocked ? "bg-yellow-100" : "bg-muted"}`}>
+                                        <IconComponent className={`h-5 w-5 sm:h-6 sm:w-6 ${achievement.unlocked ? "text-yellow-600" : "text-muted-foreground"}`} />
                                       </div>
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-1 gap-2">
-                                          <h4 className="font-semibold text-sm sm:text-base text-foreground truncate">
-                                            {achievement.title}
-                                          </h4>
+                                          <h4 className="font-semibold text-sm sm:text-base text-foreground truncate">{achievement.title}</h4>
                                           {achievement.unlocked && (
-                                            <Badge
-                                              variant="secondary"
-                                              className="bg-yellow-100 text-yellow-800 text-xs flex-shrink-0"
-                                            >
+                                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs flex-shrink-0">
                                               Unlocked
                                             </Badge>
                                           )}
                                         </div>
-                                        <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-2">
-                                          {achievement.description}
-                                        </p>
-
+                                        <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-2">{achievement.description}</p>
                                         {achievement.unlocked ? (
                                           <div className="flex items-center justify-between gap-2">
                                             <Button size="sm" variant="ghost" className="h-6 px-2 text-xs flex-shrink-0">
@@ -240,18 +290,15 @@ export default function HomePage() {
                                             </Button>
                                           </div>
                                         ) : (
-                                          achievement.progress !== undefined && (
+                                          (achievement as any).progress !== undefined && (
                                             <div className="space-y-1">
                                               <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                 <span>Progress</span>
                                                 <span>
-                                                  {achievement.progress}/{achievement.total}
+                                                  {(achievement as any).progress}/{(achievement as any).total}
                                                 </span>
                                               </div>
-                                              <Progress
-                                                value={(achievement.progress / achievement.total) * 100}
-                                                className="h-2"
-                                              />
+                                              <Progress value={(((achievement as any).progress || 0) / ((achievement as any).total || 1)) * 100} className="h-2" />
                                             </div>
                                           )
                                         )}
@@ -259,11 +306,11 @@ export default function HomePage() {
                                     </div>
                                   </CardContent>
                                 </Card>
-                              )
+                              );
                             })}
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </div>
 
@@ -271,9 +318,7 @@ export default function HomePage() {
                     <div className="flex flex-col gap-3 sm:gap-4">
                       <div className="text-center sm:text-left">
                         <h4 className="font-semibold text-sm sm:text-base text-foreground">Share Your Progress</h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          Let the community know about your achievements!
-                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Let the community know about your achievements!</p>
                       </div>
                       <Button className="w-full sm:w-auto sm:self-start">
                         <Share2 className="h-4 w-4 mr-2" />
@@ -286,8 +331,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Routine Type Selection Card */}
-          <Card className="mb-8 overflow-hidden">
+          {/* Personal Information & Goals */}
+          <Card className="mb-6 overflow-hidden">
             <CardHeader className="pt-4">
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" />
@@ -297,7 +342,6 @@ export default function HomePage() {
                 <p className="text-sm text-muted-foreground mt-2">
                   Help us calculate your personalized nutrition targets based on your body metrics and fitness level
                 </p>
-
               </CardDescription>
             </CardHeader>
 
@@ -305,45 +349,16 @@ export default function HomePage() {
               {/* Personal Stats Inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="space-y-2">
-                  <Label htmlFor="weight" className="text-sm font-medium">
-                    Weight (kg)
-                  </Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    placeholder="70"
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    className="w-full"
-                  />
+                  <Label htmlFor="weight" className="text-sm font-medium">Weight (kg)</Label>
+                  <Input id="weight" type="number" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full" />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="height" className="text-sm font-medium">
-                    Height (cm)
-                  </Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    placeholder="175"
-                    value={height}
-                    onChange={(e) => setHeight(e.target.value)}
-                    className="w-full"
-                  />
+                  <Label htmlFor="height" className="text-sm font-medium">Height (cm)</Label>
+                  <Input id="height" type="number" value={height} onChange={(e) => setHeight(e.target.value)} className="w-full" />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="age" className="text-sm font-medium">
-                    Age (years)
-                  </Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    placeholder="25"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    className="w-full"
-                  />
+                  <Label htmlFor="age" className="text-sm font-medium">Age (years)</Label>
+                  <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} className="w-full" />
                 </div>
               </div>
 
@@ -353,48 +368,33 @@ export default function HomePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     onClick={() => setExperienceLevel("beginner")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "beginner"
-                      ? "border-primary bg-primary/10 shadow-md"
-                      : "border-border hover:border-primary/50 hover:bg-primary/5"
-                      }`}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "beginner" ? "border-primary bg-primary/10 shadow-md" : "border-border hover:border-primary/50 hover:bg-primary/5"}`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-sm text-foreground">Beginner</h4>
-                      {experienceLevel === "beginner" && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
-                      )}
+                      {experienceLevel === "beginner" && <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground">New to fitness and nutrition tracking</p>
                   </button>
 
                   <button
                     onClick={() => setExperienceLevel("advanced")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "advanced"
-                      ? "border-primary bg-primary/10 shadow-md"
-                      : "border-border hover:border-primary/50 hover:bg-primary/5"
-                      }`}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "advanced" ? "border-primary bg-primary/10 shadow-md" : "border-border hover:border-primary/50 hover:bg-primary/5"}`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-sm text-foreground">Advanced</h4>
-                      {experienceLevel === "advanced" && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
-                      )}
+                      {experienceLevel === "advanced" && <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground">Regular training with good knowledge</p>
                   </button>
 
                   <button
                     onClick={() => setExperienceLevel("professional")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "professional"
-                      ? "border-primary bg-primary/10 shadow-md"
-                      : "border-border hover:border-primary/50 hover:bg-primary/5"
-                      }`}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${experienceLevel === "professional" ? "border-primary bg-primary/10 shadow-md" : "border-border hover:border-primary/50 hover:bg-primary/5"}`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-sm text-foreground">Professional</h4>
-                      {experienceLevel === "professional" && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
-                      )}
+                      {experienceLevel === "professional" && <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground">Athlete or fitness professional</p>
                   </button>
@@ -412,196 +412,198 @@ export default function HomePage() {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {/* Maintain Option */}
+                  {/* Maintain */}
                   <button
                     onClick={() => setSelectedRoutine("maintain")}
-                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "maintain"
-                      ? "border-blue-500 bg-blue-50 shadow-lg scale-105"
-                      : "border-border hover:border-blue-300 hover:bg-blue-50/50"
-                      }`}
+                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "maintain" ? "border-blue-500 bg-blue-50 shadow-lg scale-105" : "border-border hover:border-blue-300 hover:bg-blue-50/50"}`}
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="text-3xl">{routineTypes.maintain.icon}</div>
+                      <div className="text-3xl">⚖️</div>
                       <div>
-                        <h3 className="font-bold text-lg text-foreground">{routineTypes.maintain.title}</h3>
+                        <h3 className="font-bold text-lg text-foreground">Maintain</h3>
                         {selectedRoutine === "maintain" && <Badge className="bg-blue-500 text-white text-xs">Active</Badge>}
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">{routineTypes.maintain.description}</p>
-                    <div className="space-y-1 text-xs text-muted-foreground">
-                      <div className="flex justify-between">
-                        <span>Daily Calories:</span>
-                        <span className="font-medium text-foreground">{routineTypes.maintain.calories}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Protein:</span>
-                        <span className="font-medium text-foreground">{routineTypes.maintain.protein}g</span>
-                      </div>
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">Keep your current weight and build healthy habits</p>
                   </button>
 
-                  {/* Lose Option */}
+                  {/* Lose */}
                   <button
                     onClick={() => setSelectedRoutine("lose")}
-                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "lose"
-                      ? "border-rose-500 bg-rose-50 shadow-lg scale-105"
-                      : "border-border hover:border-rose-300 hover:bg-rose-50/50"
-                      }`}
+                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "lose" ? "border-rose-500 bg-rose-50 shadow-lg scale-105" : "border-border hover:border-rose-300 hover:bg-rose-50/50"}`}
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="text-3xl">{routineTypes.lose.icon}</div>
+                      <div className="text-3xl">📉</div>
                       <div>
-                        <h3 className="font-bold text-lg text-foreground">{routineTypes.lose.title}</h3>
+                        <h3 className="font-bold text-lg text-foreground">Lose</h3>
                         {selectedRoutine === "lose" && <Badge className="bg-rose-500 text-white text-xs">Active</Badge>}
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">{routineTypes.lose.description}</p>
-                    <div className="space-y-1 text-xs text-muted-foreground">
-                      <div className="flex justify-between">
-                        <span>Daily Calories:</span>
-                        <span className="font-medium text-foreground">{routineTypes.lose.calories}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Protein:</span>
-                        <span className="font-medium text-foreground">{routineTypes.lose.protein}g</span>
-                      </div>
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">Create a calorie deficit to lose weight sustainably</p>
                   </button>
 
-                  {/* Gain Option */}
+                  {/* Gain */}
                   <button
                     onClick={() => setSelectedRoutine("gain")}
-                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "gain"
-                      ? "border-green-500 bg-green-50 shadow-lg scale-105"
-                      : "border-border hover:border-green-300 hover:bg-green-50/50"
-                      }`}
+                    className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "gain" ? "border-green-500 bg-green-50 shadow-lg scale-105" : "border-border hover:border-green-300 hover:bg-green-50/50"}`}
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="text-3xl">{routineTypes.gain.icon}</div>
+                      <div className="text-3xl">📈</div>
                       <div>
-                        <h3 className="font-bold text-lg text-foreground">{routineTypes.gain.title}</h3>
+                        <h3 className="font-bold text-lg text-foreground">Gain</h3>
                         {selectedRoutine === "gain" && <Badge className="bg-green-500 text-white text-xs">Active</Badge>}
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">{routineTypes.gain.description}</p>
-                    <div className="space-y-1 text-xs text-muted-foreground">
-                      <div className="flex justify-between">
-                        <span>Daily Calories:</span>
-                        <span className="font-medium text-foreground">{routineTypes.gain.calories}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Protein:</span>
-                        <span className="font-medium text-foreground">{routineTypes.gain.protein}g</span>
-                      </div>
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">Build muscle with a calorie surplus and high protein</p>
                   </button>
                 </div>
-                {/* Activity Level Selection */}
-              <div className="space-y-3 mt-6">
-                <Label className="text-sm font-medium">Activity Level</Label>
-                <p className="text-xs text-muted-foreground mb-3">
-                  How active are you throughout the day? This helps calculate your daily calorie needs.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                  <button
-                    onClick={() => setActivityLevel("sedentary")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      activityLevel === "sedentary"
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-sm text-foreground">Sedentary</h4>
-                      {activityLevel === "sedentary" && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Little to no exercise, desk job</p>
-                  </button>
 
-                  <button
-                    onClick={() => setActivityLevel("light")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      activityLevel === "light"
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-sm text-foreground">Light</h4>
-                      {activityLevel === "light" && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Exercise 1-3 days/week</p>
-                  </button>
-
-                  <button
-                    onClick={() => setActivityLevel("moderate")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      activityLevel === "moderate"
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-sm text-foreground">Moderate</h4>
-                      {activityLevel === "moderate" && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Exercise 3-5 days/week</p>
-                  </button>
-
-                  <button
-                    onClick={() => setActivityLevel("high")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      activityLevel === "high"
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-sm text-foreground">High</h4>
-                      {activityLevel === "high" && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Exercise 6-7 days/week</p>
-                  </button>
-
-                  <button
-                    onClick={() => setActivityLevel("athlete")}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      activityLevel === "athlete"
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-sm text-foreground">Athlete</h4>
-                      {activityLevel === "athlete" && (
-                        <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Intense training 2x/day</p>
-                  </button>
+                {/* Activity Level */}
+                <div className="space-y-3 mt-6">
+                  <Label className="text-sm font-medium">Activity Level</Label>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    How active are you throughout the day? This helps calculate your daily calorie needs.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    {[
+                      { key: "sedentary", label: "Sedentary" },
+                      { key: "light", label: "Light" },
+                      { key: "moderate", label: "Moderate" },
+                      { key: "high", label: "High" },
+                      { key: "athlete", label: "Athlete" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.key}
+                        onClick={() => setActivityLevel(opt.key as any)}
+                        className={`p-4 rounded-lg border-2 transition-all text-left ${
+                          activityLevel === opt.key ? "border-primary bg-primary/10 shadow-md" : "border-border hover:border-primary/50 hover:bg-primary/5"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-sm text-foreground">{opt.label}</h4>
+                          {activityLevel === opt.key && <Badge className="bg-primary text-primary-foreground text-xs">Selected</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {opt.key === "sedentary" && "Little to no exercise, desk job"}
+                          {opt.key === "light" && "Exercise 1-3 days/week"}
+                          {opt.key === "moderate" && "Exercise 3-5 days/week"}
+                          {opt.key === "high" && "Exercise 6-7 days/week"}
+                          {opt.key === "athlete" && "Intense training 2x/day"}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
                 {/* Save Button */}
-                <div className="mt-6 flex justify-end">
-                  <Button
-                    className="w-full sm:w-auto"
-                    disabled={!canSave}>
-                    Save Profile Settings
+                <div className="mt-6 flex flex-col items-end gap-2">
+                  <Button className="w-full sm:w-auto" disabled={!canSave || saving} onClick={handleSave}>
+                    {saving ? "Saving..." : "Save Profile Settings"}
                   </Button>
+                  {saveMsg && (
+                    <p className="text-sm" style={{ color: saveMsg.startsWith("Profile") ? "#2E7D32" : "#D32F2F" }}>
+                      {saveMsg}
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* --------- Current Plan Summary --------- */}
+          <Card className="mb-8">
+            <CardHeader className="pt-4">
+              <CardTitle className="flex items-center gap-2">
+                <FlameKindling className="h-5 w-5" style={{ color: "#FF9800" }} />
+                Your Current Plan
+              </CardTitle>
+              <CardDescription>Latest personalized targets based on your selections</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingPlan && <div className="text-sm text-muted-foreground">Loading plan…</div>}
+              {planError && <div className="text-sm text-red-600">Error: {planError}</div>}
+
+              {!loadingPlan && !planError && latestPlan && (
+                <div className="space-y-6">
+                  {/* Meta */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary" className="capitalize">
+                      <Dumbbell className="h-3 w-3 mr-1" /> <TitleCap>{latestPlan.experience}</TitleCap>
+                    </Badge>
+                    <Badge variant="secondary" className="capitalize">
+                      <Activity className="h-3 w-3 mr-1" /> <TitleCap>{latestPlan.activity_level}</TitleCap>
+                    </Badge>
+                    <Badge variant="secondary" className="capitalize">
+                      <Target className="h-3 w-3 mr-1" /> <TitleCap>{latestPlan.mode}</TitleCap>
+                    </Badge>
+                    {typeof latestPlan.version === "number" && (
+                      <Badge variant="outline">v{latestPlan.version}</Badge>
+                    )}
+                  </div>
+
+                  {/* Totales base */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                        <Gauge className="h-4 w-4" /> BMR
+                      </div>
+                      <div className="text-lg font-semibold text-foreground">{fmtInt(latestPlan.bmr)} kcal</div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                        <Gauge className="h-4 w-4" /> TDEE
+                      </div>
+                      <div className="text-lg font-semibold text-foreground">{fmtInt(latestPlan.tdee)} kcal</div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                        <Flame className="h-4 w-4" /> Daily Calories
+                      </div>
+                      <div className="text-lg font-semibold text-foreground">{fmtInt(latestPlan.calorie_target)} kcal</div>
+                    </div>
+                  </div>
+
+                  {/* Macros */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="p-4 border rounded-lg">
+                      <div className="text-xs text-muted-foreground">Protein</div>
+                      <div className="text-lg font-semibold text-foreground">{fmtInt(latestPlan.protein_g)} g</div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="text-xs text-muted-foreground">Carbs</div>
+                      <div className="text-lg font-semibold text-foreground">{fmtInt(latestPlan.carbs_g)} g</div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="text-xs text-muted-foreground">Fat</div>
+                      <div className="text-lg font-semibold text-foreground">{fmtInt(latestPlan.fat_g)} g</div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="text-xs text-muted-foreground">Fiber</div>
+                      <div className="text-lg font-semibold text-foreground">{fmtInt(latestPlan.fiber_g)} g</div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="text-xs text-muted-foreground">Water</div>
+                      <div className="text-lg font-semibold text-foreground">
+                        {fmtOneDec(latestPlan.water_l)} L
+                      </div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="text-xs text-muted-foreground">Calorie Split</div>
+                      <div className="text-sm text-foreground">
+                        Prot {fmtInt(latestPlan.protein_g * 4)} kcal · Fat {fmtInt(latestPlan.fat_g * 9)} kcal · Carbs {fmtInt(latestPlan.carbs_g * 4)} kcal
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!loadingPlan && !planError && !latestPlan && (
+                <div className="text-sm text-muted-foreground">
+                  No plan yet. Save your profile settings to generate your personalized targets.
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Favorites Section */}
           <Card className="mb-8">
@@ -622,22 +624,15 @@ export default function HomePage() {
               </div>
             </CardHeader>
             <CardContent>
-              {favLoading && (
-                <div className="text-sm text-muted-foreground">Loading favorites…</div>
-              )}
-              {favError && (
-                <div className="text-sm text-red-600">Error loading favorites</div>
-              )}
-
+              {favLoading && <div className="text-sm text-muted-foreground">Loading favorites…</div>}
+              {favError && <div className="text-sm text-red-600">Error loading favorites</div>}
               {!favLoading && !favError && (
                 <>
                   {favorites.length === 0 ? (
                     <Card className="border-dashed">
                       <CardContent className="py-8 text-center">
                         <CardTitle className="mb-2">No favorites yet</CardTitle>
-                        <CardDescription>
-                          Add recipes to your favorites to see them here.
-                        </CardDescription>
+                        <CardDescription>Add recipes to your favorites to see them here.</CardDescription>
                         <div className="mt-4">
                           <Link href="/discover">
                             <Button>Discover recipes</Button>
@@ -652,15 +647,10 @@ export default function HomePage() {
                           <div className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="font-medium text-foreground line-clamp-1">{r.title}</h4>
-                              {/* Si querés categoría, podrías usar un Badge con r.visibility o similar */}
-                              <Badge variant="secondary" className="capitalize">
-                                {r.visibility}
-                              </Badge>
+                              <Badge variant="secondary" className="capitalize">{r.visibility}</Badge>
                             </div>
                             {r.description && (
-                              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                                {r.description}
-                              </p>
+                              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{r.description}</p>
                             )}
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
                               <span>{Math.round(r.calories ?? 0)} cal</span>
@@ -801,5 +791,5 @@ export default function HomePage() {
         </div>
       </div>
     </RequireAuth>
-  )
+  );
 }

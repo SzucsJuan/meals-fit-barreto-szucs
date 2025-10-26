@@ -53,7 +53,7 @@ export default function AdminDashboard() {
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Total Users
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <ChefHat className="h-4 w-4" />
                 Total Recipes
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Activity className="h-4 w-4" />
                 Meals Logged
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link href="/admin/users">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
+              <CardHeader className="pt-2">
                 <div className="flex items-center gap-3">
                   <div className="p-2">
                     <Users className="h-5 w-5" style={{ color: "#FF9800" }} />
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
 
           <Link href="/admin/recipes">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
+              <CardHeader className="pt-2">
                 <div className="flex items-center gap-3">
                   <div className="p-2">
                     <ChefHat className="h-5 w-5" style={{ color: "#FF9800" }} />
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
 
           <Link href="/home">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
+              <CardHeader className="pt-2">
                 <div className="flex items-center gap-3">
                   <div className="p-2">
                     <EggFried className="h-5 w-5" style={{ color: "#FF9800" }}/>
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
-            <CardHeader>
+            <CardHeader className="pt-4">
               <CardTitle>Weekly Activity</CardTitle>
               <CardDescription>User registrations and recipe creations</CardDescription>
             </CardHeader>
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="pt-4">
               <CardTitle>Recipe Category Distribution</CardTitle>
               <CardDescription>Breakdown of recipes by meal type</CardDescription>
             </CardHeader>
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Activity Card */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pt-4">
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
                 Recent Activity
@@ -263,7 +263,7 @@ export default function AdminDashboard() {
 
           {/* Pending Actions Card */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pt-4">
               <CardTitle className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-yellow-600" />
                 Pending Actions

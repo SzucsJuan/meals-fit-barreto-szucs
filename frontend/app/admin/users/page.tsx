@@ -249,7 +249,7 @@ export default function AdminUsersPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
             </CardHeader>
             <CardContent>
@@ -257,7 +257,7 @@ export default function AdminUsersPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
             </CardHeader>
             <CardContent>
@@ -267,7 +267,7 @@ export default function AdminUsersPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground">Suspended</CardTitle>
             </CardHeader>
             <CardContent>
@@ -277,7 +277,7 @@ export default function AdminUsersPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground">Flagged</CardTitle>
             </CardHeader>
             <CardContent>
@@ -358,7 +358,7 @@ export default function AdminUsersPage() {
 
         {/* Users Table */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pt-4">
             <CardTitle>Users ({filteredUsers.length})</CardTitle>
             <CardDescription>Manage all user accounts on the platform</CardDescription>
           </CardHeader>

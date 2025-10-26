@@ -280,7 +280,7 @@ export default function AdminRecipesPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Recipes</CardTitle>
             </CardHeader>
             <CardContent>
@@ -288,7 +288,7 @@ export default function AdminRecipesPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
             </CardHeader>
             <CardContent>
@@ -298,7 +298,7 @@ export default function AdminRecipesPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
             </CardHeader>
             <CardContent>
@@ -308,7 +308,7 @@ export default function AdminRecipesPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground">Flagged</CardTitle>
             </CardHeader>
             <CardContent>
@@ -364,7 +364,7 @@ export default function AdminRecipesPage() {
 
         {/* Recipes Table */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pt-4">
             <CardTitle>Recipes ({filteredRecipes.length})</CardTitle>
             <CardDescription>Manage all recipes on the platform</CardDescription>
           </CardHeader>

@@ -7,18 +7,17 @@ use App\Models\UserNutritionPlan;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class GoalGenerator
 {
-    /** Genera objetivos con reglas determinísticas (fallback garantizado). */
     public function generateByRules(User $u, array $input): array
     {
         [$sex, $age, $heightCm, $weightKg] = [
-            strtolower((string)($u->sex ?? 'm')),   // 'm' o 'f'
+            strtolower((string)($u->sex ?? 'm')),   // default 'm' si no existe
             (int)($u->age ?? 25),
-            (float)($u->height_cm ?? 175),
-            (float)($u->weight_kg ?? 75),
+            (float)($u->height ?? 175),   // <- usa height real
+            (float)($u->weight ?? 75),    // <- usa weight real
         ];
 
         $activityFactor = $this->activityFactor($input['activity_level']);
@@ -27,11 +26,10 @@ class GoalGenerator
 
         $calTarget = match ($input['mode']) {
             'maintenance' => $tdee,
-            'gain'        => $tdee * 1.12, // punto medio 10–15%
-            'loss'        => $tdee * 0.825 // punto medio 15–20%
+            'gain'        => $tdee * 1.12,
+            'loss'        => $tdee * 0.825
         };
 
-        // Prote: g/kg según experiencia
         $proteinPerKg = match ($input['experience']) {
             'beginner'     => 1.7,
             'advanced'     => 1.9,
@@ -39,23 +37,19 @@ class GoalGenerator
         };
         $proteinG = $weightKg * $proteinPerKg;
 
-        // Grasas: 0.9 g/kg (fijo)
         $fatG = $weightKg * 0.9;
 
-        // Carbs = kcal restantes
         $kcalFromProtein = $proteinG * 4;
         $kcalFromFat     = $fatG * 9;
         $kcalLeft        = max(0, $calTarget - $kcalFromProtein - $kcalFromFat);
         $carbsG          = $kcalLeft / 4;
 
-        // Redondeos prácticos a múltiplos de 5g
         $proteinG = $this->round5($proteinG);
         $fatG     = $this->round5($fatG);
         $carbsG   = $this->round5($carbsG);
 
-        // Extras
-        $fiberG = round(($calTarget / 1000) * 14, 0); // 14 g por 1000 kcal
-        $waterL = round($weightKg * 0.035, 1);        // 35 ml/kg
+        $fiberG = round(($calTarget / 1000) * 14, 0);
+        $waterL = round($weightKg * 0.035, 1);
 
         return [
             'bmr'            => round($bmr, 0),
@@ -69,72 +63,63 @@ class GoalGenerator
         ];
     }
 
-    /** Intenta IA. Si falla validación o no hay API key, lanza excepción para fallback. */
+    /** Devuelve ['metrics'=>array,'raw'=>array,'model'=>string,'prompt'=>string] */
     public function generateByAI(User $u, array $input): array
     {
-        // Puedes leer de .env: OPENAI_API_KEY, OPENAI_MODEL
         $apiKey = config('services.openai.key') ?? env('OPENAI_API_KEY');
         $model  = config('services.openai.model', 'gpt-4o-mini');
-
         if (!$apiKey) {
             throw new \RuntimeException('AI disabled: missing API key');
         }
 
-        // Datos del user
         $payload = [
             'sex'            => strtolower((string)($u->sex ?? 'm')),
             'age'            => (int)($u->age ?? 25),
-            'height_cm'      => (float)($u->height_cm ?? 175),
-            'weight_kg'      => (float)($u->weight_kg ?? 75),
+            'height_cm'      => (float)($u->height ?? 175),  // usa height
+            'weight_kg'      => (float)($u->weight ?? 75),   // usa weight
             'activity_level' => $input['activity_level'],
             'mode'           => $input['mode'],
             'experience'     => $input['experience'],
         ];
 
-        // Prompt estilo “función” (solo JSON)
-        $userPrompt = [
-            'role' => 'user',
-            'content' => [
-                [
-                    'type' => 'text',
-                    'text' => "Generá objetivos diarios SOLO en JSON con este contrato:\n\n".
-                        json_encode([
-                            'bmr' => 'number',
-                            'tdee' => 'number',
-                            'calorie_target' => 'number',
-                            'protein_g' => 'number',
-                            'fat_g' => 'number',
-                            'carbs_g' => 'number',
-                            'fiber_g' => 'number',
-                            'water_l' => 'number',
-                        ]).
-                        "\n\nReglas duras:\n".
-                        "- BMR = Mifflin–St Jeor.\n".
-                        "- TDEE = BMR * factor actividad (1.2,1.375,1.55,1.725,1.9).\n".
-                        "- Calorías: maintenance=TDEE, gain=+10–15%, loss=−15–20%.\n".
-                        "- Proteína g/kg: beginner 1.7, advanced 1.9, professional 2.1.\n".
-                        "- Grasas: 0.9 g/kg.\n".
-                        "- Carbs = calorías restantes / 4.\n".
-                        "- Redondeá macros (protein/fat/carbs) a múltiplos de 5g.\n".
-                        "- Devolvé números (no strings) y SOLO JSON válido.\n\n".
-                        "Datos: ".json_encode($payload),
-                ]
-            ]
-        ];
+        $promptName = 'goal-generation-v1';
 
-        $systemPrompt = [
-            'role' => 'system',
-            'content' => [
-                ['type' => 'text', 'text' => 'Sos un nutricionista deportivo. Responde estrictamente con JSON válido.']
-            ]
-        ];
-
-        // Llamada HTTP simple (sin SDK) — si preferís, reemplazalo por tu cliente preferido.
-        $response = \Http::withToken($apiKey)
-            ->timeout(20)
+        $response = Http::withToken($apiKey)
+            ->timeout(30)
+            ->retry(2, 500)
             ->post('https://api.openai.com/v1/chat/completions', [
                 'model' => $model,
-                'messages' => [$systemPrompt, $userPrompt],
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => 'Sos un nutricionista deportivo. Responde estrictamente con JSON válido.'
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' =>
+                            "Generá objetivos diarios SOLO en JSON con este contrato:\n".
+                            json_encode([
+                                'bmr' => 'number',
+                                'tdee' => 'number',
+                                'calorie_target' => 'number',
+                                'protein_g' => 'number',
+                                'fat_g' => 'number',
+                                'carbs_g' => 'number',
+                                'fiber_g' => 'number',
+                                'water_l' => 'number',
+                            ])."\n\n".
+                            "Reglas duras:\n".
+                            "- BMR = Mifflin–St Jeor.\n".
+                            "- TDEE = BMR * factor actividad (1.2,1.375,1.55,1.725,1.9).\n".
+                            "- Calorías: maintenance=TDEE, gain=+10–15%, loss=−15–20%.\n".
+                            "- Proteína g/kg: beginner 1.7, advanced 1.9, professional 2.1.\n".
+                            "- Grasas: 0.9 g/kg.\n".
+                            "- Carbs = calorías restantes / 4.\n".
+                            "- Redondeá macros (protein/fat/carbs) a múltiplos de 5g.\n".
+                            "- Devolvé números y SOLO JSON válido.\n\n".
+                            "Datos: ".json_encode($payload),
+                    ],
+                ],
                 'response_format' => ['type' => 'json_object'],
                 'temperature' => 0.1,
             ])
@@ -146,14 +131,12 @@ class GoalGenerator
             throw new \RuntimeException('AI empty response');
         }
 
-        // Parsear JSON
         $data = json_decode($content, true);
         if (!is_array($data)) {
             throw new \RuntimeException('AI invalid JSON');
         }
 
-        // Validar contrato esperado
-        $validator = Validator::make($data, [
+        $validator = \Validator::make($data, [
             'bmr'            => 'required|numeric',
             'tdee'           => 'required|numeric',
             'calorie_target' => 'required|numeric',
@@ -163,20 +146,22 @@ class GoalGenerator
             'fiber_g'        => 'required|numeric',
             'water_l'        => 'required|numeric',
         ]);
-
         if ($validator->fails()) {
-            throw new \RuntimeException('AI validation failed: '. $validator->errors()->first());
+            throw new \RuntimeException('AI validation failed: '.$validator->errors()->first());
         }
 
-        // Normalizar números (por si vienen flotantes con strings, etc.)
         foreach ($data as $k => $v) {
             $data[$k] = is_numeric($v) ? (float)$v : $v;
         }
 
-        return $data;
+        return [
+            'metrics' => $data,
+            'raw'     => $data,       // guardamos el JSON validado (podrías guardar también $response entero si querés)
+            'model'   => $model,
+            'prompt'  => $promptName,
+        ];
     }
 
-    /** Guarda/crea nueva versión y retorna el modelo. */
     public function upsertPlan(User $u, array $metrics, array $metaInput, string $source, ?array $aiContext = null): UserNutritionPlan
     {
         $last = $u->nutritionPlans()->latest('effective_from')->first();

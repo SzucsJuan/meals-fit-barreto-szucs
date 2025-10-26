@@ -17,21 +17,36 @@ class GoalsController extends Controller
         $input = $req->validated();
         $sourceParam = $req->query('source', 'ai');
 
-        $metrics = null;
+        // Si llegan métricas personales, actualizamos el perfil del usuario:
+        $dirty = [];
+        foreach (['age','weight','height'] as $k) {
+            if (array_key_exists($k, $input) && $input[$k] !== null) {
+                $dirty[$k] = $input[$k];
+            }
+        }
+        if ($dirty) {
+            $user->update($dirty);
+        }
+
         $usedSource = 'rule';
         $aiCtx = null;
+        $metrics = null;
 
         if ($sourceParam === 'ai') {
             try {
-                $metrics = $this->service->generateByAI($user, $input);
+                $ai = $this->service->generateByAI($user, $input);
+                $metrics = $ai['metrics'];
                 $usedSource = 'ai';
                 $aiCtx = [
-                    'model'  => config('services.openai.model', 'gpt-4o-mini'),
-                    'prompt' => 'goal-generation-v1', // opcional: guarda el template
-                    'raw'    => null, // si querés guardar el JSON crudo, podés hacerlo en el servicio
+                    'model'  => $ai['model'] ?? config('services.openai.model', 'gpt-4o-mini'),
+                    'prompt' => $ai['prompt'] ?? 'goal-generation-v1',
+                    'raw'    => $ai['raw'] ?? null,
                 ];
             } catch (\Throwable $e) {
-                // log optional
+                \Log::warning('AI goal generation failed', [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage(),
+                ]);
                 $metrics = $this->service->generateByRules($user, $input);
                 $usedSource = 'rule';
             }
