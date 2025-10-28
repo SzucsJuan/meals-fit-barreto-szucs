@@ -84,7 +84,7 @@ class GoalGenerator
 
         $promptName = 'goal-generation-v1';
 
-        $response = Http::withToken($apiKey)
+        $response = \Http::withToken($apiKey)
             ->timeout(30)
             ->retry(2, 500)
             ->post('https://api.openai.com/v1/chat/completions', [
