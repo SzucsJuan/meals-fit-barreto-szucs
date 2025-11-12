@@ -27,7 +27,7 @@ export default function EditRecipePage({params} : {params : Promise<{ id: string
   const { updateRecipe, loading: saving, error: saveError } = useUpdateRecipe();
 
   const [title, setTitle] = useState("");
-  const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [prepTime, setPrepTime] = useState("0");
   const [cookTime, setCookTime] = useState("0");
   const [servings, setServings] = useState("1");
@@ -149,7 +149,6 @@ export default function EditRecipePage({params} : {params : Promise<{ id: string
                     <SelectTrigger><SelectValue placeholder="Select visibility" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="unlisted">Unlisted</SelectItem>
                       <SelectItem value="private">Private</SelectItem>
                     </SelectContent>
                   </Select>

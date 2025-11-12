@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Navigation from "@/components/navigation";
 import {
@@ -11,12 +11,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Heart, Edit, Share2, Trash2 } from "lucide-react";
+import { Clock, Users, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMe } from "@/lib/useMe";
 import { detailRecipe } from "@/lib/detailRecipe";
 import { useDeleteRecipe } from "@/lib/useDeleteRecipe";
 import DeleteModalRecipe from "@/components/DeleteModalRecipe";
+import FavoriteButton from "@/components/FavoriteButton";
+import { ensureCsrf, xsrfHeader } from "@/lib/csrf";
+
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 function splitSteps(steps?: string | null) {
   if (!steps) return [];
@@ -35,8 +39,50 @@ export default function RecipeDetailPage() {
 
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // ---- favoritos (usa tu componente ya implementado) ----
   const isOwner = !!(me && r?.user?.id && me.id === r.user.id);
   const canDelete = isOwner;
+
+  // ---- visibilidad: estado local para reflejar cambios instantáneos ----
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
+  const [updatingVis, setUpdatingVis] = useState(false);
+
+  useEffect(() => {
+    if (r?.visibility === "public" || r?.visibility === "private") {
+      setVisibility(r.visibility);
+    }
+  }, [r?.visibility]);
+
+
+  async function toggleVisibility(nextVis: "public" | "private") {
+    if (!r || updatingVis || visibility === nextVis) return;
+    try {
+      setUpdatingVis(true);
+
+      await ensureCsrf(BASE);
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      Object.assign(headers, xsrfHeader()); 
+      const res = await fetch(`${BASE}/api/recipes/${r.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers, // tipo concreto
+        body: JSON.stringify({ visibility: nextVis }),
+      });
+
+      if (!res.ok) throw new Error(`Failed to update visibility (${res.status})`);
+      setVisibility(nextVis);
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo cambiar la visibilidad.");
+    } finally {
+      setUpdatingVis(false);
+    }
+  }
 
   async function handleDelete() {
     if (!r) return;
@@ -48,7 +94,6 @@ export default function RecipeDetailPage() {
       alert("Error deleting recipe.");
     }
   }
-
 
   const totalMinutes = (r?.prep_time_minutes ?? 0) + (r?.cook_time_minutes ?? 0);
   const steps = splitSteps(r?.steps);
@@ -64,9 +109,7 @@ export default function RecipeDetailPage() {
           </Link>
         </div>
 
-        {loading && (
-          <div className="text-sm text-muted-foreground">Loading...</div>
-        )}
+        {loading && <div className="text-sm text-muted-foreground">Loading...</div>}
         {error && <div className="text-sm text-red-600">Error: {error}</div>}
         {!loading && !r && !error && (
           <div className="text-sm text-muted-foreground">Recipe not found.</div>
@@ -90,22 +133,24 @@ export default function RecipeDetailPage() {
                     <h1 className="text-3xl font-bold text-foreground mb-2">
                       {r.title}
                     </h1>
-                    <p className="text-muted-foreground text-lg">
-                      {r.description}
-                    </p>
+                    <p className="text-muted-foreground text-lg">{r.description}</p>
                     {r.user?.name && (
                       <p className="text-xs text-muted-foreground mt-2">
                         by {r.user.name}
                       </p>
                     )}
                   </div>
-                  <Button variant="ghost" size="sm">
-                    <Heart className="h-5 w-5 text-muted-foreground" />
-                  </Button>
+
+                  {/* Corazón de favoritos */}
+                  <FavoriteButton
+                    recipeId={r.id}
+                    initialFavorited={!!r.is_favorited}
+                    onChange={() => { }}
+                  />
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{r.visibility}</Badge>
+                  <Badge variant="secondary">{visibility}</Badge>
                   {typeof r.avg_rating === "number" && (
                     <Badge variant="outline">
                       ★ {r.avg_rating.toFixed(1)} ({r.votes_count ?? 0})
@@ -118,31 +163,48 @@ export default function RecipeDetailPage() {
                     <Clock className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">Total Time</div>
-                      <div className="text-sm text-muted-foreground">
-                        {totalMinutes} min
-                      </div>
+                      <div className="text-sm text-muted-foreground">{totalMinutes} min</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">Servings</div>
-                      <div className="text-sm text-muted-foreground">
-                        {r.servings}
-                      </div>
+                      <div className="text-sm text-muted-foreground">{r.servings}</div>
                     </div>
                   </div>
                 </div>
 
+                {/* Acciones */}
                 <div className="flex gap-2">
                   <Button asChild className="flex-1">
                     <Link href={`/recipes/${r.id}/edit`}>
-                      <Edit className="h-4 w-4 mr-2" /> Edit Recipe</Link>
+                      <Edit className="h-4 w-4 mr-2" /> Edit Recipe
+                    </Link>
                   </Button>
-                  <Button variant="outline">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share
-                  </Button>
+
+                  {/* 🔁 Toggle de visibilidad: reemplaza al Share */}
+                  {isOwner && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant={visibility === "public" ? "default" : "outline"}
+                        size="sm"
+                        disabled={updatingVis}
+                        onClick={() => toggleVisibility("public")}
+                      >
+                        Public
+                      </Button>
+                      <Button
+                        variant={visibility === "private" ? "default" : "outline"}
+                        size="sm"
+                        disabled={updatingVis}
+                        onClick={() => toggleVisibility("private")}
+                      >
+                        Private
+                      </Button>
+                    </div>
+                  )}
+
                   {canDelete && (
                     <>
                       <Button
@@ -181,9 +243,7 @@ export default function RecipeDetailPage() {
                     <div className="text-2xl font-bold text-primary">
                       {Math.round(r.calories)}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      Calories
-                    </div>
+                    <div className="text-sm text-muted-foreground">Calories</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-accent">
@@ -231,9 +291,7 @@ export default function RecipeDetailPage() {
                 </CardHeader>
                 <CardContent>
                   {steps.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">
-                      No steps provided.
-                    </div>
+                    <div className="text-sm text-muted-foreground">No steps provided.</div>
                   ) : (
                     <ol className="space-y-4">
                       {steps.map((st, idx) => (

@@ -100,10 +100,6 @@ class Recipe extends Model
     {
         return $q->where('visibility', 'public');
     }
-    public function scopeUnlisted($q)
-    {
-        return $q->where('visibility', 'unlisted');
-    }
     public function scopePrivate($q)
     {
         return $q->where('visibility', 'private');

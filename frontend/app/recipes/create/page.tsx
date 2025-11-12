@@ -20,12 +20,12 @@ import { apiRecipeImages } from "@/lib/api";
 
 export default function CreateRecipePage() {
   const router = useRouter();
-  const { data: ingredientOptions } = useIngredientsHook(""); // usa tu hook
+  const { data: ingredientOptions } = useIngredientsHook("");
   const { createRecipe, loading, error } = useCreateRecipe();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [prepTime, setPrepTime] = useState("");
   const [cookTime, setCookTime] = useState("");
   const [servings, setServings] = useState("");
@@ -158,7 +158,6 @@ export default function CreateRecipePage() {
                       <SelectTrigger><SelectValue placeholder="Select visibility" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="unlisted">Unlisted</SelectItem>
                         <SelectItem value="private">Private</SelectItem>
                       </SelectContent>
                     </Select>

@@ -26,7 +26,7 @@ class RecipeUpdateRequest extends FormRequest
             'slug' => ['nullable', 'string', 'max:200', 'unique:recipes,slug,' . $routeParam->id],
             'description' => ['nullable', 'string'],
             'steps' => ['nullable', 'string'],
-            'visibility' => ['sometimes', 'in:public,unlisted,private'],
+            'visibility' => 'sometimes|in:public,private',
             'servings' => ['sometimes', 'numeric', 'min:0.1'],
             'prep_time_minutes' => ['sometimes', 'integer', 'min:0'],
             'cook_time_minutes' => ['sometimes', 'integer', 'min:0'],

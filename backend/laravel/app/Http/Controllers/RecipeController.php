@@ -22,19 +22,29 @@ class RecipeController extends Controller
         $perPage = (int) $request->query('per_page', 15);
         $order = $request->query('order', 'latest'); // latest|rating|calories|protein|carbs|fat
         $user = $request->user();
+        $userId = optional($user)->id;
+
+        $mine = $request->boolean('mine');          // solo mis recetas
+        $discover = $request->boolean('discover');  // solo públicas (para /discover)
 
         $query = Recipe::query()
             ->with(['user:id,name', 'ingredients:id,name'])
-            ->withIsFavorited(optional(auth()->user())->id)
+            ->withIsFavorited($userId)
             ->withAvg('votes as avg_rating', 'rating')
-            ->withCount(['votes', 'favoredBy'])
-            // públicas o del dueño
-            ->where(function ($w) use ($user) {
+            ->withCount(['votes', 'favoredBy']);
+
+        if ($mine && $user) {
+            $query->where('user_id', $user->id);
+        } elseif ($discover) {
+            $query->where('visibility', 'public');
+        } else {
+            $query->where(function ($w) use ($user) {
                 $w->where('visibility', 'public');
                 if ($user) {
                     $w->orWhere('user_id', $user->id);
                 }
             });
+        }
 
         if ($q !== '') {
             $query->where(function ($sub) use ($q) {
@@ -46,13 +56,12 @@ class RecipeController extends Controller
             });
         }
 
-        if ($request->boolean('mine')) {
-            $query->where('user_id', $user->id);
-        }
-
         switch ($order) {
             case 'rating':
                 $query->orderByDesc('avg_rating')->orderByDesc('id');
+                break;
+            case 'name':
+                $query->orderBy('title');
                 break;
             case 'calories':
             case 'protein':
@@ -67,6 +76,7 @@ class RecipeController extends Controller
         return $query->paginate($perPage);
     }
 
+
     // GET
     public function show(Recipe $recipe, Request $request)
     {
@@ -78,12 +88,12 @@ class RecipeController extends Controller
 
         $recipe = Recipe::query()
             ->whereKey($recipe->id)
-            ->withIsFavorited($userId)                  
+            ->withIsFavorited($userId)
             ->with([
                 'user:id,name',
                 'ingredients:id,name,serving_size,serving_unit,calories,protein,carbs,fat',
             ])
-            ->withCount(['votes', 'favoredBy'])       
+            ->withCount(['votes', 'favoredBy'])
             ->withAvg('votes as avg_rating', 'rating')
             ->firstOrFail();
 
@@ -135,10 +145,10 @@ class RecipeController extends Controller
     // DELETE
     public function destroy(Request $request, Recipe $recipe)
     {
-        
+
         $user = $request->user();
 
-        abort_unless($user && ($user->id === $recipe -> user_id || $user->is_admin()), 403);
+        abort_unless($user && ($user->id === $recipe->user_id || $user->is_admin()), 403);
 
         $recipe->delete();
 

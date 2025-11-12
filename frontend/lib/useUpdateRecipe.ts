@@ -36,7 +36,7 @@ export function useUpdateRecipe() {
       title: string;
       description: string;
       stepsText: string;
-      visibility: "public" | "unlisted" | "private";
+      visibility: "public" | "private";
       servings: string;
       prepTime: string;
       cookTime: string;

@@ -113,7 +113,7 @@ export type RecipeDTO = {
   title: string;
   description?: string | null;
   steps?: string | null;
-  visibility: "public" | "unlisted" | "private";
+  visibility: "public" | "private";
   servings: number;
   prep_time_minutes?: number | null;
   cook_time_minutes?: number | null;
