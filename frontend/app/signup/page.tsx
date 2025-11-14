@@ -41,10 +41,8 @@ export default function SignupPage() {
 
     try {
       setLoading(true);
-      // 1) Registro (token devuelto no lo usamos; la sesión es por cookie)
       await authApi.register({ name, email, password, password_confirmation: confirm });
 
-      // 2) Auto-login para crear la sesión web y tener cookie de sesión
       await authApi.login({ email, password });
 
       router.push("/home");
@@ -57,7 +55,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Side - Hero Section */}
       <div className="hidden lg:flex flex-col justify-center items-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-12">
         <div className="max-w-md space-y-6">
           <div className="space-y-2">
@@ -96,7 +93,6 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* Right Side - Signup Form */}
       <div className="flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-background">
         <div className="w-full max-w-md space-y-8">
           <div className="space-y-2 text-center lg:text-left">
@@ -110,9 +106,8 @@ export default function SignupPage() {
           </div>
 
           <Card className="border-border">
-            <CardHeader className="space-y-1 pb-4">
+            <CardHeader className="pt-4">
               <CardTitle className="text-xl">Get started for free</CardTitle>
-              <CardDescription>No credit card required</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <form className="space-y-4" onSubmit={onSubmit} noValidate>
@@ -121,7 +116,7 @@ export default function SignupPage() {
                   <Input
                     id="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Your name"
                     className="h-11"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
