@@ -38,15 +38,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const booted = useRef(false);
 
   const refresh = async () => {
-    await ensureCsrfCookie();
-    const u = await fetchUser();
-    setUser(u);
-    setStatus(u ? "authed" : "guest");
+    try {
+      await ensureCsrfCookie();
+      const u = await fetchUser();
+      setUser(u);
+      setStatus(u ? "authed" : "guest");
+    } catch (err) {
+      console.error("Error en refresh()", err);
+      setUser(null);
+      setStatus("guest");
+    }
   };
 
   useEffect(() => {
     if (booted.current) return;
     booted.current = true;
+
     refresh();
 
     const onStorage = (e: StorageEvent) => {

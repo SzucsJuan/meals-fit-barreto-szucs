@@ -6,14 +6,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { EggFried } from "lucide-react";
 import { authApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext"; // 👈 IMPORTANTE
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export default function LoginPage() {
   const router = useRouter();
+  const { refresh } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -35,9 +38,18 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      await authApi.login({ email, password }); // crea cookie de sesión
+
+      await authApi.login({ email, password });
+
+      await refresh();
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("mf-auth-event", Date.now().toString());
+      }
+
       router.push("/home");
     } catch (err: any) {
+      console.error(err);
       setFormError(err.message || "Credenciales inválidas.");
     } finally {
       setLoading(false);
@@ -46,7 +58,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Side - Hero Section */}
       <div className="hidden lg:flex flex-col justify-center items-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-12">
         <div className="max-w-md space-y-6">
           <div className="space-y-2">
@@ -88,7 +99,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
       <div className="flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-background">
         <div className="w-full max-w-md space-y-8">
           <div className="space-y-2 text-center lg:text-left">
@@ -115,8 +125,11 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     aria-invalid={!!fieldErrors.email}
                   />
-                  {fieldErrors.email && <p className="text-xs text-red-600">{fieldErrors.email}</p>}
+                  {fieldErrors.email && (
+                    <p className="text-xs text-red-600">{fieldErrors.email}</p>
+                  )}
                 </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
@@ -133,7 +146,9 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     aria-invalid={!!fieldErrors.password}
                   />
-                  {fieldErrors.password && <p className="text-xs text-red-600">{fieldErrors.password}</p>}
+                  {fieldErrors.password && (
+                    <p className="text-xs text-red-600">{fieldErrors.password}</p>
+                  )}
                 </div>
 
                 <Button type="submit" className="w-full h-11" size="lg" disabled={loading}>
