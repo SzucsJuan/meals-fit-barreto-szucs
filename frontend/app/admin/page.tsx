@@ -1,31 +1,109 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Shield, Users, ChefHat, TrendingUp, AlertCircle, CheckCircle, Clock, Activity, EggFried } from "lucide-react"
-import Link from "next/link"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Shield,
+  Users,
+  ChefHat,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Activity,
+  EggFried,
+} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import RequireAuth from "@/components/RequireAuth";
 
-const statsData = [
-  { name: "Mon", users: 45, recipes: 12, meals: 234 },
-  { name: "Tue", users: 52, recipes: 15, meals: 267 },
-  { name: "Wed", users: 48, recipes: 18, meals: 289 },
-  { name: "Thu", users: 61, recipes: 14, meals: 312 },
-  { name: "Fri", users: 55, recipes: 20, meals: 298 },
-  { name: "Sat", users: 67, recipes: 25, meals: 345 },
-  { name: "Sun", users: 58, recipes: 22, meals: 321 },
-]
+type WeeklyPoint = {
+  name: string;
+  users: number;
+  recipes: number;
+  meals: number;
+};
 
-const categoryDistribution = [
-  { name: "Breakfast", value: 892, color: "#FFD54F" },
-  { name: "Lunch", value: 1234, color: "#FF9800" },
-  { name: "Dinner", value: 1456, color: "#388E3C" },
-  { name: "Snacks", value: 310, color: "#A5D6A7" },
-]
+type CategoryPoint = {
+  name: string;
+  value: number;
+};
 
-export default function AdminDashboard() {
+type RecentActivityItem = {
+  type: string;               
+  title: string;
+  description: string;
+  created_at: string;
+  created_at_formatted: string;
+  created_at_human: string;
+};
+
+type AdminStats = {
+  total_users: number;
+  total_recipes: number;
+  total_meals_logged: number;
+  weekly_activity: WeeklyPoint[];
+  recipe_category_distribution: CategoryPoint[];
+  recent_activity: RecentActivityItem[];
+};
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const CATEGORY_COLORS = ["#FFD54F", "#FF9800", "#388E3C", "#A5D6A7"];
+
+export default function AdminPage() {
+  return (
+    <RequireAuth requireAdmin>
+      <AdminDashboardContent />
+    </RequireAuth>
+  );
+}
+
+function AdminDashboardContent() {
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoadingStats(true);
+        setError(null);
+
+        const res = await fetch(`${API}/api/admin/stats`, {
+          method: "GET",
+          credentials: "include", 
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Error al cargar estadísticas (${res.status})`);
+        }
+
+        const data: AdminStats = await res.json();
+        setStats(data);
+      } catch (err: any) {
+        console.error("Error fetching admin stats", err);
+        setError("No se pudieron cargar las estadísticas");
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -60,11 +138,16 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">1,247</div>
-              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                <TrendingUp className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">+12%</span> from last month
+              <div className="text-3xl font-bold text-foreground">
+                {loadingStats ? "..." : stats?.total_users ?? 0}
               </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+              </div>
+              {error && (
+                <p className="mt-1 text-xs text-red-500">
+                  {error}
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -76,10 +159,10 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">3,892</div>
+              <div className="text-3xl font-bold text-foreground">
+                {loadingStats ? "..." : stats?.total_recipes ?? 0}
+              </div>
               <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                <TrendingUp className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">+8%</span> from last month
               </div>
             </CardContent>
           </Card>
@@ -92,10 +175,10 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">18,456</div>
+              <div className="text-3xl font-bold text-foreground">
+                {loadingStats ? "..." : stats?.total_meals_logged ?? 0}
+              </div>
               <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                <TrendingUp className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">+15%</span> from last month
               </div>
             </CardContent>
           </Card>
@@ -140,7 +223,7 @@ export default function AdminDashboard() {
               <CardHeader className="pt-2">
                 <div className="flex items-center gap-3">
                   <div className="p-2">
-                    <EggFried className="h-5 w-5" style={{ color: "#FF9800" }}/>
+                    <EggFried className="h-5 w-5" style={{ color: "#FF9800" }} />
                   </div>
                   <div>
                     <CardTitle className="text-base">Back to App</CardTitle>
@@ -157,18 +240,19 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader className="pt-4">
               <CardTitle>Weekly Activity</CardTitle>
-              <CardDescription>User registrations and recipe creations</CardDescription>
+              <CardDescription>User registrations, recipes & meals (last 7 days)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statsData}>
+                  <BarChart data={stats?.weekly_activity ?? []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
                     <Bar dataKey="users" fill="#4CAF50" name="New Users" />
                     <Bar dataKey="recipes" fill="#FF9800" name="New Recipes" />
+                    <Bar dataKey="meals" fill="#2196F3" name="Meals Logged" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -185,7 +269,7 @@ export default function AdminDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={categoryDistribution}
+                      data={stats?.recipe_category_distribution ?? []}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
@@ -193,18 +277,25 @@ export default function AdminDashboard() {
                       paddingAngle={5}
                       dataKey="value"
                     >
-                      {categoryDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {(stats?.recipe_category_distribution ?? []).map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
+
               <div className="flex flex-wrap justify-center gap-4 mt-4">
-                {categoryDistribution.map((category) => (
+                {(stats?.recipe_category_distribution ?? []).map((category, index) => (
                   <div key={category.name} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }}
+                    />
                     <span className="text-sm text-muted-foreground">
                       {category.name} ({category.value})
                     </span>
@@ -213,10 +304,11 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+
         </div>
 
         {/* Recent Activity & Alerts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {/* Recent Activity Card */}
           <Card>
             <CardHeader className="pt-4">
@@ -227,42 +319,50 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-start gap-3 pb-3 border-b border-border">
-                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">New user registered</p>
-                    <p className="text-xs text-muted-foreground">john.doe@example.com • 5 minutes ago</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 pb-3 border-b border-border">
-                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Recipe published</p>
-                    <p className="text-xs text-muted-foreground">
-                      "Healthy Breakfast Bowl" by Sarah M. • 12 minutes ago
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 pb-3 border-b border-border">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Recipe flagged for review</p>
-                    <p className="text-xs text-muted-foreground">"Quick Snack Ideas" • 25 minutes ago</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Document uploaded</p>
-                    <p className="text-xs text-muted-foreground">"Nutrition Guidelines 2024.pdf" • 1 hour ago</p>
-                  </div>
-                </div>
+                {(!stats || !stats.recent_activity || stats.recent_activity.length === 0) && (
+                  <p className="text-sm text-muted-foreground">
+                    No recent activity to display.
+                  </p>
+                )}
+
+                {stats?.recent_activity?.map((item, idx) => {
+                  let Icon = CheckCircle;
+                  let iconClass = "text-green-600";
+
+                  if (item.type === "user") {
+                    Icon = Users;
+                    iconClass = "text-blue-600";
+                  } else if (item.type === "recipe") {
+                    Icon = ChefHat;
+                    iconClass = "text-green-600";
+                  } else if (item.type === "meal") {
+                    Icon = Activity;
+                    iconClass = "text-emerald-600";
+                  }
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-start gap-3 pb-3 ${
+                        idx !== (stats.recent_activity.length - 1) ? "border-b border-border" : ""
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 mt-0.5 ${iconClass}`} />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.description} • {item.created_at_formatted} • {item.created_at_human}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
 
           {/* Pending Actions Card */}
-          <Card>
+          {/* <Card>
             <CardHeader className="pt-4">
               <CardTitle className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-yellow-600" />
@@ -306,9 +406,9 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>
-  )
+  );
 }

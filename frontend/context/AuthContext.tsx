@@ -8,7 +8,7 @@ type AuthCtx = {
   user: User;
   status: Status;
   setUser: (u: User) => void;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<User | null>;
 };
 
 const AuthContext = createContext<AuthCtx | null>(null);
@@ -37,18 +37,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>("loading");
   const booted = useRef(false);
 
-  const refresh = async () => {
-    try {
-      await ensureCsrfCookie();
-      const u = await fetchUser();
-      setUser(u);
-      setStatus(u ? "authed" : "guest");
-    } catch (err) {
-      console.error("Error en refresh()", err);
-      setUser(null);
-      setStatus("guest");
-    }
-  };
+const refresh = async (): Promise<User | null> => {
+  try {
+    await ensureCsrfCookie();
+    const u = await fetchUser();
+    setUser(u);
+    setStatus(u ? "authed" : "guest");
+    return u;
+  } catch (err) {
+    console.error("Error en refresh()", err);
+    setUser(null);
+    setStatus("guest");
+    return null;
+  }
+};
 
   useEffect(() => {
     if (booted.current) return;

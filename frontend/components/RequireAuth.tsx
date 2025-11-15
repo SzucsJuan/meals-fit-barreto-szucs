@@ -1,15 +1,28 @@
 "use client";
+
 import { PropsWithChildren, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-export default function RequireAuth({ children }: PropsWithChildren) {
-  const { status } = useAuth();
+type RequireAuthProps = PropsWithChildren<{
+  requireAdmin?: boolean;
+}>;
+
+export default function RequireAuth({ children, requireAdmin }: RequireAuthProps) {
+  const { status, user } = useAuth(); 
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "guest") router.replace("/signin");
-  }, [status, router]);
+    if (status === "guest") {
+      router.replace("/signin");
+      return;
+    }
+
+    if (status === "authed" && requireAdmin && user && user.role !== "admin") {
+      router.replace("/home");
+      return;
+    }
+  }, [status, requireAdmin, user, router]);
 
   if (status === "loading") {
     return (
@@ -19,6 +32,12 @@ export default function RequireAuth({ children }: PropsWithChildren) {
     );
   }
 
-  if (status === "guest") return null; 
+  if (
+    status === "guest" ||
+    (status === "authed" && requireAdmin && user && user.role !== "admin")
+  ) {
+    return null;
+  }
+
   return <>{children}</>;
 }

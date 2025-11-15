@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { EggFried } from "lucide-react";
 import { authApi } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext"; // 👈 IMPORTANTE
+import { useAuth } from "@/context/AuthContext";
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -31,30 +31,36 @@ export default function LoginPage() {
     return Object.keys(errs).length === 0;
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    if (!validate()) return;
+const onSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setFormError(null);
+  if (!validate()) return;
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      await authApi.login({ email, password });
+    await authApi.login({ email, password });
 
-      await refresh();
+    const u = await refresh();
 
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("mf-auth-event", Date.now().toString());
-      }
-
-      router.push("/home");
-    } catch (err: any) {
-      console.error(err);
-      setFormError(err.message || "Credenciales inválidas.");
-    } finally {
-      setLoading(false);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("mf-auth-event", Date.now().toString());
     }
-  };
+
+    const role = u?.role;
+
+    if (role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push("/home");
+    }
+  } catch (err: any) {
+    console.error(err);
+    setFormError(err.message || "Credenciales inválidas.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
