@@ -13,7 +13,8 @@ use App\Http\Controllers\{
     RecipeController,
     AuthController,
     RecipeImageController,
-    AdminStatsController
+    AdminStatsController,
+    AdminUserController
 };
 
 // --------- Auth de SPA (cookie de sesión) -----------
@@ -56,4 +57,9 @@ Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no
 // ===================== RUTAS ADMIN =====================
 Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'role:admin', 'no-store'])->group(function () {
     Route::get('/admin/stats', [AdminStatsController::class, 'index']);
+
+    Route::get('/admin/users', [AdminUserController::class, 'index']);
+    Route::post('/admin/users', [AdminUserController::class, 'store']);
+    Route::patch('/admin/users/{user}', [AdminUserController::class, 'update']);
+    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
 });

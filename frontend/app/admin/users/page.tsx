@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -13,165 +13,316 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Users, Search, Plus, Edit, Trash2, Shield, Ban, CheckCircle, AlertTriangle, ArrowLeft, Mail } from "lucide-react"
-import Link from "next/link"
+} from "@/components/ui/select";
+import {
+  Users,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  Shield,
+  ArrowLeft,
+  Mail,
+  Key,
+  AlertTriangle,
+  CheckCircle,
+} from "lucide-react";
+import Link from "next/link";
 
-// Sample user data
-const users = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    email: "sarah.j@example.com",
-    role: "user",
-    status: "active",
-    joinedDate: "2024-01-10",
-    recipesCreated: 12,
-    mealsLogged: 245,
-    lastActive: "2024-01-22",
-  },
-  {
-    id: 2,
-    name: "Mike Chen",
-    email: "mike.c@example.com",
-    role: "user",
-    status: "active",
-    joinedDate: "2024-01-12",
-    recipesCreated: 8,
-    mealsLogged: 189,
-    lastActive: "2024-01-21",
-  },
-  {
-    id: 3,
-    name: "John Smith",
-    email: "john.s@example.com",
-    role: "user",
-    status: "suspended",
-    joinedDate: "2024-01-15",
-    recipesCreated: 2,
-    mealsLogged: 23,
-    lastActive: "2024-01-18",
-  },
-  {
-    id: 4,
-    name: "Anonymous User",
-    email: "anon@example.com",
-    role: "user",
-    status: "flagged",
-    joinedDate: "2024-01-20",
-    recipesCreated: 1,
-    mealsLogged: 5,
-    lastActive: "2024-01-22",
-  },
-  {
-    id: 5,
-    name: "Admin User",
-    email: "admin@example.com",
-    role: "admin",
-    status: "active",
-    joinedDate: "2023-11-01",
-    recipesCreated: 45,
-    mealsLogged: 892,
-    lastActive: "2024-01-22",
-  },
-]
+type UserRow = {
+  id: number;
+  name: string;
+  email: string;
+  role: "user" | "admin" | string;
+  created_at: string | null;
+  joined_date: string | null;
+  recipes_count: number;
+  meals_logged_count: number;
+  last_activity_at: string | null;
+  last_activity_date: string | null;
+};
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+
+function getXsrfToken(): string {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+async function ensureCsrf() {
+  await fetch(`${API}/sanctum/csrf-cookie`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  });
+}
 
 export default function AdminUsersPage() {
-  const [filterStatus, setFilterStatus] = useState<string>("all")
-  const [filterRole, setFilterRole] = useState<string>("all")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [editingUser, setEditingUser] = useState<any>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredUsers = users.filter((user) => {
-    const matchesStatus = filterStatus === "all" || user.status === filterStatus
-    const matchesRole = filterRole === "all" || user.role === filterRole
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesStatus && matchesRole && matchesSearch
-  })
+  const [filterRole, setFilterRole] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return (
-          <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Active
-          </Badge>
-        )
-      case "suspended":
-        return (
-          <Badge variant="secondary" className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">
-            <Ban className="h-3 w-3 mr-1" />
-            Suspended
-          </Badge>
-        )
-      case "flagged":
-        return (
-          <Badge variant="secondary" className="bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
-            <AlertTriangle className="h-3 w-3 mr-1" />
-            Flagged
-          </Badge>
-        )
-      default:
-        return null
-    }
-  }
+  const [editingUser, setEditingUser] = useState<UserRow | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState("user");
+  const [creating, setCreating] = useState(false);
+
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [passwordDialogUserEmail, setPasswordDialogUserEmail] = useState<string | null>(null);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params = new URLSearchParams();
+        if (filterRole !== "all") params.set("role", filterRole);
+        if (searchQuery.trim()) params.set("search", searchQuery.trim());
+
+        const res = await fetch(`${API}/api/admin/users?${params.toString()}`, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Error al cargar usuarios (${res.status})`);
+        }
+
+        const data: UserRow[] = await res.json();
+        setUsers(data);
+      } catch (err: any) {
+        console.error("Error fetching users", err);
+        setError("No se pudieron cargar los usuarios");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [filterRole, searchQuery]);
 
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "admin":
         return (
-          <Badge variant="secondary" className="bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+          <Badge
+            variant="secondary"
+            className="bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300"
+          >
             <Shield className="h-3 w-3 mr-1" />
             Admin
           </Badge>
-        )
+        );
       case "user":
-        return <Badge variant="outline">User</Badge>
+        return <Badge variant="outline">User</Badge>;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
-  const handleEdit = (user: any) => {
-    setEditingUser(user)
-    setIsEditDialogOpen(true)
-  }
+  const handleEdit = (user: UserRow) => {
+    setEditingUser(user);
+    setIsEditDialogOpen(true);
+  };
 
-  const handleSaveEdit = () => {
-    console.log("[v0] Saving user:", editingUser)
-    setIsEditDialogOpen(false)
-    setEditingUser(null)
-  }
+  const handleSaveEdit = async () => {
+    if (!editingUser) return;
 
-  const handleDelete = (userId: number) => {
-    if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-      console.log("[v0] Deleting user:", userId)
+    try {
+      await ensureCsrf();
+      const token = getXsrfToken();
+
+      const res = await fetch(`${API}/api/admin/users/${editingUser.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": token,
+        },
+        body: JSON.stringify({
+          name: editingUser.name,
+          email: editingUser.email,
+          role: editingUser.role,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Error al actualizar usuario (${res.status})`);
+      }
+
+      const updated = await res.json();
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u))
+      );
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+
+      setSuccessMessage("User updated successfully.");
+      setIsSuccessDialogOpen(true);
+    } catch (err) {
+      console.error("Error updating user", err);
+      alert("No se pudo actualizar el usuario");
     }
-  }
+  };
 
-  const handleSuspend = (userId: number) => {
-    console.log("[v0] Suspending user:", userId)
-  }
+  const openDeleteDialog = (user: UserRow) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
+  };
 
-  const handleActivate = (userId: number) => {
-    console.log("[v0] Activating user:", userId)
-  }
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setDeleting(true);
+      await ensureCsrf();
+      const token = getXsrfToken();
+
+      const res = await fetch(`${API}/api/admin/users/${userToDelete.id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": token,
+        },
+      });
+
+      if (!res.ok && res.status !== 204) {
+        throw new Error(`Error al eliminar usuario (${res.status})`);
+      }
+
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (err) {
+      console.error("Error deleting user", err);
+      alert("No se pudo eliminar el usuario");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!newName.trim() || !newEmail.trim()) {
+      alert("Name and email are required.");
+      return;
+    }
+
+    try {
+      setCreating(true);
+      await ensureCsrf();
+      const token = getXsrfToken();
+
+      const res = await fetch(`${API}/api/admin/users`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": token,
+        },
+        body: JSON.stringify({
+          name: newName,
+          email: newEmail,
+          role: newRole,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Error al crear usuario (${res.status})`);
+      }
+
+      const data = await res.json();
+
+      try {
+        const params = new URLSearchParams();
+        if (filterRole !== "all") params.set("role", filterRole);
+        if (searchQuery.trim()) params.set("search", searchQuery.trim());
+
+        const resList = await fetch(`${API}/api/admin/users?${params.toString()}`, {
+          method: "GET",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        if (resList.ok) {
+          const listData: UserRow[] = await resList.json();
+          setUsers(listData);
+        }
+      } catch (err) {
+        console.error("Error reloading users after create", err);
+      }
+
+      setGeneratedPassword(data.password || null);
+      setPasswordDialogUserEmail(data.user?.email || newEmail);
+      setIsPasswordDialogOpen(true);
+
+      setNewName("");
+      setNewEmail("");
+      setNewRole("user");
+      setIsCreateDialogOpen(false);
+    } catch (err) {
+      console.error("Error creating user", err);
+      alert("No se pudo crear el usuario");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleCopyPassword = async () => {
+    if (!generatedPassword) return;
+    try {
+      await navigator.clipboard.writeText(generatedPassword);
+      setSuccessMessage("Password copied to clipboard.");
+      setIsSuccessDialogOpen(true);
+    } catch (err) {
+      console.error("Error copying password", err);
+    }
+  };
+
+  const filteredUsers = users;
+
+  const totalUsers = users.length;
+  const totalStandardUsers = users.filter((u) => u.role === "user").length;
+  const totalAdmins = users.filter((u) => u.role === "admin").length;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -186,10 +337,12 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">User Management</h1>
-                <p className="text-muted-foreground">Manage user accounts and permissions</p>
+                <p className="text-muted-foreground">
+                  Manage user accounts and permissions
+                </p>
               </div>
             </div>
-            <Dialog>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
@@ -204,15 +357,26 @@ export default function AdminUsersPage() {
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="user-name">Full Name</Label>
-                    <Input id="user-name" placeholder="Enter full name" />
+                    <Input
+                      id="user-name"
+                      placeholder="Enter full name"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="user-email">Email</Label>
-                    <Input id="user-email" type="email" placeholder="Enter email address" />
+                    <Input
+                      id="user-email"
+                      type="email"
+                      placeholder="Enter email address"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="user-role">Role</Label>
-                    <Select defaultValue="user">
+                    <Select value={newRole} onValueChange={(v) => setNewRole(v)}>
                       <SelectTrigger id="user-role">
                         <SelectValue />
                       </SelectTrigger>
@@ -222,22 +386,18 @@ export default function AdminUsersPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="user-status">Status</Label>
-                    <Select defaultValue="active">
-                      <SelectTrigger id="user-status">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="suspended">Suspended</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Create User</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateDialogOpen(false)}
+                    disabled={creating}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateUser} disabled={creating}>
+                    {creating ? "Creating..." : "Create User"}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -246,49 +406,41 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardHeader className="pt-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Users
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{users.length}</div>
+              <div className="text-2xl font-bold text-foreground">{totalUsers}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pt-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Standard Users
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {users.filter((u) => u.status === "active").length}
+              <div className="text-2xl font-bold text-foreground">
+                {totalStandardUsers}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pt-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Suspended</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Admins
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-600">
-                {users.filter((u) => u.status === "suspended").length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pt-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Flagged</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-rose-600">
-                {users.filter((u) => u.status === "flagged").length}
-              </div>
+              <div className="text-2xl font-bold text-foreground">{totalAdmins}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search and Filters */}
         <div className="flex flex-col gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -300,133 +452,98 @@ export default function AdminUsersPage() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <div className="flex gap-2">
-              <Button
-                variant={filterStatus === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterStatus("all")}
-              >
-                All Status
-              </Button>
-              <Button
-                variant={filterStatus === "active" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterStatus("active")}
-              >
-                Active
-              </Button>
-              <Button
-                variant={filterStatus === "suspended" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterStatus("suspended")}
-              >
-                Suspended
-              </Button>
-              <Button
-                variant={filterStatus === "flagged" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterStatus("flagged")}
-              >
-                Flagged
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={filterRole === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterRole("all")}
-              >
-                All Roles
-              </Button>
-              <Button
-                variant={filterRole === "admin" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterRole("admin")}
-              >
-                Admin
-              </Button>
-              <Button
-                variant={filterRole === "user" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterRole("user")}
-              >
-                User
-              </Button>
-            </div>
+            <Button
+              variant={filterRole === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterRole("all")}
+            >
+              All users
+            </Button>
+            <Button
+              variant={filterRole === "user" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterRole("user")}
+            >
+              User
+            </Button>
+            <Button
+              variant={filterRole === "admin" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterRole("admin")}
+            >
+              Admin
+            </Button>
           </div>
         </div>
 
-        {/* Users Table */}
         <Card>
           <CardHeader className="pt-4">
             <CardTitle>Users ({filteredUsers.length})</CardTitle>
             <CardDescription>Manage all user accounts on the platform</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {filteredUsers.map((user) => (
-                <div key={user.id} className="border border-border rounded-lg p-4">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-foreground">{user.name}</h3>
-                        {getRoleBadge(user.role)}
-                        {getStatusBadge(user.status)}
+            {error && (
+              <p className="mb-4 text-sm text-red-500">
+                {error}
+              </p>
+            )}
+            {loading ? (
+              <p className="text-sm text-muted-foreground">Loading users...</p>
+            ) : (
+              <div className="space-y-4">
+                {filteredUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    className="border border-border rounded-lg p-4"
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-foreground">{user.name}</h3>
+                          {getRoleBadge(user.role)}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                          <Mail className="h-4 w-4" />
+                          {user.email}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                          <span>Joined {user.joined_date ?? "-"}</span>
+                          <span>•</span>
+                          <span>{user.recipes_count} recipes</span>
+                          <span>•</span>
+                          <span>{user.meals_logged_count} meals logged</span>
+                          <span>•</span>
+                          <span>Last active {user.last_activity_date ?? "-"}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                        <Mail className="h-4 w-4" />
-                        {user.email}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                        <span>Joined {user.joinedDate}</span>
-                        <span>•</span>
-                        <span>{user.recipesCreated} recipes</span>
-                        <span>•</span>
-                        <span>{user.mealsLogged} meals logged</span>
-                        <span>•</span>
-                        <span>Last active {user.lastActive}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap lg:flex-col gap-2">
-                      {user.status === "suspended" ? (
-                        <Button size="sm" variant="outline" onClick={() => handleActivate(user.id)}>
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Activate
-                        </Button>
-                      ) : (
+                      <div className="flex flex-wrap lg:flex-col gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="text-slate-600 bg-transparent"
-                          onClick={() => handleSuspend(user.id)}
+                          variant="ghost"
+                          onClick={() => handleEdit(user)}
                         >
-                          <Ban className="h-4 w-4 mr-1" />
-                          Suspend
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
                         </Button>
-                      )}
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(user)}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-rose-600"
-                        onClick={() => handleDelete(user.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-rose-600"
+                          onClick={() => openDeleteDialog(user)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -440,7 +557,9 @@ export default function AdminUsersPage() {
                 <Input
                   id="edit-name"
                   value={editingUser.name}
-                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  onChange={(e) =>
+                    setEditingUser({ ...editingUser, name: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -449,14 +568,18 @@ export default function AdminUsersPage() {
                   id="edit-email"
                   type="email"
                   value={editingUser.email}
-                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  onChange={(e) =>
+                    setEditingUser({ ...editingUser, email: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-role">Role</Label>
                 <Select
                   value={editingUser.role}
-                  onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
+                  onValueChange={(value) =>
+                    setEditingUser({ ...editingUser, role: value })
+                  }
                 >
                   <SelectTrigger id="edit-role">
                     <SelectValue />
@@ -467,33 +590,118 @@ export default function AdminUsersPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-status">Status</Label>
-                <Select
-                  value={editingUser.status}
-                  onValueChange={(value) => setEditingUser({ ...editingUser, status: value })}
-                >
-                  <SelectTrigger id="edit-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                    <SelectItem value="flagged">Flagged</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
+            <Button onClick={handleSaveEdit}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              New User Password
+            </DialogTitle>
+            <DialogDescription>
+              Share this password with the user so they can log in.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {passwordDialogUserEmail && (
+              <p className="text-sm text-muted-foreground break-all">
+                <span className="font-medium text-foreground">User:</span>{" "}
+                {passwordDialogUserEmail}
+              </p>
+            )}
+            <div className="space-y-2">
+              <Label>Password</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  readOnly
+                  value={generatedPassword ?? ""}
+                  className="font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyPassword}
+                  disabled={!generatedPassword}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsPasswordDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-rose-600" />
+              Delete User
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The user and their data may be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {userToDelete && (
+              <p className="text-sm text-muted-foreground break-all">
+                Are you sure you want to delete{" "}
+                <span className="font-medium text-foreground">
+                  {userToDelete.name} ({userToDelete.email})
+                </span>
+                ?
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-rose-600"
+              onClick={confirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
+              Success
+            </DialogTitle>
+            <DialogDescription>{successMessage}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setIsSuccessDialogOpen(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

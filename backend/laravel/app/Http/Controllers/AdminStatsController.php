@@ -100,7 +100,7 @@ class AdminStatsController extends Controller
                     return [
                         'type' => 'recipe',
                         'title' => 'Recipe published',
-                        'description' => sprintf('%s by %s', $r->title, $author),
+                        'description' => sprintf('%s created by %s', $r->title, $author),
                         'created_at' => $r->created_at->toIso8601String(),
                         'created_at_formatted' => $r->created_at->format('Y-m-d H:i'),
                         'created_at_human' => $r->created_at->diffForHumans(),
@@ -115,14 +115,14 @@ class AdminStatsController extends Controller
                 ->get()
                 ->map(function ($m) {
                     $who = $m->user?->name ?? $m->user?->email ?? 'Unknown user';
-                    $forDate = $m->logged_at?->format('Y-m-d') ?? $m->created_at->format('Y-m-d');
+                    $forDate = $m->logged_at?->format('d-m-Y') ?? $m->created_at->format('d-m-Y');
 
                     return [
                         'type' => 'meal',
                         'title' => 'Meal logged',
                         'description' => sprintf('Created on %s by %s', $forDate, $who),
                         'created_at' => $m->created_at->toIso8601String(),
-                        'created_at_formatted' => $m->created_at->format('Y-m-d H:i'),
+                        'created_at_formatted' => $m->created_at->format('d-m-Y H:i'),
                         'created_at_human' => $m->created_at->diffForHumans(),
                     ];
                 })

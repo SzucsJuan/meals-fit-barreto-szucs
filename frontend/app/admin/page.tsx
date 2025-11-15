@@ -6,7 +6,7 @@ import {
   Shield,
   Users,
   ChefHat,
-  AlertCircle,
+  Target,
   CheckCircle,
   Clock,
   Activity,
@@ -336,7 +336,7 @@ function AdminDashboardContent() {
                     Icon = ChefHat;
                     iconClass = "text-green-600";
                   } else if (item.type === "meal") {
-                    Icon = Activity;
+                    Icon = Target;
                     iconClass = "text-emerald-600";
                   }
 
@@ -351,7 +351,7 @@ function AdminDashboardContent() {
                       <div className="flex-1">
                         <p className="text-sm font-medium">{item.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {item.description} • {item.created_at_formatted} • {item.created_at_human}
+                          {item.description} • {item.created_at_human}
                         </p>
                       </div>
                     </div>

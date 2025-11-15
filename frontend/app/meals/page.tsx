@@ -30,12 +30,9 @@ type MealCard = {
   type: string;
   totals: { calories: number; protein: number; carbs: number; fats: number };
   details: Detail[];
-  // Si tu hook ya trae el ID del MealLog, usalo y borro por endpoint directo.
-  // Si no, hago fallback borrando todos los detalles.
   mealLogId?: number;
 };
 
-// ================== CSRF helpers (Sanctum) ==================
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
@@ -49,7 +46,6 @@ async function ensureCsrfCookie(apiBase = "") {
   });
 }
 
-// ================== Selector de Ingredientes por nombre ==================
 function IngredientSelector({
   valueId,
   onChange,
