@@ -43,17 +43,25 @@ class AuthController extends Controller
         }
 
         // Regenera la sesión para evitar fixation
+           if ($request->hasSession()) {
         $request->session()->regenerate();
+           }
+
+        $user = $request->user();
+
+        $user->tokens()->delete(); // Elimina tokens previos si los hubiera
+        $token = $user->createToken('mobile')->plainTextToken;
 
         return response()->json([
-            'message' => 'Logged in',
-            'user' => Auth::user(),
+            'token' => $token,
+            'user' =>  $user,
         ], 200);
     }
 
     public function logout(Request $request)
     {
         // Cierra sesión del guard web
+        if ($request->hasSession()) {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
@@ -61,11 +69,27 @@ class AuthController extends Controller
 
         $forgetSession = Cookie::forget(config('session.cookie', 'laravel_session'));
         $forgetXSRF    = Cookie::forget('XSRF-TOKEN');
+    }
 
-        return response()->noContent()
+        if ($request->user()) {
+        $request->user()->currentAccessToken()?->delete();
+    }
+
+        return response()->json([
+            'message' => 'Logged out',
+        ], 200);
+
+         if (isset($forgetSession, $forgetXSRF)) {
+        $response = $response
             ->withCookie($forgetSession)
             ->withCookie($forgetXSRF);
     }
+
+        return $response;
+            
+    }
+    
+    
 }
 
 
