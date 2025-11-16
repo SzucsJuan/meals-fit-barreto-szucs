@@ -24,7 +24,10 @@ const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 function splitSteps(steps?: string | null) {
   if (!steps) return [];
-  return steps.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+  return steps
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 export default function RecipeDetailPage() {
@@ -32,18 +35,18 @@ export default function RecipeDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
-  // evitar llamadas sin ID
-  const { data: r, loading, error } = id ? detailRecipe(id) : { data: null, loading: true, error: null };
+  const { data: r, loading, error } = id
+    ? detailRecipe(id)
+    : { data: null, loading: true, error: null as any };
   const { user: me } = useMe();
   const { deleteRecipe } = useDeleteRecipe();
 
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // ---- favoritos (usa tu componente ya implementado) ----
   const isOwner = !!(me && r?.user?.id && me.id === r.user.id);
   const canDelete = isOwner;
+  const isAdmin = me?.role === "admin";
 
-  // ---- visibilidad: estado local para reflejar cambios instantáneos ----
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [updatingVis, setUpdatingVis] = useState(false);
 
@@ -52,7 +55,6 @@ export default function RecipeDetailPage() {
       setVisibility(r.visibility);
     }
   }, [r?.visibility]);
-
 
   async function toggleVisibility(nextVis: "public" | "private") {
     if (!r || updatingVis || visibility === nextVis) return;
@@ -66,11 +68,11 @@ export default function RecipeDetailPage() {
         Accept: "application/json",
       };
 
-      Object.assign(headers, xsrfHeader()); 
+      Object.assign(headers, xsrfHeader());
       const res = await fetch(`${BASE}/api/recipes/${r.id}`, {
         method: "PUT",
         credentials: "include",
-        headers, // tipo concreto
+        headers,
         body: JSON.stringify({ visibility: nextVis }),
       });
 
@@ -95,7 +97,8 @@ export default function RecipeDetailPage() {
     }
   }
 
-  const totalMinutes = (r?.prep_time_minutes ?? 0) + (r?.cook_time_minutes ?? 0);
+  const totalMinutes =
+    (r?.prep_time_minutes ?? 0) + (r?.cook_time_minutes ?? 0);
   const steps = splitSteps(r?.steps);
 
   return (
@@ -103,13 +106,22 @@ export default function RecipeDetailPage() {
       <Navigation />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
+        {/* 🔙 Botones de back */}
+        <div className="mb-6 flex flex-wrap gap-2">
           <Link href="/recipes">
             <Button variant="outline">Back to Recipes</Button>
           </Link>
+
+          {isAdmin && (
+            <Link href="/admin">
+              <Button variant="outline">Back to Admin Panel</Button>
+            </Link>
+          )}
         </div>
 
-        {loading && <div className="text-sm text-muted-foreground">Loading...</div>}
+        {loading && (
+          <div className="text-sm text-muted-foreground">Loading...</div>
+        )}
         {error && <div className="text-sm text-red-600">Error: {error}</div>}
         {!loading && !r && !error && (
           <div className="text-sm text-muted-foreground">Recipe not found.</div>
@@ -133,7 +145,9 @@ export default function RecipeDetailPage() {
                     <h1 className="text-3xl font-bold text-foreground mb-2">
                       {r.title}
                     </h1>
-                    <p className="text-muted-foreground text-lg">{r.description}</p>
+                    <p className="text-muted-foreground text-lg">
+                      {r.description}
+                    </p>
                     {r.user?.name && (
                       <p className="text-xs text-muted-foreground mt-2">
                         by {r.user.name}
@@ -141,11 +155,10 @@ export default function RecipeDetailPage() {
                     )}
                   </div>
 
-                  {/* Corazón de favoritos */}
                   <FavoriteButton
                     recipeId={r.id}
                     initialFavorited={!!r.is_favorited}
-                    onChange={() => { }}
+                    onChange={() => {}}
                   />
                 </div>
 
@@ -163,31 +176,36 @@ export default function RecipeDetailPage() {
                     <Clock className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">Total Time</div>
-                      <div className="text-sm text-muted-foreground">{totalMinutes} min</div>
+                      <div className="text-sm text-muted-foreground">
+                        {totalMinutes} min
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">Servings</div>
-                      <div className="text-sm text-muted-foreground">{r.servings}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {r.servings}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Acciones */}
-                <div className="flex gap-2">
-                  <Button asChild className="flex-1">
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild className="flex-1 min-w-[160px]">
                     <Link href={`/recipes/${r.id}/edit`}>
                       <Edit className="h-4 w-4 mr-2" /> Edit Recipe
                     </Link>
                   </Button>
 
-                  {/* 🔁 Toggle de visibilidad: reemplaza al Share */}
                   {isOwner && (
                     <div className="flex items-center gap-1">
                       <Button
-                        variant={visibility === "public" ? "default" : "outline"}
+                        variant={
+                          visibility === "public" ? "default" : "outline"
+                        }
                         size="sm"
                         disabled={updatingVis}
                         onClick={() => toggleVisibility("public")}
@@ -195,7 +213,9 @@ export default function RecipeDetailPage() {
                         Public
                       </Button>
                       <Button
-                        variant={visibility === "private" ? "default" : "outline"}
+                        variant={
+                          visibility === "private" ? "default" : "outline"
+                        }
                         size="sm"
                         disabled={updatingVis}
                         onClick={() => toggleVisibility("private")}
@@ -219,8 +239,8 @@ export default function RecipeDetailPage() {
                         open={showConfirm}
                         onClose={() => setShowConfirm(false)}
                         onConfirm={() => {
-                          setShowConfirm(false);
-                          handleDelete();
+                          setShowConfirm(false)
+                          handleDelete()
                         }}
                       />
                     </>
@@ -243,25 +263,33 @@ export default function RecipeDetailPage() {
                     <div className="text-2xl font-bold text-primary">
                       {Math.round(r.calories)}
                     </div>
-                    <div className="text-sm text-muted-foreground">Calories</div>
+                    <div className="text-sm text-muted-foreground">
+                      Calories
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-accent">
                       {Math.round(r.protein)}g
                     </div>
-                    <div className="text-sm text-muted-foreground">Protein</div>
+                    <div className="text-sm text-muted-foreground">
+                      Protein
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-chart-3">
                       {Math.round(r.carbs)}g
                     </div>
-                    <div className="text-sm text-muted-foreground">Carbs</div>
+                    <div className="text-sm text-muted-foreground">
+                      Carbs
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-chart-5">
                       {Math.round(r.fat)}g
                     </div>
-                    <div className="text-sm text-muted-foreground">Fats</div>
+                    <div className="text-sm text-muted-foreground">
+                      Fats
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -275,7 +303,7 @@ export default function RecipeDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
-                    {r.ingredients.map((ing) => (
+                    {r.ingredients.map((ing: any) => (
                       <li key={ing.id}>
                         {ing.pivot.quantity} {ing.pivot.unit} – {ing.name}{" "}
                         {ing.pivot.notes && `(${ing.pivot.notes})`}
@@ -291,7 +319,9 @@ export default function RecipeDetailPage() {
                 </CardHeader>
                 <CardContent>
                   {steps.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">No steps provided.</div>
+                    <div className="text-sm text-muted-foreground">
+                      No steps provided.
+                    </div>
                   ) : (
                     <ol className="space-y-4">
                       {steps.map((st, idx) => (
@@ -299,7 +329,9 @@ export default function RecipeDetailPage() {
                           <Badge variant="outline" className="min-w-fit">
                             {idx + 1}
                           </Badge>
-                          <span className="text-sm leading-relaxed">{st}</span>
+                          <span className="text-sm leading-relaxed">
+                            {st}
+                          </span>
                         </li>
                       ))}
                     </ol>

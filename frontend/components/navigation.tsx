@@ -7,9 +7,26 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { usePathname, useRouter } from "next/navigation"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, ChefHat, Target, Calendar, Heart, Menu, LogOut, LogIn, UserPlus, Binoculars } from "lucide-react"
+import {
+  Home,
+  ChefHat,
+  Target,
+  Calendar,
+  Heart,
+  Menu,
+  LogOut,
+  LogIn,
+  UserPlus,
+  Binoculars,
+  Shield,
+} from "lucide-react"
 
-type UserDTO = { id: number; name: string; email: string }
+type UserDTO = {
+  id: number
+  name: string
+  email: string
+  role?: "user" | "admin" | string
+}
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -31,7 +48,9 @@ export default function Navigation() {
         if (mounted) setChecking(false)
       }
     })()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const isActive = (path: string) => {
@@ -43,9 +62,9 @@ export default function Navigation() {
   const handleLogout = async () => {
     try {
       setLoggingOut(true)
-      await authApi.logout()            
+      await authApi.logout()
       setUser(null)
-      router.push("/signin")                  
+      router.push("/signin")
     } catch (e) {
       console.error(e)
     } finally {
@@ -54,7 +73,13 @@ export default function Navigation() {
     }
   }
 
-  const NavigationLinks = ({ mobile = false, onLinkClick = () => {} }) => (
+  const NavigationLinks = ({
+    mobile = false,
+    onLinkClick = () => {},
+  }: {
+    mobile?: boolean
+    onLinkClick?: () => void
+  }) => (
     <>
       <Link href="/home" onClick={onLinkClick}>
         <Button
@@ -96,16 +121,40 @@ export default function Navigation() {
           Discover
         </Button>
       </Link>
+
+      {/* 👉 Admin Panel solo si el user es admin */}
+      {user?.role === "admin" && (
+        <Link href="/admin" onClick={onLinkClick}>
+          <Button
+            variant={isActive("/admin") ? "default" : "outline"}
+            size="sm"
+            className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
+          >
+            <Shield className="h-4 w-4" />
+            Admin Panel
+          </Button>
+        </Link>
+      )}
     </>
   )
 
   // Botonera derecha (Auth)
-  const AuthButtons = ({ mobile = false, onLinkClick = () => {} }) => {
+  const AuthButtons = ({
+    mobile = false,
+    onLinkClick = () => {},
+  }: {
+    mobile?: boolean
+    onLinkClick?: () => void
+  }) => {
     if (checking) {
-      // placeholder mínimo mientras verifica sesión
       return (
         <div className={`${mobile ? "flex flex-col gap-2" : "flex items-center gap-2"}`}>
-          <Button variant="ghost" size="sm" disabled className={`${mobile ? "w-full justify-start" : ""}`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled
+            className={`${mobile ? "w-full justify-start" : ""}`}
+          >
             ...
           </Button>
         </div>
@@ -135,7 +184,11 @@ export default function Navigation() {
     return (
       <div className={`${mobile ? "flex flex-col gap-2" : "flex items-center gap-2"}`}>
         <Link href="/signin" onClick={onLinkClick}>
-          <Button variant="ghost" size="sm" className={`${mobile ? "w-full justify-start" : ""}`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${mobile ? "w-full justify-start" : ""}`}
+          >
             <LogIn className="h-4 w-4 mr-2" />
             Sign in
           </Button>
@@ -180,12 +233,22 @@ export default function Navigation() {
               <SheetContent side="right" className="w-64">
                 <div className="flex flex-col gap-4 mt-8">
                   <div className="flex flex-col gap-2">
-                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">MAIN MENU</h3>
-                    <NavigationLinks mobile onLinkClick={() => setMobileMenuOpen(false)} />
+                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">
+                      MAIN MENU
+                    </h3>
+                    <NavigationLinks
+                      mobile
+                      onLinkClick={() => setMobileMenuOpen(false)}
+                    />
                   </div>
                   <div className="flex flex-col gap-2 pt-4 border-t">
-                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">ACCOUNT</h3>
-                    <AuthButtons mobile onLinkClick={() => setMobileMenuOpen(false)} />
+                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">
+                      ACCOUNT
+                    </h3>
+                    <AuthButtons
+                      mobile
+                      onLinkClick={() => setMobileMenuOpen(false)}
+                    />
                   </div>
                 </div>
               </SheetContent>

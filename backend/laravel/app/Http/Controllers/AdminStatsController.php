@@ -51,7 +51,6 @@ class AdminStatsController extends Controller
             $cursor->addDay();
         }
 
-        // ----- Recipe Category Distribution -----
         $rawCategories = MealDetail::select('meal_type', DB::raw('COUNT(*) as count'))
             ->groupBy('meal_type')
             ->get();

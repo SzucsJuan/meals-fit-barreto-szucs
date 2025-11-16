@@ -14,7 +14,8 @@ use App\Http\Controllers\{
     AuthController,
     RecipeImageController,
     AdminStatsController,
-    AdminUserController
+    AdminUserController,
+    AdminRecipeController
 };
 
 // --------- Auth de SPA (cookie de sesión) -----------
@@ -62,4 +63,8 @@ Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'ro
     Route::post('/admin/users', [AdminUserController::class, 'store']);
     Route::patch('/admin/users/{user}', [AdminUserController::class, 'update']);
     Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
+
+    Route::get('/admin/recipes', [AdminRecipeController::class, 'index']);
+    Route::patch('/admin/recipes/{recipe}', [AdminRecipeController::class, 'update']);
+    Route::delete('/admin/recipes/{recipe}', [AdminRecipeController::class, 'destroy']);
 });
