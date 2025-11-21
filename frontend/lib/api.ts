@@ -181,3 +181,24 @@ export const apiRecipeImages = {
   remove: (id: number | string) =>
     api<void>(`/api/recipes/${id}/image`, { method: "DELETE" }),
 };
+
+
+/* =======================
+   Achievements
+   ======================= */
+
+export type AchievementDTO = {
+  id: number;
+  code: string;
+  name: string;
+  description: string | null;
+  icon_url: string | null;
+  awarded_at: string | null;
+};
+
+export const apiAchievements = {
+  me: () =>
+    api<AchievementDTO[]>("/api/me/achievements", {
+      method: "GET",
+    }),
+};
