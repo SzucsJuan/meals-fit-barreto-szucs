@@ -155,8 +155,6 @@ export const apiRecipes = {
   update: (id: number | string, payload: any) => api<RecipeDTO>(`/api/recipes/${id}`, {
     method: "PUT", json: payload,
   }),
-  // si necesitás index:
-  // index: (query?: string) => api<Paginated<RecipeDTO>>(`/api/recipes?q=${encodeURIComponent(query||"")}`)
 };
 
 /* =======================
@@ -177,7 +175,7 @@ export const apiRecipeImages = {
     form.append("image", file);
     return api<UploadRecipeImageResponse>(`/api/recipes/${id}/image`, {
       method: "POST",
-      body: form, // NO seteamos Content-Type manualmente
+      body: form, 
     });
   },
   remove: (id: number | string) =>
