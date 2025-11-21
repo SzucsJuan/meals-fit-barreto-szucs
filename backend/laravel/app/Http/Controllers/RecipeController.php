@@ -6,6 +6,7 @@ use App\Models\Recipe;
 use Illuminate\Http\Request;
 use App\Services\RecipeService;
 use App\Http\Requests\{RecipeStoreRequest, RecipeUpdateRequest};
+use App\Services\AchievementService;
 
 class RecipeController extends Controller
 {
@@ -103,11 +104,15 @@ class RecipeController extends Controller
     // POST
     public function store(RecipeStoreRequest $request)
     {
+        $achievementService = new AchievementService();
+        $user = $request->user();
         // 1) Ignoramos user_id del cliente por seguridad
         $data = $request->safe()->except(['user_id']);
+        
 
         // 2) Creamos por relación del usuario autenticado (no más hardcode)
         $recipe = $request->user()->recipes()->create($data);
+        $achievementService->checkAfterRecipeCreated($user);
 
         // 3) Ingredientes + macros
         if (!empty($data['ingredients'])) {

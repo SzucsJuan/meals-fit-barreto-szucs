@@ -49,10 +49,10 @@ class User extends Authenticatable
         return $this->belongsToMany(Recipe::class, 'favorites')
             ->withPivot('created_at'); // sin ->using()
     }
-
-    public function votes(): HasMany
+    public function favoriteRecipes()
     {
-        return $this->hasMany(Vote::class);
+        // Ajustá nombres si tu tabla pivot / claves son distintas
+        return $this->belongsToMany(Recipe::class, 'favorites', 'user_id', 'recipe_id');
     }
 
     public function mealLogs(): HasMany
@@ -65,26 +65,11 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\UserNutritionPlan::class);
     }
 
-    public function messagesSent(): HasMany
+    public function achievements()
     {
-        return $this->hasMany(Message::class, 'sender_id');
-    }
-
-    public function messagesReceived(): HasMany
-    {
-        return $this->hasMany(Message::class, 'receiver_id');
-    }
-
-
-    public function achievements(): BelongsToMany
-    {
-        return $this->belongsToMany(Achievement::class, 'user_achievements')
-                    ->withPivot('awarded_at');
-    }
-
-    public function calendarEvents(): HasMany
-    {
-        return $this->hasMany(CalendarEvent::class);
+        return $this->belongsToMany(\App\Models\Achievement::class, 'user_achievements')
+            ->withPivot(['awarded_at'])
+            ->withTimestamps();
     }
 
     public function isAdmin(): bool

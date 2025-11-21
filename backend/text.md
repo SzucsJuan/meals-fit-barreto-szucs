@@ -1,6 +1,6 @@
 PRENDER BACK:
 
-php artisan serve --host=localhost --port=8000
+php artisan serve --host=0.0.0.0 --port=8000
 
 
 Datos de usuarios

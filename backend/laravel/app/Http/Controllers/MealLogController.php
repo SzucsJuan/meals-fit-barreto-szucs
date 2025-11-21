@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\MealLogStoreRequest;
 use App\Models\{MealLog, MealDetail, Ingredient, Recipe};
+use App\Services\AchievementService;
 
 class MealLogController extends Controller
 {
@@ -54,9 +55,11 @@ class MealLogController extends Controller
         $logDate = (string) $request->input('log_date');
         $notes   = $request->input('notes');
         $details = $request->input('details', []);
+        $user = $request->user();
+        $achievementService = new AchievementService();
 
 
-        return DB::transaction(function () use ($userId, $logDate, $notes, $details) {
+        return DB::transaction(function () use ($userId, $logDate, $notes, $details, $user, $achievementService) {
 
             // 1) Header diario (crea si no existe). Evita duplicados por el índice único.
             $mealLog = MealLog::firstOrCreate(
@@ -127,6 +130,8 @@ class MealLogController extends Controller
                     $batchTotals['carbs'] += $carb;
                     $batchTotals['fat'] += $fat;
 
+                    $achievementService->checkAfterMealLogged($user);
+
                 } elseif (!empty($d['recipe_id'])) {
 
                     // ===== Detalle por RECETA =====
@@ -195,9 +200,12 @@ class MealLogController extends Controller
                 'total_carbs' => round((float) $sums->carb, 2),
                 'total_fat' => round((float) $sums->fat, 2),
             ]);
-
             return $mealLog->load('details.ingredient:id,name', 'details.recipe:id,title');
         });
+        
+        if ($user->meals()->count() === 1) {
+            app(AchievementService::class)->unlockByCode($user, 'first_log'); 
+            }
     }
 
     public function weekly(Request $request)
@@ -210,7 +218,6 @@ class MealLogController extends Controller
         $start = Carbon::now($tz)->subDays(7)->toDateString();       // YYYY-MM-DD
 
         // Sumar macros por día (usamos details para exactitud)
-        // Si preferís usar los totales de meal_logs, cambiá a SUM(ml.total_*)
         $rows = MealDetail::query()
             ->selectRaw('
                 ml.log_date AS d,
