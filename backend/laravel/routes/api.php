@@ -5,8 +5,8 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use App\Http\Controllers\{
     FavoriteController,
+    AchievementController,
     GoalsController,
-    VoteController,
     MealLogController,
     MealDetailController,
     IngredientController,
@@ -62,6 +62,9 @@ Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no
     Route::apiResource('meals', MealLogController::class)->only(['index', 'show', 'store']);
     Route::apiResource('meal-details', MealDetailController::class)->only(['destroy', 'update']);
     Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
+
+    Route::get('/me/achievements', [AchievementController::class, 'me']);
+
 });
 
 // ===================== RUTAS ADMIN =====================
