@@ -47,11 +47,10 @@ class User extends Authenticatable
     public function favorites()
     {
         return $this->belongsToMany(Recipe::class, 'favorites')
-            ->withPivot('created_at'); // sin ->using()
+            ->withPivot('created_at');
     }
     public function favoriteRecipes()
     {
-        // Ajustá nombres si tu tabla pivot / claves son distintas
         return $this->belongsToMany(Recipe::class, 'favorites', 'user_id', 'recipe_id');
     }
 

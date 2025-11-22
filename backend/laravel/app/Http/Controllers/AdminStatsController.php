@@ -18,7 +18,7 @@ class AdminStatsController extends Controller
         $totalRecipes = Recipe::count();
         $totalMealsLogged = MealLog::count();
 
-        // ----- Weekly Activity (últimos 7 días) -----
+        // Actividad del usuario, últimos 7 días 
         $today = Carbon::today();
         $start = $today->copy()->subDays(6);
 

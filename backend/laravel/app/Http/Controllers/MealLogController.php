@@ -15,7 +15,6 @@ class MealLogController extends Controller
     public function index(Request $request)
     {
         $userId = auth()->id(); 
-        // Log::info('User ID:', ['id' => auth()->id()]); 
         $date = $request->query('date');
         $from = $request->query('from');
         $to = $request->query('to');
@@ -61,7 +60,6 @@ class MealLogController extends Controller
 
         return DB::transaction(function () use ($userId, $logDate, $notes, $details, $user, $achievementService) {
 
-            // 1) Header diario (crea si no existe). Evita duplicados por el índice único.
             $mealLog = MealLog::firstOrCreate(
                 ['user_id' => $userId, 'log_date' => $logDate],
                 [
@@ -81,29 +79,26 @@ class MealLogController extends Controller
             ];
 
             foreach ($details as $d) {
-                $mealType = $d['meal_type']; // 'breakfast' | 'lunch' | 'dinner' | 'snack'
+                $mealType = $d['meal_type'];
                 $loggedAt = $d['logged_at'] ?? null;
 
                 if (!$loggedAt) {
-                    $loggedAt = $logDate . ' 12:00:00'; // default si no envías
+                    $loggedAt = $logDate . ' 12:00:00'; 
                 }
 
                 if (!empty($d['ingredient_id'])) {
 
-                    // ===== Detalle por INGREDIENTE =====
+                    // Detalle por cada Ingrediente
                     $ing = Ingredient::findOrFail((int) $d['ingredient_id']);
                     $grams = isset($d['grams']) ? (float) $d['grams'] : null;
                     $servs = isset($d['servings']) ? (float) $d['servings'] : 1.0;
 
-                    // Cálculo:
-                    // - Si vino grams y el ingrediente es g/ml => factor = grams / serving_size
-                    // - Si NO vino grams => usamos "servings" como múltiplo de la porción base.
                     $serving = (float) ($ing->serving_size ?: 1);
 
                     if ($grams !== null && in_array($ing->serving_unit, ['g', 'ml'])) {
                         $factor = $serving > 0 ? ($grams / $serving) : 0;
                     } else {
-                        $factor = $servs; // múltiplos de la porción base
+                        $factor = $servs; 
                     }
 
                     $cals = $ing->calories * $factor;
@@ -134,16 +129,14 @@ class MealLogController extends Controller
 
                 } elseif (!empty($d['recipe_id'])) {
 
-                    // ===== Detalle por RECETA =====
+                    // Detalle por cada Receta
                     $recipe = Recipe::with('ingredients')->findOrFail((int) $d['recipe_id']);
                     $servs = isset($d['servings']) ? (float) $d['servings'] : 1.0;
 
-                    // Garantizamos macros totales de la receta (si faltan)
                     if ($recipe->calories === null) {
                         $recipe->recomputeMacrosAndSave(true);
                     }
 
-                    // Macros base por porción si la receta tiene servings > 0
                     $base = $recipe->servings > 0
                         ? [
                             'cal' => $recipe->calories / $recipe->servings,
@@ -184,7 +177,7 @@ class MealLogController extends Controller
                 }
             }
 
-            // 3) Recalcular totales del día (sumando TODO lo que haya en details)
+            // Se recalculan los totales del día
             $sums = $mealLog->details()
                 ->selectRaw('
                     COALESCE(SUM(calories),0) as cals,
@@ -213,11 +206,11 @@ class MealLogController extends Controller
         $userId = auth()->id();
         $tz = (string) $request->query('tz', 'America/Argentina/Buenos_Aires');
 
-        // Ventana: últimos 7 días en TZ del usuario (si usás DATE, ya es "local")
-        $today = Carbon::now($tz)->toDateString();                   // YYYY-MM-DD
-        $start = Carbon::now($tz)->subDays(7)->toDateString();       // YYYY-MM-DD
+        // Últimos 7 días del usuario
+        $today = Carbon::now($tz)->toDateString();                   
+        $start = Carbon::now($tz)->subDays(7)->toDateString();       
 
-        // Sumar macros por día (usamos details para exactitud)
+        // Suma de macros por día
         $rows = MealDetail::query()
             ->selectRaw('
                 ml.log_date AS d,
@@ -232,16 +225,16 @@ class MealLogController extends Controller
             ->groupBy('ml.log_date')
             ->orderBy('ml.log_date')
             ->get()
-            ->keyBy('d'); // key por fecha para mapear rápido
+            ->keyBy('d'); 
 
-        // Armar esqueleto de los 7 días sin huecos
+        // Armado de esqueleto con data 
         $out = [];
         $cursor = Carbon::parse($start, $tz);
         $end = Carbon::parse($today, $tz);
 
         while ($cursor->lte($end)) {
             $date = $cursor->toDateString();
-            $label = $cursor->format('D'); // Mon, Tue, ...
+            $label = $cursor->format('D'); 
             $out[$date] = [
                 'date' => $date,
                 'dayShort' => $label,
@@ -253,7 +246,7 @@ class MealLogController extends Controller
             $cursor->addDay();
         }
 
-        // Rellenar con datos reales
+        // Datos de los detalles
         foreach ($rows as $d => $row) {
             if (isset($out[$d])) {
                 $out[$d]['calories'] = (float) $row->calories;

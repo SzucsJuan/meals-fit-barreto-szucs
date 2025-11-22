@@ -20,7 +20,6 @@ class MealLogStoreRequest extends FormRequest
             'details.*.grams'         => ['nullable','numeric','min:0'],
             'details.*.logged_at'     => ['nullable','date_format:Y-m-d H:i:s'],
 
-            // 🔒 prohibir que te manden user_id
             'user_id' => ['prohibited'],
         ];
     }
@@ -45,5 +44,5 @@ class MealLogStoreRequest extends FormRequest
             }
         });
     }
-        public function authorize(): bool { return true; } //modificar cuando se use auth
+        public function authorize(): bool { return true; } 
 }

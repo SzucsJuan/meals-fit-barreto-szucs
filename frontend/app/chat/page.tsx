@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { MessageCircle, Send, Search, Users, Bot, Zap } from "lucide-react"
 import Navigation from "@/components/navigation"
 
-// Sample chat data
 const conversations = [
   {
     id: 1,

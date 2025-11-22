@@ -14,10 +14,10 @@ class GoalGenerator
     public function generateByRules(User $u, array $input): array
     {
         [$sex, $age, $heightCm, $weightKg] = [
-            strtolower((string)($u->sex ?? 'm')),   // default 'm' si no existe
+            strtolower((string)($u->sex ?? 'm')),  
             (int)($u->age ?? 25),
-            (float)($u->height ?? 175),   // <- usa height real
-            (float)($u->weight ?? 75),    // <- usa weight real
+            (float)($u->height ?? 175),   
+            (float)($u->weight ?? 75),    
         ];
 
         $activityFactor = $this->activityFactor($input['activity_level']);
@@ -63,7 +63,6 @@ class GoalGenerator
         ];
     }
 
-    /** Devuelve ['metrics'=>array,'raw'=>array,'model'=>string,'prompt'=>string] */
     public function generateByAI(User $u, array $input): array
     {
         $apiKey = config('services.openai.key') ?? env('OPENAI_API_KEY');
@@ -75,8 +74,8 @@ class GoalGenerator
         $payload = [
             'sex'            => strtolower((string)($u->sex ?? 'm')),
             'age'            => (int)($u->age ?? 25),
-            'height_cm'      => (float)($u->height ?? 175),  // usa height
-            'weight_kg'      => (float)($u->weight ?? 75),   // usa weight
+            'height_cm'      => (float)($u->height ?? 175),  
+            'weight_kg'      => (float)($u->weight ?? 75),   
             'activity_level' => $input['activity_level'],
             'mode'           => $input['mode'],
             'experience'     => $input['experience'],
@@ -156,7 +155,7 @@ class GoalGenerator
 
         return [
             'metrics' => $data,
-            'raw'     => $data,       // guardamos el JSON validado (podrías guardar también $response entero si querés)
+            'raw'     => $data,       
             'model'   => $model,
             'prompt'  => $promptName,
         ];

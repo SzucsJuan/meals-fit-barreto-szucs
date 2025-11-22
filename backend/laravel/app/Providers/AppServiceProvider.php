@@ -28,7 +28,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         Ingredient::observe(IngredientObserver::class);
-        //
     }
 
 }

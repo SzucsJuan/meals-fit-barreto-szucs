@@ -8,7 +8,6 @@ import { Apple, ArrowLeft, Mail } from "lucide-react"
 export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Side - Hero Section */}
       <div className="hidden lg:flex flex-col justify-center items-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-12">
         <div className="max-w-md space-y-6">
           <div className="space-y-2">
@@ -47,10 +46,8 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
 
-      {/* Right Side - Reset Form */}
       <div className="flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-background">
         <div className="w-full max-w-md space-y-8">
-          {/* Logo and Header */}
           <div className="space-y-2 text-center lg:text-left">
             <Link href="/" className="inline-flex items-center gap-2 mb-6">
               <Apple className="h-8 w-8 text-primary" />

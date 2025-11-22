@@ -30,10 +30,8 @@ class AchievementService
 
     public function checkAfterMealLogged(User $user): void
     {
-        // 1) Primer registro de comida
         $this->unlockFirstLogIfNeeded($user);
 
-        // 2) Racha de 7 días
         if ($this->has7DayStreak($user)) {
             $this->unlockByCode($user, '7_days_streak');
         }
@@ -48,8 +46,7 @@ class AchievementService
 
     public function checkAfterFavoriteAdded(User $user): void
     {
-        // Asumiendo relación $user->favoriteRecipes()
-        // y que la tabla recipes tiene user_id (dueño de la receta)
+
         $count = $user->favoriteRecipes()
             ->where('recipes.user_id', '!=', $user->id)
             ->count();
@@ -59,11 +56,9 @@ class AchievementService
         }
     }
 
-    /* ================== Helpers privados ================== */
 
     protected function unlockFirstLogIfNeeded(User $user): void
     {
-        // Asumiendo relación $user->mealLogs()
         if ($user->mealLogs()->count() === 1) {
             $this->unlockByCode($user, 'first_log');
         }
@@ -72,7 +67,7 @@ class AchievementService
     protected function has7DayStreak(User $user): bool
     {
         $today = Carbon::today();
-        $from = $today->copy()->subDays(6); // hoy + 6 días hacia atrás = 7 días
+        $from = $today->copy()->subDays(6);
 
         return $user->mealLogs()
             ->whereBetween('log_date', [

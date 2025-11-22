@@ -10,7 +10,7 @@ class GoalsController extends Controller
 {
     public function __construct(private GoalGenerator $service) {}
 
-    /** POST /api/me/goals?source=ai|rule (default: ai con fallback) */
+    /** POST /api/me/goals?source=ai|rule */
     public function store(GoalRequest $req)
     {
         $user  = $req->user();

@@ -25,7 +25,7 @@ Route::get('/sanctum/csrf-cookie', function () {
 });
 
 
-// Login/Logout deben vivir en web, no en api
+// Login/Logout
 Route::post('/login', [AuthController::class, 'login']);     // SIN auth
 
 Route::post('/logout', function (Illuminate\Http\Request $request) {
@@ -37,7 +37,7 @@ Route::post('/logout', function (Illuminate\Http\Request $request) {
 
 
 
-// RUTAS TESTING - DEBUG
+// RUTAS QUE SE USARON PARA TESTING - DEBUG
 
 Route::get('/debug-auth', function (Request $request) {
     return response()->json([

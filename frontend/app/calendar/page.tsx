@@ -20,7 +20,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Calendar, ChevronLeft, ChevronRight, Target, TrendingUp, Plus } from "lucide-react"
 import Link from "next/link"
 
-// Sample nutrition data for calendar
 type NutritionDay = {
   calories: number
   protein: number

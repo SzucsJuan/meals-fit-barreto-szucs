@@ -18,7 +18,6 @@ class RecomputeRecipeMacrosJob implements ShouldQueue
         $recipe = Recipe::find($this->recipeId);
         if (!$recipe) return;
 
-        // ignoramos mismatch de unidades para no reventar el job por un dato viejo
         $recipe->recomputeMacrosAndSave(true);
     }
 }

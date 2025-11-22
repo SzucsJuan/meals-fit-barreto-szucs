@@ -42,14 +42,14 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 422);
         }
 
-        // Regenera la sesión para evitar fixation
+        // Se regenera sesión para evitar falsos positivos
            if ($request->hasSession()) {
         $request->session()->regenerate();
            }
 
         $user = $request->user();
 
-        $user->tokens()->delete(); // Elimina tokens previos si los hubiera
+        $user->tokens()->delete(); // Se elimina tokens anteriores
         $token = $user->createToken('mobile')->plainTextToken;
 
         return response()->json([
@@ -60,7 +60,6 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Cierra sesión del guard web
         if ($request->hasSession()) {
         Auth::guard('web')->logout();
 

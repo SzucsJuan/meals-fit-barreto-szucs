@@ -20,20 +20,16 @@ return MealDetail::create($request->validated());
 
 public function update(MealDetailUpdateRequest $request, MealDetail $mealDetail): JsonResponse
     {
-        // $this->authorize('update', $mealDetail); // activar con policies cuando corresponda
         $data = $request->validated();
 
         return DB::transaction(function() use ($mealDetail, $data) {
-            // Actualizamos campos simples si vienen
             if (array_key_exists('meal_type',$data)) $mealDetail->meal_type = $data['meal_type'];
             if (array_key_exists('logged_at',$data)) $mealDetail->logged_at = $data['logged_at']; // mutador maneja TZ
 
-            // Si pidieron cambiar a INGREDIENTE
             if (!empty($data['ingredient_id'])) {
                 $ing   = Ingredient::findOrFail($data['ingredient_id']);
                 $grams = (float) ($data['grams'] ?? 0);
 
-                // calculo (mismo criterio que el store de MealLogController)
                 $serving = (float) ($ing->serving_size ?: 1);
                 $factor  = ($ing->serving_unit === 'unit')
                     ? ($grams / 1.0)
@@ -54,7 +50,6 @@ public function update(MealDetailUpdateRequest $request, MealDetail $mealDetail)
                 $mealDetail->fat           = round($fat, 2);
             }
 
-            // Si pidieron cambiar a RECETA
             if (!empty($data['recipe_id'])) {
                 $recipe   = Recipe::with('ingredients')->findOrFail($data['recipe_id']);
                 $servings = (float) ($data['servings'] ?? 1);
@@ -92,13 +87,12 @@ public function update(MealDetailUpdateRequest $request, MealDetail $mealDetail)
                 $mealDetail->fat           = round($fat, 2);
             }
 
-            // Si solo quieren editar meal_type / logged_at y nada más, dejamos los macros tal cual.
             $mealDetail->save();
 
-            // Recalcular totales del MealLog
+            // Recalcular totales
             $this->recalcLogTotals($mealDetail->meal_log_id);
 
-            // Devolver detail + log resumido si querés (acá devuelvo el detail “fresco”)
+            // Se devuelve el detalle actualizado
             return response()->json(
                 $mealDetail->fresh()->load('ingredient:id,name','recipe:id,title')
             );
@@ -107,7 +101,6 @@ public function update(MealDetailUpdateRequest $request, MealDetail $mealDetail)
 
     public function destroy(MealDetail $mealDetail): JsonResponse
     {
-        // $this->authorize('delete', $mealDetail);
         $logId = $mealDetail->meal_log_id;
 
         return DB::transaction(function() use ($mealDetail, $logId) {
@@ -118,7 +111,7 @@ public function update(MealDetailUpdateRequest $request, MealDetail $mealDetail)
         });
     }
 
-    /** Suma macros de todos los detalles y actualiza el MealLog */
+    // Se suman macros de todos los detalles y se actualiza el MealLog
     private function recalcLogTotals(int $mealLogId): void
     {
         $log = MealLog::with('details')->findOrFail($mealLogId);

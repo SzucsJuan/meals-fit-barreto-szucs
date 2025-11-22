@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Clock, Users } from "lucide-react";
 
 import { detailRecipe } from "@/lib/detailRecipe";
-// Si tu type RecipeDetail no tiene is_favorited, lo tratamos como opcional
 
 function splitSteps(steps?: string | null) {
   if (!steps) return [];
@@ -44,7 +43,6 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
 
           {r && (
             <>
-              {/* Header */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 pt-4">
                 <div className="relative">
                   <img
@@ -52,7 +50,6 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
                     alt={r.title}
                     className="w-full h-80 object-cover rounded-lg"
                   />
-                  {/* ❤️ favoritos en el detalle */}
                   <FavoriteButton
                     key={`${r.id}-${(r as any).is_favorited ? "1" : "0"}`}
                     recipeId={r.id}
@@ -102,7 +99,6 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
                 </div>
               </div>
 
-              {/* Nutrition */}
               <Card className="mb-8">
                 <CardHeader className="pt-4">
                   <CardTitle>Nutrition Information</CardTitle>
@@ -132,7 +128,6 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
                 </CardContent>
               </Card>
 
-              {/* Ingredients & Instructions */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card>
                   <CardHeader className="pt-4">

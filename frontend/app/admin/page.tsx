@@ -125,7 +125,6 @@ function AdminDashboardContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between gap-4">
@@ -159,9 +158,8 @@ function AdminDashboardContent() {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pt-4">
@@ -211,7 +209,6 @@ function AdminDashboardContent() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link href="/admin/users">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -268,7 +265,6 @@ function AdminDashboardContent() {
           </Link>
         </div>
 
-        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader className="pt-4">
@@ -353,7 +349,6 @@ function AdminDashboardContent() {
           </Card>
         </div>
 
-        {/* Recent Activity */}
         <div className="grid grid-cols-1 gap-6">
           <Card>
             <CardHeader className="pt-4">

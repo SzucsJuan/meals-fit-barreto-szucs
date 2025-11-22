@@ -27,11 +27,9 @@ import {
   UtensilsCrossed,
   Binoculars,
   Home,
-  Droplets,
   Dumbbell,
   Activity,
   Gauge,
-  Scale,
   FlameKindling,
 } from "lucide-react";
 import Link from "next/link";
@@ -42,14 +40,13 @@ import RequireAuth from "@/components/RequireAuth";
 import { useMyFavorites } from "@/lib/useMyFavorites";
 import React, { useEffect, useState } from "react";
 
-/** ----- Sanctum helpers (CSRF para SPA) ----- */
+/** ----- Gelpers de sanctum ----- */
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-// Debe ejecutarse al menos una vez por sesión antes del primer POST/PUT/PATCH/DELETE
 async function ensureCsrf() {
   const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
   await fetch(`${BASE}/sanctum/csrf-cookie`, {
@@ -116,14 +113,14 @@ export default function HomePage() {
   const totalCount = achievements.length;
   const canSave = !!selectedRoutine && !!experienceLevel;
 
-  // Favoritos reales (3 más recientes)
+  // últimos 3 favoritos
   const { data: favorites = [], loading: favLoading, error: favError } = useMyFavorites(3, 1);
 
   function mapMode(m: "maintain" | "lose" | "gain"): "maintenance" | "loss" | "gain" {
     return m === "maintain" ? "maintenance" : m === "lose" ? "loss" : "gain";
   }
 
-  // ---- Cargar plan actual ----
+  // ---- Se carga el plan actual ----
   async function loadLatestPlan() {
     try {
       setLoadingPlan(true);
@@ -164,11 +161,11 @@ export default function HomePage() {
     try {
       setSaving(true);
 
-      // Paso 1: asegurar cookies de sesión + XSRF-TOKEN
+      // Se asegura la cookie de sesión
       await ensureCsrf();
       const xsrf = getCookie("XSRF-TOKEN") || "";
 
-      // Paso 2: POST protegido con header X-XSRF-TOKEN y credenciales
+      // POST protegido con header X-XSRF-TOKEN y credenciales
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals?source=ai`, {
         method: "POST",
         credentials: "include",
@@ -197,7 +194,7 @@ export default function HomePage() {
       setSaveMsg("Profile & goals saved. Plan version " + (data?.plan?.version ?? "?"));
 
       // refrescar resumen del plan
-      setLatestPlan(data?.plan ?? null); // inmediato con respuesta del POST
+      setLatestPlan(data?.plan ?? null); 
     } catch (e: any) {
       setSaveMsg(e?.message || "Unexpected error");
     } finally {
@@ -205,7 +202,6 @@ export default function HomePage() {
     }
   }
 
-  // helpers visuales
   const TitleCap = ({ children }: { children: React.ReactNode }) => (
     <span className="capitalize">{children as any}</span>
   );
@@ -218,7 +214,6 @@ export default function HomePage() {
         <Navigation />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Section */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -228,7 +223,6 @@ export default function HomePage() {
                   <p className="text-muted-foreground">What’s on your plate today?</p>
                 </div>
               </div>
-              {/* Achievements Button */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button
@@ -331,7 +325,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Personal Information & Goals */}
           <Card className="mb-6 overflow-hidden">
             <CardHeader className="pt-4">
               <CardTitle className="flex items-center gap-2">
@@ -346,7 +339,6 @@ export default function HomePage() {
             </CardHeader>
 
             <CardContent className="pt-2">
-              {/* Personal Stats Inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="space-y-2">
                   <Label htmlFor="weight" className="text-sm font-medium">Weight (kg)</Label>
@@ -362,7 +354,6 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Experience Level Selection */}
               <div className="space-y-3 border-b border-border pb-6 mb-8">
                 <Label className="text-sm font-medium">Experience Level</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -401,7 +392,6 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Your Fitness Goal */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Target className="h-5 w-5 text-primary" />
@@ -412,7 +402,6 @@ export default function HomePage() {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {/* Maintain */}
                   <button
                     onClick={() => setSelectedRoutine("maintain")}
                     className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "maintain" ? "border-blue-500 bg-blue-50 shadow-lg scale-105" : "border-border hover:border-blue-300 hover:bg-blue-50/50"}`}
@@ -427,7 +416,6 @@ export default function HomePage() {
                     <p className="text-sm text-muted-foreground mb-4">Keep your current weight and build healthy habits</p>
                   </button>
 
-                  {/* Lose */}
                   <button
                     onClick={() => setSelectedRoutine("lose")}
                     className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "lose" ? "border-rose-500 bg-rose-50 shadow-lg scale-105" : "border-border hover:border-rose-300 hover:bg-rose-50/50"}`}
@@ -442,7 +430,6 @@ export default function HomePage() {
                     <p className="text-sm text-muted-foreground mb-4">Create a calorie deficit to lose weight sustainably</p>
                   </button>
 
-                  {/* Gain */}
                   <button
                     onClick={() => setSelectedRoutine("gain")}
                     className={`p-6 rounded-xl border-2 transition-all text-left ${selectedRoutine === "gain" ? "border-green-500 bg-green-50 shadow-lg scale-105" : "border-border hover:border-green-300 hover:bg-green-50/50"}`}
@@ -458,7 +445,6 @@ export default function HomePage() {
                   </button>
                 </div>
 
-                {/* Activity Level */}
                 <div className="space-y-3 mt-6">
                   <Label className="text-sm font-medium">Activity Level</Label>
                   <p className="text-xs text-muted-foreground mb-3">
@@ -495,7 +481,6 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Save Button */}
                 <div className="mt-6 flex flex-col items-end gap-2">
                   <Button className="w-full sm:w-auto" disabled={!canSave || saving} onClick={handleSave}>
                     {saving ? "Saving..." : "Save Profile Settings"}
@@ -510,7 +495,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* --------- Current Plan Summary --------- */}
           <Card className="mb-8">
             <CardHeader className="pt-4">
               <CardTitle className="flex items-center gap-2">
@@ -525,7 +509,6 @@ export default function HomePage() {
 
               {!loadingPlan && !planError && latestPlan && (
                 <div className="space-y-6">
-                  {/* Meta */}
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary" className="capitalize">
                       <Dumbbell className="h-3 w-3 mr-1" /> <TitleCap>{latestPlan.experience}</TitleCap>
@@ -541,7 +524,6 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  {/* Totales base */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="p-4 border rounded-lg">
                       <div className="flex items-center gap-2 text-muted-foreground text-xs">
@@ -563,7 +545,6 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Macros */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     <div className="p-4 border rounded-lg">
                       <div className="text-xs text-muted-foreground">Protein</div>
@@ -605,7 +586,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Favorites Section */}
           <Card className="mb-8">
             <CardHeader className="pt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -667,9 +647,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Main Action Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-            {/* Create New Recipe */}
             <Link href="/recipes/create">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="pt-4">
@@ -692,7 +670,6 @@ export default function HomePage() {
               </Card>
             </Link>
 
-            {/* Add Meals */}
             <Link href="/meals/add">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="pt-4">
@@ -715,7 +692,6 @@ export default function HomePage() {
               </Card>
             </Link>
 
-            {/* Discover */}
             <Link href="/discover">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="pt-4">
@@ -739,7 +715,6 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Quick Stats */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader className="pt-4">

@@ -23,7 +23,6 @@ class Achievement extends Model
             ->withTimestamps();
     }
 
-    // Si querés acceder explícitamente al modelo pivot
     public function userAchievements(): HasMany
     {
         return $this->hasMany(UserAchievement::class);

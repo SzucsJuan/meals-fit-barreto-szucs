@@ -12,7 +12,6 @@ import RequireAuth from "@/components/RequireAuth"
 import FavoriteButton from "@/components/FavoriteButton"
 import { fetchDiscover, type DiscoverRecipe } from "@/lib/discover"
 
-/** Hook simple de debounce */
 function useDebouncedValue<T>(value: T, delay = 400) {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {
@@ -31,10 +30,8 @@ export default function DiscoverPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  // 🔹 debounce para la búsqueda
   const debouncedQuery = useDebouncedValue(searchQuery, 450)
 
-  // map UI sort → API order param
   const order = useMemo(() => {
     switch (sortBy) {
       case "name":
@@ -60,15 +57,12 @@ export default function DiscoverPage() {
     }
   }
 
-  // resetear a página 1 cuando cambian filtros / búsqueda
   useEffect(() => {
     setPage(1)
   }, [debouncedQuery, order])
 
-  // cargar cuando cambian página, orden o búsqueda (debounced)
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, order, debouncedQuery])
 
   return (
@@ -76,7 +70,6 @@ export default function DiscoverPage() {
       <div className="min-h-screen bg-background">
         <Navigation />
 
-        {/* Header */}
         <div className="border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
@@ -96,7 +89,6 @@ export default function DiscoverPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-          {/* Search & Sort (Top Rated removido) */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -118,7 +110,6 @@ export default function DiscoverPage() {
             </select>
           </div>
 
-          {/* Grid */}
           {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
 
           {loading ? (
@@ -201,7 +192,6 @@ export default function DiscoverPage() {
                 ))}
               </div>
 
-              {/* Paginación */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-3 mt-8">
                   <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>

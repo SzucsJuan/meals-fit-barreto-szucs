@@ -64,7 +64,7 @@ type VisibilityFilter = "all" | "public" | "private";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-// Helpers CSRF (igual que en otros lados)
+// Helpers de sanctum
 function getXsrfToken(): string {
   if (typeof document === "undefined") return "";
   const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
@@ -80,7 +80,7 @@ async function ensureCsrf() {
 }
 
 export default function AdminRecipesPage() {
-  // ---------- LISTADO ----------
+  // ---------- LISTADO DE RECETAS ----------
   const [recipes, setRecipes] = useState<RecipeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,11 +88,11 @@ export default function AdminRecipesPage() {
   const [filterVisibility, setFilterVisibility] = useState<VisibilityFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ---------- EDIT ----------
+  // ---------- EDIT RECETAS----------
   const [editingRecipe, setEditingRecipe] = useState<RecipeRow | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // ---------- ADD (admin) ----------
+  // ---------- ADD RECETAS ----------
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const { data: ingredientOptions } = useIngredientsHook("");
@@ -141,7 +141,7 @@ export default function AdminRecipesPage() {
     setDragOver(false);
   };
 
-  // ---------- LISTADO: fetch ----------
+  // ---------- fetch recipes ----------
   const fetchRecipes = useCallback(async () => {
     try {
       setLoading(true);
@@ -276,13 +276,13 @@ export default function AdminRecipesPage() {
     }
   };
 
-  const filteredRecipes = recipes; // ya vienen filtradas del back
+  const filteredRecipes = recipes;
 
   const totalRecipes = recipes.length;
   const totalPublic = recipes.filter((r) => r.visibility === "public").length;
   const totalPrivate = recipes.filter((r) => r.visibility === "private").length;
 
-  // ---------- ADD: helpers ingredientes / pasos ----------
+  // ---------- ADD ----------
   const addRow = () => {
     const nextId =
       newRows.length > 0 ? Math.max(...newRows.map((r) => r.tempId)) + 1 : 1;
@@ -366,19 +366,17 @@ export default function AdminRecipesPage() {
         }
       }
 
-      // Refrescamos listado admin
+      // Se refresca el listado del admin
       await fetchRecipes();
       clearAddForm();
       setIsAddDialogOpen(false);
     } catch (e) {
       console.error("Error creando receta desde admin", e);
-      // el hook ya maneja error en createError si es necesario
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -401,7 +399,6 @@ export default function AdminRecipesPage() {
               </div>
             </div>
 
-            {/* ADD RECIPE (admin) */}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
@@ -418,7 +415,6 @@ export default function AdminRecipesPage() {
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
-                  {/* Basic info */}
                   <Card>
                     <CardContent className="space-y-4 pt-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -487,7 +483,6 @@ export default function AdminRecipesPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Ingredients */}
                   <Card>
                     <CardHeader className="pt-4">
                       <div className="flex items-center justify-between">
@@ -613,7 +608,6 @@ export default function AdminRecipesPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Steps */}
                   <Card>
                     <CardHeader className="pt-4">
                       <div className="flex items-center justify-between">
@@ -656,7 +650,6 @@ export default function AdminRecipesPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Imagen */}
                   <Card>
                     <CardHeader className="pt-4">
                       <CardTitle>Recipe Image</CardTitle>
@@ -817,7 +810,6 @@ export default function AdminRecipesPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards: total | public | private */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardHeader className="pt-4">
@@ -857,7 +849,6 @@ export default function AdminRecipesPage() {
           </Card>
         </div>
 
-        {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -893,7 +884,6 @@ export default function AdminRecipesPage() {
           </div>
         </div>
 
-        {/* Recipes Table */}
         <Card>
           <CardHeader className="pt-4">
             <CardTitle>Recipes ({filteredRecipes.length})</CardTitle>
@@ -982,7 +972,6 @@ export default function AdminRecipesPage() {
         </Card>
       </div>
 
-      {/* Edit Dialog (edición rápida: nombre/desc/visibility) */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>

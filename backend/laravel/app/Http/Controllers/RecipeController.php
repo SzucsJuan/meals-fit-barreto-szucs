@@ -21,12 +21,12 @@ class RecipeController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $perPage = (int) $request->query('per_page', 15);
-        $order = $request->query('order', 'latest'); // latest|rating|calories|protein|carbs|fat
+        $order = $request->query('order', 'latest');
         $user = $request->user();
         $userId = optional($user)->id;
 
-        $mine = $request->boolean('mine');          // solo mis recetas
-        $discover = $request->boolean('discover');  // solo públicas (para /discover)
+        $mine = $request->boolean('mine');          
+        $discover = $request->boolean('discover'); 
 
         $query = Recipe::query()
             ->with(['user:id,name', 'ingredients:id,name'])
@@ -81,7 +81,6 @@ class RecipeController extends Controller
     // GET
     public function show(Recipe $recipe, Request $request)
     {
-        // evitar error si no hay sesión (recetas públicas)
         $userId = optional($request->user())->id;
         $isOwner = $recipe->user_id === $userId;
 
@@ -106,15 +105,14 @@ class RecipeController extends Controller
     {
         $achievementService = new AchievementService();
         $user = $request->user();
-        // 1) Ignoramos user_id del cliente por seguridad
+        // Por seguridad de ignora el user_id en el request
         $data = $request->safe()->except(['user_id']);
         
 
-        // 2) Creamos por relación del usuario autenticado (no más hardcode)
         $recipe = $request->user()->recipes()->create($data);
         $achievementService->checkAfterRecipeCreated($user);
 
-        // 3) Ingredientes + macros
+        // Ingredientes y macros
         if (!empty($data['ingredients'])) {
             $this->recipes->syncIngredientsAndRecompute(
                 $recipe,
@@ -122,7 +120,6 @@ class RecipeController extends Controller
                 ignoreUnitMismatch: false
             );
         } else {
-            // sin ingredientes → macros en 0 para no dejar valores sucios
             $recipe->fill(['calories' => 0, 'protein' => 0, 'carbs' => 0, 'fat' => 0])->save();
         }
 
@@ -131,16 +128,13 @@ class RecipeController extends Controller
     // PUT
     public function update(RecipeUpdateRequest $request, Recipe $recipe)
     {
-        // $this->authorize('update', $recipe); // descomentar con auth
         $data = $request->validated();
 
         $recipe->update($data);
 
         if (array_key_exists('ingredients', $data)) {
-            // si llegó el array, sincronizamos (aunque esté vacío → elimina todos)
             $this->recipes->syncIngredientsAndRecompute($recipe, $data['ingredients'], ignoreUnitMismatch: false);
         } else {
-            // si no llegó, al menos recalcular si cambiaste servings u otros
             $recipe->recomputeMacrosAndSave(true);
         }
 

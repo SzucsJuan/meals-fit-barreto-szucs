@@ -1,10 +1,10 @@
 export default function DiscoverRecipeDetailLoading() {
   return (
     <div className="container mx-auto p-6 space-y-8">
-      {/* Imagen principal */}
+      {/* Imagen */}
       <div className="h-64 w-full rounded-xl bg-muted animate-pulse" />
 
-      {/* Título y autor */}
+      {/* Título */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-2">
           <div className="h-8 w-64 rounded bg-muted animate-pulse" />
@@ -17,14 +17,14 @@ export default function DiscoverRecipeDetailLoading() {
         </div>
       </div>
 
-      {/* Stats rápidos (rating, votos, tiempo, porciones) */}
+      {/* Stats */}
       <div className="flex flex-wrap gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="h-5 w-28 rounded bg-muted animate-pulse" />
         ))}
       </div>
 
-      {/* Descripción breve */}
+      {/* Descripciones */}
       <div className="space-y-2">
         <div className="h-4 w-full rounded bg-muted animate-pulse" />
         <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />

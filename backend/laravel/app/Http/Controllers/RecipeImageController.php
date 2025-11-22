@@ -14,7 +14,6 @@ class RecipeImageController extends Controller
     
     public function store(Request $request, Recipe $recipe)
     {
-        // $this->authorize('update', $recipe);
         $data = $request->validate([
             'image' => ['required','image','mimes:jpeg,png,webp','max:5120'],
         ]);
@@ -25,15 +24,12 @@ class RecipeImageController extends Controller
         $file = $data['image'];
         $ext  = strtolower($file->extension() ?: 'jpg');
 
-        // Leer y normalizar (v2)
         $img = Image::make($file->getRealPath())->orientate();
 
-        // Codificar principal (respetando extensión original si es jpg/png/webp)
         $main = "recipes/{$recipe->id}/{$uuid}.{$ext}";
         $mainEncoded = (clone $img)->encode($ext === 'png' ? 'png' : ($ext === 'webp' ? 'webp' : 'jpg'), 82);
         Storage::disk($disk)->put($main, (string) $mainEncoded);
 
-        // Thumb 512px (v2: resize con aspect ratio)
         $thumb = (clone $img)->resize(512, null, function ($c) {
             $c->aspectRatio();
             $c->upsize();
@@ -42,16 +38,13 @@ class RecipeImageController extends Controller
         $thumbPath = "recipes/{$recipe->id}/{$uuid}_thumb.{$thumbExt}";
         Storage::disk($disk)->put($thumbPath, (string) $thumb->encode($thumbExt, 82));
 
-        // WEBP (si GD/Imagick soporta webp)
         $webpPath = "recipes/{$recipe->id}/{$uuid}.webp";
         $webpEncoded = (clone $img)->encode('webp', 80);
         Storage::disk($disk)->put($webpPath, (string) $webpEncoded);
 
-        // Medidas de la imagen principal (usar del original)
         $w = $img->width();
         $h = $img->height();
 
-        // Borrar previas si había
         if ($recipe->image_disk) {
             foreach (['image_path','image_thumb_path','image_webp_path'] as $col) {
                 $p = $recipe->{$col};
@@ -61,7 +54,6 @@ class RecipeImageController extends Controller
             }
         }
 
-        // Guardar paths en DB
         $recipe->fill([
             'image_disk'       => $disk,
             'image_path'       => $main,
@@ -82,8 +74,6 @@ class RecipeImageController extends Controller
 
     public function destroy(Recipe $recipe)
     {
-        // $this->authorize('update', $recipe);
-
         if ($recipe->image_disk) {
             foreach (['image_path','image_thumb_path','image_webp_path'] as $col) {
                 $p = $recipe->{$col};

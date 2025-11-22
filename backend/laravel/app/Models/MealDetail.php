@@ -37,19 +37,16 @@ class MealDetail extends Model
         return config('app.timezone', 'UTC');
     }
 
-    // Guarda SIEMPRE en UTC
     public function setLoggedAtAttribute($value): void
     {
         if (!$value) {
             $this->attributes['logged_at'] = null;
             return;
         }
-        // Interpretar el valor como hora LOCAL del usuario y convertir a UTC
         $local = Carbon::parse($value, $this->userTz());
         $this->attributes['logged_at'] = $local->clone()->setTimezone('UTC')->format('Y-m-d H:i:s');
     }
 
-    // Devuelve SIEMPRE en zona local
     public function getLoggedAtAttribute($value): ?string
     {
         if (!$value) return null;

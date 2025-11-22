@@ -11,9 +11,9 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'name' => 'Admin',
+            'name' => 'admin',
             'email' => 'admin@admin.com',
-            'password' => Hash::make('admin123'),
+            'password' => Hash::make('admin1234'),
             'role' => 'admin',
             'profile_picture' => 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
             'age' => 28,
@@ -22,23 +22,12 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
-            'name' => 'Juan',
-            'email' => 'juan@user.com',
-            'password' => Hash::make('juan123'),
+            'name' => 'user',
+            'email' => 'user@prueba.com',
+            'password' => Hash::make('prueba1234'),
             'role' => 'user',
             'profile_picture' => 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
             'age' => 28,
-            'weight' => 70,
-            'height' => 1.80
-        ]);
-
-        User::create([
-            'name' => 'Ian',
-            'email' => 'ian@user.com',
-            'password' => Hash::make('ian123'),
-            'role' => 'user',
-            'profile_picture' => 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-            'age' => 26,
             'weight' => 70,
             'height' => 1.80
         ]);

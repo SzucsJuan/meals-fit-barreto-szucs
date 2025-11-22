@@ -16,7 +16,7 @@ class MealDetailStoreRequest extends FormRequest
         return [
             'meal_log_id' => ['required', 'exists:meal_logs,id'],
             'meal_type' => ['nullable', 'in:breakfast,lunch,dinner,snack'],
-            'ingredient_id' => ['required', 'exists:ingredients,id'], // ahora obligatorio
+            'ingredient_id' => ['required', 'exists:ingredients,id'], 
             'servings' => ['nullable', 'numeric', 'min:0.001'],
             'grams' => ['nullable', 'numeric', 'min:0.01'],
         ];

@@ -19,6 +19,7 @@ import {
   UserPlus,
   Binoculars,
   Shield,
+  Trophy
 } from "lucide-react"
 
 type UserDTO = {
@@ -119,6 +120,16 @@ export default function Navigation() {
         >
           <Binoculars className="h-4 w-4" />
           Discover
+        </Button>
+      </Link>
+            <Link href="/achievements" onClick={onLinkClick}>
+        <Button
+          variant={isActive("/achievements") ? "default" : "ghost"}
+          size="sm"
+          className={`flex items-center gap-2 ${mobile ? "w-full justify-start" : ""}`}
+        >
+          <Trophy className="h-4 w-4" />
+          Achievements
         </Button>
       </Link>
 

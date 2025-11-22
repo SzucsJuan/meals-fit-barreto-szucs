@@ -12,8 +12,7 @@ class FavoriteController extends Controller
     // GET /api/me/favorites
     public function index(Request $request)
     {
-        /** @var \App\Models\User $user */
-        $user = $request->user(); // idéntico a Auth::user(), pero tipa mejor
+        $user = $request->user();
 
         $perPage = (int) $request->query('per_page', 12);
 

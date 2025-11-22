@@ -13,18 +13,12 @@ class RecipeService
      * Sincroniza ingredientes de una receta y recalcula macros.
      *
      * @param  Recipe $recipe
-     * @param  array<int, array{
-     *   ingredient_id:int,
-     *   quantity:float|int,
-     *   unit:string,           // 'g'|'ml'|'unit'
-     *   notes?:string|null
-     * }> $items
+     * @param  array<int,
      * @param  bool $ignoreUnitMismatch  Si true, ignora items con unidad distinta al ingrediente
      * @return Recipe
      */
     public function syncIngredientsAndRecompute(Recipe $recipe, array $items, bool $ignoreUnitMismatch = false): Recipe
     {
-        // Normalizamos -> array para sync: [ingredient_id => ['quantity'=>..,'unit'=>..,'notes'=>..], ...]
         $payload = [];
 
         foreach ($items as $i => $row) {
@@ -42,7 +36,6 @@ class RecipeService
 
             if ($unit !== $ing->serving_unit) {
                 if ($ignoreUnitMismatch) {
-                    // salteamos este ingrediente
                     continue;
                 }
                 throw new InvalidArgumentException(

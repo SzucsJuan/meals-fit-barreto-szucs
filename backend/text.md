@@ -6,18 +6,13 @@ php artisan serve --host=0.0.0.0 --port=8000
 Datos de usuarios
 
 Admin:
-    name: Admin
+    name: admin
     email: admin@admin.com
-    pass: admin123
+    pass: admin1234
 
 
-Usuario 1:
-    name: Juan
-    email: juan@user.com
-    pass: juan123
-
-Usuario 2:
-    name: Ian
-    email: ian@user.com
-    pass: ian123
+Usuario de prueba:
+    name: user
+    email: user@prueba.com
+    pass: prueba1234
 

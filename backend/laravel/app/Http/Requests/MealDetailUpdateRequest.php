@@ -8,7 +8,7 @@ class MealDetailUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // poné tu auth/policy cuando corresponda
+        return true;
     }
 
     public function rules(): array
@@ -16,10 +16,8 @@ class MealDetailUpdateRequest extends FormRequest
         return [
             'meal_type'    => 'sometimes|in:breakfast,lunch,dinner,snack',
             'logged_at'    => 'sometimes|date',     
-            //  INGREDIENTE
             'ingredient_id'=> 'sometimes|nullable|exists:ingredients,id',
             'grams'        => 'sometimes|nullable|numeric|min:0',
-            //  RECETA
             'recipe_id'    => 'sometimes|nullable|exists:recipes,id',
             'servings'     => 'sometimes|nullable|numeric|min:0.01',
         ];
@@ -39,12 +37,10 @@ class MealDetailUpdateRequest extends FormRequest
                 return;
             }
 
-            // si es ingrediente, pedir grams cuando lo usan
             if (($data['ingredient_id'] ?? null) && !isset($data['grams'])) {
                 $v->errors()->add('grams','Para ingrediente, enviá "grams".');
             }
 
-            // si es receta, pedir servings cuando la usan
             if (($data['recipe_id'] ?? null) && !isset($data['servings'])) {
                 $v->errors()->add('servings','Para receta, enviá "servings".');
             }

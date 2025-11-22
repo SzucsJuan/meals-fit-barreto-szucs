@@ -16,13 +16,11 @@ class AdminUserController extends Controller
 
         $query = User::query()
             ->select('users.*')
-            // últimas activity con subquery
             ->selectSub(
                 MealLog::selectRaw('MAX(created_at)')
                     ->whereColumn('user_id', 'users.id'),
                 'last_activity_at'
             )
-            // contadores de recetas y meals
             ->withCount([
                 'recipes',
                 'mealLogs as meals_logged_count',
@@ -42,7 +40,6 @@ class AdminUserController extends Controller
 
         $users = $query->get();
 
-        // formateo mínimo para el front
         $data = $users->map(function (User $u) {
             return [
                 'id'                 => $u->id,
@@ -103,7 +100,6 @@ class AdminUserController extends Controller
 
     public function destroy(User $user)
     {
-        // si querés evitar borrar al propio admin logueado, podés chequear acá
         $user->delete();
         return response()->noContent();
     }

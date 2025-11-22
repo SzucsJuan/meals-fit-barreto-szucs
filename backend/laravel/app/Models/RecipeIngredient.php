@@ -14,12 +14,10 @@ class RecipeIngredient extends Pivot
     protected static function booted(): void
     {
         static::saved(function (RecipeIngredient $pivot) {
-            // Recalcular cada vez que se agrega o cambia cantidad/unidad/notas
             optional($pivot->recipe)->recomputeMacrosAndSave(true);
         });
 
         static::deleted(function (RecipeIngredient $pivot) {
-            // Recalcular al quitar un ingrediente
             optional($pivot->recipe)->recomputeMacrosAndSave(true);
         });
     }

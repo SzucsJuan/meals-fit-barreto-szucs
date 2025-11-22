@@ -110,9 +110,7 @@ class Recipe extends Model
         return (float) ($this->votes()->avg('rating') ?? 0);
     }
 
-    /* ============================= */
-    /* ======= MACROS CÁLCULO ====== */
-    /* ============================= */
+    //Cálculo de macros
 
     public function calculateMacros(bool $perServing = false, bool $ignoreUnitMismatch = false): array
     {
@@ -164,9 +162,7 @@ class Recipe extends Model
         return $this->refresh();
     }
 
-    /* ============================= */
-    /* ========== SLUGS ============ */
-    /* ============================= */
+    // Slugs
 
     protected static function booted(): void
     {
@@ -183,7 +179,7 @@ class Recipe extends Model
             }
         });
 
-        // 🧹 Al borrar la receta, eliminar archivos asociados del storage
+        // Cuando se borra la receta, también se eliminan imágenes de storage
         static::deleting(function (Recipe $recipe) {
             if (!$recipe->image_disk)
                 return;
@@ -217,9 +213,7 @@ class Recipe extends Model
     }
 
     
-    /* ============================= */
-    /* ======= ACCESSORS URL ======= */
-    /* ============================= */
+    // Accesos URL para imágenes
 
 
     public function getImageUrlAttribute(): ?string

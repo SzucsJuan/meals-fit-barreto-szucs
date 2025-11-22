@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Users, MessageCircle, Heart, Share2, TrendingUp, Plus } from "lucide-react"
 import Navigation from "@/components/navigation"
 
-// Sample community data
 const posts = [
   {
     id: 1,
