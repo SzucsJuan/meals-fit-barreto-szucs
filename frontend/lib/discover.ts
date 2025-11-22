@@ -1,4 +1,3 @@
-// /lib/discover.ts
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type DiscoverRecipe = {
@@ -13,7 +12,7 @@ export type DiscoverRecipe = {
   prep_time_minutes: number;
   user: { id: number; name: string };
   is_favorited?: boolean;
-  image_url?: string | null;        // 👈 nuevo
+  image_url?: string | null;        
   image_thumb_url?: string | null; 
 };
 
@@ -36,5 +35,5 @@ export async function fetchDiscover({
     cache: 'no-store',
   });
   if (!res.ok) throw new Error('Failed to fetch discover recipes');
-  return res.json(); // paginator: { data, meta, links }
+  return res.json(); 
 }

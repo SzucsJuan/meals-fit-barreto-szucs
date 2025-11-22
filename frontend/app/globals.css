@@ -4,7 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color tokens for nutrition/fitness theme */
   --background: #ffffff;
   --foreground: #475569;
   --card: #faf9f6;
@@ -41,7 +40,6 @@
 }
 
 .dark {
-  /* Updated dark mode tokens for nutrition/fitness theme */
   --background: #1f2937;
   --foreground: #f8fafc;
   --card: #374151;

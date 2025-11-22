@@ -6,11 +6,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Apple, Target, TrendingUp, Award, EggFried } from "lucide-react";
 import { authApi } from "@/lib/api";
 
-// Validaciones simples (sin libs)
+// Se valida simple
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const minLen = (v: string, n: number) => v.trim().length >= n;
 

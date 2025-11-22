@@ -1,14 +1,12 @@
-// lib/sanitize.ts
 export const s = {
   text(v: unknown, max = 1000): string {
     let t = String(v ?? "").trim();
-    // ❗ Esto quita TODOS los control chars (incluye \n). Úsalo solo para campos de una línea.
+    // Se encarga de quitar todos los control chars
     t = t.replace(/[\u0000-\u001F\u007F]/g, "");
     if (t.length > max) t = t.slice(0, max);
     return t;
   },
 
-  // ✅ NUEVO: preserva \n y \r, limpia el resto
   multiline(v: unknown, max = 5000): string {
     let t = String(v ?? "");
     // eliminar control chars excepto \t \n \r

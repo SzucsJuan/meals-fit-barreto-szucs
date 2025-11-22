@@ -96,7 +96,6 @@ function RecipeGrid({
               {r.description}
             </CardDescription>
 
-            {/* --- INFO: tiempo + porciones --- */}
             <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
@@ -108,7 +107,6 @@ function RecipeGrid({
               </div>
             </div>
 
-            {/* --- MACROS --- */}
             <div className="grid grid-cols-4 gap-2 text-xs mt-3">
               <div className="text-center">
                 <div className="font-semibold text-foreground">
@@ -163,10 +161,9 @@ export default function RecipesPage() {
   const router = useRouter();
   const sp = useSearchParams();
 
-  // tab actual (mine | fav)
   const tab = sp.get("tab") === "fav" ? "fav" : "mine";
 
-  // paginación independiente por tab
+  // paginación por tab
   const pageMine = Math.max(1, Number(sp.get("pageMine") || 1));
   const pageFav = Math.max(1, Number(sp.get("pageFav") || 1));
 
@@ -185,7 +182,6 @@ export default function RecipesPage() {
     per_page: number;
   }
 
-  // Estados locales sincronizados con el fetch
   const [favData, setFavData] = useState<any[]>([]);
   const [favMeta, setFavMeta] = useState<PaginationMeta | null>(null);
 
@@ -212,7 +208,6 @@ export default function RecipesPage() {
     setQuery({ tab: value, ...(value === "mine" ? { pageMine: "1" } : { pageFav: "1" }) });
   };
 
-  // helpers de sincronización entre tabs
   function updateMyDataById(id: number, isFav: boolean) {
     setMyData((prev) => prev.map((r) => (r.id === id ? { ...r, is_favorited: isFav } : r)));
   }
@@ -220,7 +215,6 @@ export default function RecipesPage() {
   function addToFavIfNeeded(recipe: any) {
     setFavData((prev) => {
       if (prev.some((x) => x.id === recipe.id)) return prev;
-      // si estamos en la página 1, lo mostramos arriba
       if ((favMeta?.current_page ?? 1) === 1) return [{ ...recipe, is_favorited: true }, ...prev];
       return prev;
     });
@@ -230,7 +224,6 @@ export default function RecipesPage() {
   function removeFromFavIfPresent(id: number) {
     setFavData((prev) => {
       const next = prev.filter((x) => x.id !== id);
-      // si queda vacía la página y hay anteriores, navegamos a la previa
       if (next.length === 0 && (favMeta?.current_page ?? 1) > 1) {
         setQuery({ tab: "fav", pageFav: String((favMeta!.current_page as number) - 1) });
       }
@@ -241,10 +234,9 @@ export default function RecipesPage() {
 
   // callback central: sincroniza ambas listas
   function handleFavoriteChange(recipe: any, isFav: boolean) {
-    // 1) reflejar en “Creadas por mí” si esa receta está en esa lista
     updateMyDataById(recipe.id, isFav);
 
-    // 2) actualizar la lista de “Favoritos”
+    // actualización de lista de favoritos
     if (isFav) addToFavIfNeeded(recipe);
     else removeFromFavIfPresent(recipe.id);
   }
@@ -276,7 +268,6 @@ export default function RecipesPage() {
               <TabsTrigger value="fav">My Favorites</TabsTrigger>
             </TabsList>
 
-            {/* Tab: Creadas por mí */}
             <TabsContent value="mine" className="mt-6">
               {loadingMine && <div className="text-sm text-muted-foreground">Loading...</div>}
               {errMine && <div className="text-sm text-red-600">Error: {errMine}</div>}
@@ -311,7 +302,6 @@ export default function RecipesPage() {
               )}
             </TabsContent>
 
-            {/* Tab: Favoritos */}
             <TabsContent value="fav" className="mt-6">
               {loadingFav && <div className="text-sm text-muted-foreground">Loading...</div>}
               {errFav && <div className="text-sm text-red-600">Error: {errFav}</div>}
@@ -324,7 +314,6 @@ export default function RecipesPage() {
                     onFavChange={handleFavoriteChange}
                   />
 
-                  {/* Paginación usando meta local si existe */}
                   <Pagination
                     current={(favMeta?.current_page ?? 1)}
                     last={(favMeta?.last_page ?? 1)}

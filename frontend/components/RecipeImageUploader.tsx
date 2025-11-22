@@ -39,7 +39,7 @@ export default function RecipeImageUploader({
     const blob = URL.createObjectURL(file);
     setLocalPreview(blob);
     try {
-      const r = await upload(file); // { image_url, image_webp_url, image_thumb_url }
+      const r = await upload(file);
       setImgUrl(r.image_url ?? null);
       setWebpUrl(r.image_webp_url ?? null);
       onChange?.({
@@ -48,7 +48,6 @@ export default function RecipeImageUploader({
         image_thumb_url: r.image_thumb_url ?? null,
       });
     } catch {
-      // error ya está en el hook
     } finally {
       setLocalPreview(null);
       setTimeout(() => URL.revokeObjectURL(blob), 800);
@@ -80,7 +79,6 @@ export default function RecipeImageUploader({
     <div className={className}>
       <div className="rounded-2xl border border-dashed p-4 md:p-5">
         <div className="flex flex-col md:flex-row gap-5">
-          {/* Dropzone + Preview */}
           <div
             className={[
               "relative w-full md:w-64",
@@ -118,7 +116,6 @@ export default function RecipeImageUploader({
               )}
             </div>
 
-            {/* Input oculto */}
             <input
               ref={inputRef}
               type="file"
@@ -128,7 +125,6 @@ export default function RecipeImageUploader({
             />
           </div>
 
-          {/* Actions / mensajes */}
           <div className="flex-1 flex flex-col justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <button

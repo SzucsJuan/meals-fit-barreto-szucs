@@ -7,8 +7,8 @@ import { useToggleFavorite } from "@/lib/useToggleFavorite";
 
 type Props = {
   recipeId: number;
-  initialFavorited?: boolean; // del backend (is_favorited)
-  onChange?: (isFavorited: boolean) => void; // callback opcional
+  initialFavorited?: boolean;
+  onChange?: (isFavorited: boolean) => void; 
   className?: string;
   size?: "sm" | "default" | "lg" | "icon";
 };
@@ -25,14 +25,13 @@ export default function FavoriteButton({
 
   async function onClick() {
     const prev = favorited;
-    // Optimistic
     setFavorited(!prev);
     try {
       const { isFavorited } = await toggle(recipeId, prev);
       setFavorited(isFavorited);
       onChange?.(isFavorited);
     } catch {
-      // revertir si falló
+      // si falla se revierte
       setFavorited(prev);
     }
   }

@@ -1,9 +1,8 @@
-// lib/api.ts
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-/* =======================
-   Helpers base (CSRF, errores)
-   ======================= */
+
+
+// Lee la cookie
 
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
@@ -49,7 +48,6 @@ export async function api<T>(
   const headers = new Headers(init.headers || {});
   headers.set("Accept", "application/json");
 
-  // Para JSON, seteamos Content-Type; para FormData, NO.
   if (init.json !== undefined) {
     headers.set("Content-Type", "application/json");
   }
@@ -71,7 +69,7 @@ export async function api<T>(
   try {
     body = await res.json();
   } catch {
-    // respuesta sin JSON
+    // va sin JSON la respuesta
   }
 
   if (!res.ok) {
@@ -81,9 +79,8 @@ export async function api<T>(
   return body as T;
 }
 
-/* =======================
-   Auth
-   ======================= */
+
+// LLamada a Usuarios
 
 export type UserDTO = { id: number; name: string; email: string };
 
@@ -104,9 +101,8 @@ export const authApi = {
   me: () => api<UserDTO>("/api/user", { method: "GET" }),
 };
 
-/* =======================
-   Recetas
-   ======================= */
+
+// LLamada a Recetas
 
 export type RecipeDTO = {
   id: number;
@@ -157,9 +153,8 @@ export const apiRecipes = {
   }),
 };
 
-/* =======================
-   Imágenes de recetas
-   ======================= */
+
+// Llamado a imagenes
 
 export type UploadRecipeImageResponse = {
   image_url: string;
@@ -183,9 +178,8 @@ export const apiRecipeImages = {
 };
 
 
-/* =======================
-   Achievements
-   ======================= */
+
+//Llamado a achievements
 
 export type AchievementDTO = {
   id: number;

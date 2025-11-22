@@ -124,7 +124,6 @@ export default function CreateRecipePage() {
       <div className="min-h-screen bg-background">
         <Navigation />
 
-        {/* Header */}
         <div className="border-border">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
@@ -144,7 +143,6 @@ export default function CreateRecipePage() {
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="space-y-8">
-            {/* Basic Information */}
             <Card>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -186,7 +184,6 @@ export default function CreateRecipePage() {
               </CardContent>
             </Card>
 
-            {/* Ingredients */}
             <Card>
               <CardHeader className="pt-4">
                 <div className="flex items-center justify-between">
@@ -266,7 +263,6 @@ export default function CreateRecipePage() {
               </CardContent>
             </Card>
 
-            {/* Instructions */}
             <Card>
               <CardHeader className="pt-4">
                 <div className="flex items-center justify-between">
@@ -318,7 +314,6 @@ export default function CreateRecipePage() {
                   }}
                 >
                   <div className="flex flex-col md:flex-row gap-5">
-                    {/* Preview cuadrado */}
                     <div className="relative w-full md:w-64 rounded-xl overflow-hidden border bg-neutral-100 dark:bg-neutral-900">
                       <div className="aspect-square relative">
                         {imagePreview ? (
@@ -348,7 +343,6 @@ export default function CreateRecipePage() {
                       </div>
                     </div>
 
-                    {/* Botones */}
                     <div className="flex-1 flex flex-col justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <input
@@ -400,7 +394,6 @@ export default function CreateRecipePage() {
               </CardContent>
             </Card>
 
-            {/* Save */}
             <div className="flex justify-end">
               <Button onClick={handleSave} className="flex items-center gap-2" disabled={loading}>
                 <Save className="h-4 w-4" />

@@ -13,7 +13,6 @@ import { useWeeklyMealLog } from "@/lib/useWeeklyMealLog";
 import RequireAuth from "@/components/RequireAuth";
 import Navigation from "@/components/navigation";
 
-// ================== Tipos mínimos locales ==================
 type IngredientOpt = { id: number; name: string };
 
 type Detail = {
@@ -207,7 +206,6 @@ async function apiDeleteMealDetail(detailId: number, apiBase = "") {
   return true;
 }
 
-// Preferido: borrar log completo por ID
 async function apiDeleteMealLog(mealLogId: number, apiBase = "") {
   await ensureCsrfCookie(apiBase);
   const res = await fetch(`${apiBase}/api/meal-logs/${mealLogId}`, {
@@ -223,7 +221,6 @@ async function apiDeleteMealLog(mealLogId: number, apiBase = "") {
 // Fallback: borrar todos los detalles de un meal
 async function apiBulkDeleteDetails(detailIds: number[], apiBase = "") {
   for (const id of detailIds) {
-    // secuencial para simplificar manejo de 419/ratelimit; si querés, podés paralelizar con Promise.all
     await apiDeleteMealDetail(id, apiBase);
   }
   return true;
@@ -231,7 +228,6 @@ async function apiBulkDeleteDetails(detailIds: number[], apiBase = "") {
 
 const nutritionGoals = { calories: 2200, protein: 165, carbs: 275, fats: 73 };
 
-// ================== Página ==================
 export default function MealsPage() {
   const [selectedView, setSelectedView] = useState<"today" | "week">("today");
 
@@ -247,7 +243,7 @@ export default function MealsPage() {
     [dayTotals]
   );
 
-  // ===== Modal edit (solo ingrediente)
+  // ===== Editar (solo ingrediente)
   const [editOpen, setEditOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -310,7 +306,6 @@ export default function MealsPage() {
     }
   }
 
-  // Delete detail
   function openDelete(detail: Detail) {
     setDeletingDetail(detail);
     setDeleteError(null);
@@ -336,7 +331,7 @@ export default function MealsPage() {
     }
   }
 
-  // Delete meal log completo
+  // Deletear meal completo
   function openDeleteLog(meal: MealCard) {
     setDeletingMeal(meal);
     setDeleteLogError(null);
@@ -375,7 +370,6 @@ export default function MealsPage() {
     <RequireAuth>
       <div className="min-h-screen bg-background">
         <Navigation />
-        {/* Header */}
         <div className="border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
@@ -421,7 +415,6 @@ export default function MealsPage() {
 
           {selectedView === "today" ? (
             <>
-              {/* Daily Overview */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card>
                   <CardHeader className="pb-2 pt-4">
@@ -468,7 +461,6 @@ export default function MealsPage() {
                 </Card>
               </div>
 
-              {/* Macro Distribution / Calorie Progress */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <Card>
                   <CardHeader className="pt-4">
@@ -527,7 +519,6 @@ export default function MealsPage() {
                 </Card>
               </div>
 
-              {/* Today's Meals */}
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-foreground">Today's Meals</h2>
@@ -554,7 +545,6 @@ export default function MealsPage() {
                         <div className="flex items-center gap-3">
                           <Badge variant="outline">{meal.type}</Badge>
                         </div>
-                        {/* Botón de borrar LOG COMPLETO */}
                         <div className="flex items-center gap-2">
                           <Button
                             variant="destructive"
@@ -613,7 +603,6 @@ export default function MealsPage() {
               </div>
             </>
           ) : (
-            // Weekly View
             <div className="space-y-6">
               <Card>
                 <CardHeader className="pt-4">
@@ -687,7 +676,6 @@ export default function MealsPage() {
         </div>
       </div>
 
-      {/* ===== MODAL EDIT (solo Ingrediente) */}
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeEdit} />
@@ -740,7 +728,6 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* ===== MODAL DELETE DETAIL */}
       {deleteOpen && deletingDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeDelete} />
@@ -774,7 +761,6 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* ===== MODAL DELETE LOG */}
       {deleteLogOpen && deletingMeal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeDeleteLog} />

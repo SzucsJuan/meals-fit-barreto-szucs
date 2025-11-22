@@ -3,20 +3,17 @@
 export default function MealAddLoading() {
   return (
     <div className="container mx-auto p-6 space-y-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="h-8 w-48 rounded bg-muted animate-pulse" />
         <div className="h-8 w-24 rounded bg-muted animate-pulse" />
       </div>
 
-      {/* Form: fecha/hora + tipo de comida */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="h-10 w-full rounded bg-muted animate-pulse" />
         <div className="h-10 w-full rounded bg-muted animate-pulse" />
         <div className="h-10 w-full rounded bg-muted animate-pulse" />
       </div>
 
-      {/* Buscador de recetas/ingredientes */}
       <div className="space-y-3">
         <div className="h-6 w-44 rounded bg-muted animate-pulse" />
         <div className="h-10 w-full rounded bg-muted animate-pulse" />
@@ -27,7 +24,6 @@ export default function MealAddLoading() {
         </div>
       </div>
 
-      {/* Resultados / selección */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="rounded-2xl border p-4">
@@ -38,7 +34,6 @@ export default function MealAddLoading() {
         ))}
       </div>
 
-      {/* Detalle de ítems agregados (lista) */}
       <div className="space-y-2">
         <div className="h-6 w-40 rounded bg-muted animate-pulse" />
         {Array.from({ length: 4 }).map((_, i) => (
@@ -54,7 +49,6 @@ export default function MealAddLoading() {
         ))}
       </div>
 
-      {/* Resumen de macros */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-xl border p-4 space-y-2">
@@ -65,7 +59,6 @@ export default function MealAddLoading() {
         ))}
       </div>
 
-      {/* Botones de acción */}
       <div className="flex justify-end gap-3">
         <div className="h-10 w-24 rounded bg-muted animate-pulse" />
         <div className="h-10 w-28 rounded bg-muted animate-pulse" />

@@ -15,8 +15,8 @@ type TabsContextType = {
 const TabsCtx = React.createContext<TabsContextType | null>(null);
 
 type TabsProps = {
-  value?: string;                 // controlado
-  defaultValue?: string;          // no controlado
+  value?: string;                
+  defaultValue?: string;         
   onValueChange?: (v: string) => void;
   className?: string;
   children: React.ReactNode;
@@ -35,11 +35,9 @@ export function Tabs({ value, defaultValue, onValueChange, className, children }
     [isControlled, onValueChange]
   );
 
-  // si no hay default y encontramos el primer TabsTrigger, lo usamos
   const firstTrigger = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (!current && firstTrigger.current) setValue(firstTrigger.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
 
   return (
@@ -72,11 +70,10 @@ export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>
     const ctx = React.useContext(TabsCtx);
     if (!ctx) throw new Error("TabsTrigger must be used within <Tabs>");
 
-    // registrar primer trigger si no hay valor aún
     const registered = React.useRef(false);
     React.useEffect(() => {
       if (!registered.current && !ctx.value) {
-        (firstTrigger as any).current = value; // @ts-ignore acceso al ref del root
+        (firstTrigger as any).current = value;
         registered.current = true;
       }
     }, [ctx.value, value]);
@@ -126,5 +123,4 @@ export const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
 );
 TabsContent.displayName = "TabsContent";
 
-// pequeño truco para compartir primer trigger entre root/trigger
 const firstTrigger = { current: null as null | string };

@@ -106,7 +106,6 @@ export default function RecipeDetailPage() {
       <Navigation />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 🔙 Botones de back */}
         <div className="mb-6 flex flex-wrap gap-2">
           <Link href="/recipes">
             <Button variant="outline">Back to Recipes</Button>
@@ -129,7 +128,6 @@ export default function RecipeDetailPage() {
 
         {r && (
           <>
-            {/* Header */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 pt-4">
               <div>
                 <img
@@ -192,7 +190,6 @@ export default function RecipeDetailPage() {
                   </div>
                 </div>
 
-                {/* Acciones */}
                 <div className="flex flex-wrap gap-2">
                   <Button asChild className="flex-1 min-w-[160px]">
                     <Link href={`/recipes/${r.id}/edit`}>
@@ -249,7 +246,6 @@ export default function RecipeDetailPage() {
               </div>
             </div>
 
-            {/* Nutrition */}
             <Card className="mb-8">
               <CardHeader className="pt-4">
                 <CardTitle>Nutrition Information</CardTitle>
@@ -295,7 +291,6 @@ export default function RecipeDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Ingredients & Instructions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <Card>
                 <CardHeader className="pt-4">

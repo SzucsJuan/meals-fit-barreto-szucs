@@ -22,7 +22,7 @@ export function useUpdateRecipe() {
   const [error, setError] = useState<string | null>(null);
 
   async function ensureCsrfCookie() {
-    // Carga / renueva XSRF-TOKEN si hiciera falta
+    // Carga / renueva XSRF-TOKEN en caso de que haga falta
     await fetch(`${API}/sanctum/csrf-cookie`, {
       method: "GET",
       credentials: "include",
@@ -47,7 +47,7 @@ export function useUpdateRecipe() {
     setError(null);
 
     try {
-      // Asegurar el CSRF para métodos no idempotentes
+      // Aseguramos que tengamos el XSRF-TOKEN
       await ensureCsrfCookie();
 
       const xsrfCookie = readCookie("XSRF-TOKEN");
@@ -93,7 +93,6 @@ export function useUpdateRecipe() {
           const err = await res.json();
           if (err?.message) msg += ` - ${err.message}`;
         } catch {
-          // ignore json parse
         }
         setError(msg);
         throw new Error(msg);

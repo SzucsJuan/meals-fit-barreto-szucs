@@ -11,8 +11,6 @@ import {
   Home,
   ChefHat,
   Target,
-  Calendar,
-  Heart,
   Menu,
   LogOut,
   LogIn,
@@ -133,7 +131,7 @@ export default function Navigation() {
         </Button>
       </Link>
 
-      {/* 👉 Admin Panel solo si el user es admin */}
+      {/* Solo va al panel del Admin si el user es admin  */}
       {user?.role === "admin" && (
         <Link href="/admin" onClick={onLinkClick}>
           <Button
@@ -149,7 +147,6 @@ export default function Navigation() {
     </>
   )
 
-  // Botonera derecha (Auth)
   const AuthButtons = ({
     mobile = false,
     onLinkClick = () => {},
@@ -223,17 +220,14 @@ export default function Navigation() {
             <h1 className="text-xl font-bold text-foreground">Meals&amp;Fit</h1>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
             <NavigationLinks />
           </div>
 
-          {/* Desktop Right (Auth) */}
           <div className="hidden md:flex items-center gap-2">
             <AuthButtons />
           </div>
 
-          {/* Mobile Navigation */}
           <div className="flex md:hidden">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>

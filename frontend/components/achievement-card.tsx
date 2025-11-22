@@ -35,8 +35,6 @@ export function AchievementCard({ achievement }: AchievementCardProps) {
             <CardContent>
                 <div className="flex items-center space-x-4">
                     <div className={cn("flex h-12 w-12 items-center justify-center rounded-full border-2", isUnlocked ? "border-amber-500 bg-amber-100 dark:bg-amber-900/20" : "border-muted bg-muted")}>
-                        {/* Placeholder for icon if no URL, or use the URL */}
-                        {/* For now using Trophy/Lock icons as fallback/main visual */}
                         {isUnlocked ? <Trophy className="h-6 w-6 text-amber-600" /> : <Lock className="h-6 w-6 text-muted-foreground" />}
                     </div>
                     <div>

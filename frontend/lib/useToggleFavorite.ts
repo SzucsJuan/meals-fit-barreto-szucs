@@ -51,7 +51,6 @@ export function useToggleFavorite() {
       }
 
       const json = await res.json().catch(() => ({}));
-      // Devuelve { recipe_id, is_favorited } si aplicaste el ajuste opcional en el backend
       return { recipeId: json?.recipe_id ?? recipeId, isFavorited: json?.is_favorited ?? !currentlyFavorited };
     } catch (e: any) {
       setError(e?.message ?? "Favorite toggle failed");

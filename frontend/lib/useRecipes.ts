@@ -47,7 +47,7 @@ export function useRecipes(search: string, order: string = "latest") {
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const json = await r.json();
-        setData(json.data ?? json);        // paginator o colección
+        setData(json.data ?? json);      
       })
       .catch((e) => {
         if (e.name !== "AbortError") setError(e.message);

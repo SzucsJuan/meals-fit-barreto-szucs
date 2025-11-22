@@ -1,4 +1,3 @@
-// lib/useDeleteRecipe.ts
 "use client";
 
 const API =
@@ -20,12 +19,12 @@ async function ensureCsrfCookie() {
 
 export function useDeleteRecipe() {
   async function deleteRecipe(id: number) {
-    // Pedimos/aseguramos la cookie de CSRF antes de hacer el DELETE
+    // Antes de hacer delete, se asegura la cookie
     await ensureCsrfCookie();
 
     const xsrf = getCookie("XSRF-TOKEN");
 
-    // Construir headers con la clase Headers evita el problema de tipos
+    // Construimos con headers
     const headers = new Headers();
     headers.set("Accept", "application/json");
     headers.set("X-Requested-With", "XMLHttpRequest");

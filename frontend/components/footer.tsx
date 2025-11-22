@@ -12,7 +12,6 @@ const navItems = [
 export function Footer() {
   return (
     <footer className="mt-16">
-      {/* Sección principal */}
       <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-t">
         <div className="container mx-auto px-4 py-12 md:py-16">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_1fr] gap-12 text-center md:text-left">

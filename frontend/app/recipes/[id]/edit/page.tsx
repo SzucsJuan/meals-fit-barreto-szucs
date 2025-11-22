@@ -136,7 +136,6 @@ export default function EditRecipePage({params} : {params : Promise<{ id: string
           {recipe && (
             <div className="space-y-8 pt-4">
 
-              {/* Básicos */}
               <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-3">
                   <Label className="pb-2">Recipe Name</Label>
@@ -175,7 +174,6 @@ export default function EditRecipePage({params} : {params : Promise<{ id: string
                 </div>
               </section>
 
-              {/* Ingredientes */}
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Ingredients</Label>
@@ -255,7 +253,6 @@ export default function EditRecipePage({params} : {params : Promise<{ id: string
 
               {saveError && <div className="text-sm text-red-600">Error: {saveError}</div>}
 
-              {/* Botonera duplicada al final para UX */}
               <div className="flex justify-end gap-2">
                 <Link href={`/recipes/${recipeId}`}>
                   <Button variant="outline">Cancel</Button>

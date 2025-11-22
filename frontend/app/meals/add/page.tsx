@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation"; // NUEVO
+import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -17,14 +17,14 @@ import Navigation from "@/components/navigation";
 
 interface SelectedFood {
   id: number;
-  name: string; // mostrás "Nombre (serving_size+unit)"
-  calories: number; // macros por PORCIÓN del ingrediente
+  name: string; 
+  calories: number; 
   protein: number;
   carbs: number;
   fats: number;
   serving_size: number;
   serving_unit: "g" | "ml" | "unit";
-  quantity: number; // cuántas porciones (servings)
+  quantity: number; 
 }
 
 const API =
@@ -44,12 +44,11 @@ export default function AddMealPage() {
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
   const { createMealLog, loading: saving, error: saveError } = useCreateMealLog();
 
-  // Estados de importación desde receta (UX)
+  // Estados de importación desde receta
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importedFrom, setImportedFrom] = useState<string | null>(null);
 
-  // Agregar manualmente desde el buscador (lo mantenemos igual)
   const addFood = (ing: ReturnType<typeof useIngredients>["data"][number]) => {
     const food: SelectedFood = {
       id: ing.id,
@@ -87,7 +86,6 @@ export default function AddMealPage() {
     );
   }, [selectedFoods]);
 
-  // ====== IMPORTAR AUTOMÁTICAMENTE DESDE ?recipeId= ====== //
   type RecipeIngredientPivot = { quantity: number; unit: "g" | "ml" | "unit"; notes?: string | null };
   type RecipeIngredient = { id: number; name: string; pivot: RecipeIngredientPivot };
   type RecipeForImport = {
@@ -210,7 +208,7 @@ export default function AddMealPage() {
     };
   }, [recipeId]);
 
-  // ====== GUARDAR ====== //
+  // Guardado //
   const handleSaveMeal = async () => {
     if (!mealType || selectedFoods.length === 0) return;
 
@@ -364,7 +362,6 @@ export default function AddMealPage() {
               </Card>
             </div>
 
-            {/* Right Column - Selected Foods and Summary */}
             <div className="space-y-6">
               <Card>
                 <CardHeader className="pt-4">

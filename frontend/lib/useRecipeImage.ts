@@ -1,4 +1,3 @@
-// lib/useRecipeImage.ts
 "use client";
 import { useState } from "react";
 import { apiRecipeImages } from "./api";

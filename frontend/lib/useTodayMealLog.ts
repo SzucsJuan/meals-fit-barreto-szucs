@@ -48,7 +48,6 @@ export function useTodayMealLog() {
     setError(null);
     try {
       const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/meals`);
-      // console.log(url);
       url.searchParams.set("date", date);
 
       const res = await fetch(url.toString(), {
@@ -76,7 +75,6 @@ export function useTodayMealLog() {
 
   useEffect(() => { refetch(); }, []);
 
-  // Agrupar detalles por meal_type para la UI
   const grouped = useMemo(() => {
     const map: Record<MealType, MealDetailDTO[]> = {
       breakfast: [], lunch: [], dinner: [], snack: [],
@@ -85,7 +83,6 @@ export function useTodayMealLog() {
     return map;
   }, [data]);
 
-  // Totales por comida
   const mealCards = useMemo(() => {
     const out: {
       type: string;
@@ -110,7 +107,7 @@ export function useTodayMealLog() {
     return out;
   }, [grouped]);
 
-  // Totales del día (ya vienen en el log, pero por si querés recalcular de details)
+  // Totales del día
   const dayTotals = useMemo(() => ({
     calories: Math.round(data?.total_calories ?? 0),
     protein:  Math.round(data?.total_protein ?? 0),

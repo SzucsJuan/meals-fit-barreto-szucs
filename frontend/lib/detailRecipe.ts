@@ -1,4 +1,3 @@
-// lib/detailRecipe.ts
 "use client";
 
 import { useEffect, useState } from "react";
@@ -22,7 +21,7 @@ export function detailRecipe(id: string | number): State {
       try {
         setLoading(true);
         setError(null);
-        const json = await apiRecipes.show(id); // ✅ usa el cliente central
+        const json = await apiRecipes.show(id); 
         if (!cancelled) setData(json);
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? "Error fetching recipe");

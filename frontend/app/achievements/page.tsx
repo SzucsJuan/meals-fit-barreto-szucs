@@ -57,7 +57,6 @@ export default function AchievementsPage() {
                                             : "border-slate-200 bg-slate-50/60 dark:bg-slate-900/20"
                                         }`}
                                 >
-                                    {/* Estado */}
                                     <div className="absolute top-2 right-2">
                                         <span
                                             className={`text-xs font-semibold px-2 py-1 rounded-full ${awarded

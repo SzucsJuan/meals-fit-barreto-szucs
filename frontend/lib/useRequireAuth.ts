@@ -1,4 +1,3 @@
-// /lib/useRequireAuth.ts
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -26,12 +25,10 @@ async function fetchUser(): Promise<any | null> {
       },
     });
 
-    // No autenticado o sin cuerpo todavía
     if (res.status === 204 || res.status === 401) return null;
 
     if (!res.ok) return null;
 
-    // Algunos servidores pueden devolver "" en vez de JSON
     const text = await res.text();
     if (!text) return null;
 
@@ -49,13 +46,13 @@ export function useRequireAuth(redirectTo = "/signin"): AuthState {
     let mounted = true;
 
     (async () => {
-      // Siempre aseguramos CSRF antes de consultar el user
+      // Se asegura CSRF
       await ensureCsrfCookie();
 
-      // Primer intento
+      // Se hace un primer intento
       let user = await fetchUser();
 
-      // Si no hay user, reintentamos una vez tras un pequeño delay
+      // En caso de que no haya user, va de nuevo pero con un pequeño delay
       if (!user) {
         await new Promise((r) => setTimeout(r, 250));
         await ensureCsrfCookie();
