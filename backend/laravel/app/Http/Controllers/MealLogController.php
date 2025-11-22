@@ -54,11 +54,9 @@ class MealLogController extends Controller
         $logDate = (string) $request->input('log_date');
         $notes   = $request->input('notes');
         $details = $request->input('details', []);
-        $user = $request->user();
-        $achievementService = new AchievementService();
 
 
-        return DB::transaction(function () use ($userId, $logDate, $notes, $details, $user, $achievementService) {
+        return DB::transaction(function () use ($userId, $logDate, $notes, $details) {
 
             $mealLog = MealLog::firstOrCreate(
                 ['user_id' => $userId, 'log_date' => $logDate],
@@ -125,7 +123,6 @@ class MealLogController extends Controller
                     $batchTotals['carbs'] += $carb;
                     $batchTotals['fat'] += $fat;
 
-                    $achievementService->checkAfterMealLogged($user);
 
                 } elseif (!empty($d['recipe_id'])) {
 

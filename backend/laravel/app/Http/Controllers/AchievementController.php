@@ -33,19 +33,7 @@ class AchievementController extends Controller
             ->orderBy('achievements.id')
             ->get();
 
-        $data = $achievements->map(function ($a) {
-            return [
-                'id' => $a->id,
-                'code' => $a->code,
-                'name' => $a->name,
-                'description' => $a->description,
-                'icon_url' => $a->icon_url,
-                'awarded_at' => $a->awarded_at
-                    ? $a->awarded_at->toISOString()
-                    : null,
-            ];
-        });
 
-        return response()->json($data);
+        return response()->json($achievements);
     }
 }
