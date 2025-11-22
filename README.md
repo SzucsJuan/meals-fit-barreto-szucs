@@ -76,13 +76,18 @@ cp .env.example .env.local
 -------------------------------------------------------------------------------------
 
 ▶️ Correr proyecto en local
+--Generar BD en MySQL => nombre: meals_fit_db
+
 --Levantar back (API Laravel)
 
 cd backend\laravel
 
-# Ejecutar migraciones (y seeders si corresponde)
-php artisan migrate --seed
+# Ejecutar migraciones
+php artisan migrate
+# Ejecutar seeders
+php artisan db:seed
 
+# Enlazar storage
 php artisan storage:link
 
 # Levantar servidor de desarrollo
