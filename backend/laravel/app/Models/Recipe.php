@@ -9,11 +9,14 @@ use Illuminate\Database\Eloquent\Relations\{
     BelongsToMany,
     HasMany
 };
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\Storage;
 
 class Recipe extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'title',
@@ -48,7 +51,10 @@ class Recipe extends Model
     ];
 
     protected $hidden = [
-        'image_disk', 'image_path', 'image_thumb_path', 'image_webp_path',
+        'image_disk',
+        'image_path',
+        'image_thumb_path',
+        'image_webp_path',
     ];
 
     protected $appends = ['image_url', 'image_thumb_url', 'image_webp_url'];
@@ -201,9 +207,9 @@ class Recipe extends Model
 
         while (
             static::query()
-                ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
-                ->where('slug', $slug)
-                ->exists()
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->where('slug', $slug)
+            ->exists()
         ) {
             $slug = "{$base}-{$i}";
             $i++;
@@ -212,8 +218,10 @@ class Recipe extends Model
         return $slug;
     }
 
-    
-    // Accesos URL para imágenes
+
+    /* ============================= */
+    /* ======= ACCESSORS URL ======= */
+    /* ============================= */
 
 
     public function getImageUrlAttribute(): ?string

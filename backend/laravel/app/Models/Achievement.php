@@ -19,8 +19,7 @@ class Achievement extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_achievements')
-            ->withPivot(['awarded_at'])
-            ->withTimestamps();
+            ->withPivot(['awarded_at']);
     }
 
     public function userAchievements(): HasMany

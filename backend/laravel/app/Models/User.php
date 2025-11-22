@@ -8,13 +8,15 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\{
-    HasMany, BelongsToMany
+    HasMany,
+    BelongsToMany
 };
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
+    use HasApiTokens, Notifiable, HasFactory;
     protected $fillable = [
         'name',
         'email',
@@ -67,8 +69,7 @@ class User extends Authenticatable
     public function achievements()
     {
         return $this->belongsToMany(\App\Models\Achievement::class, 'user_achievements')
-            ->withPivot(['awarded_at'])
-            ->withTimestamps();
+            ->withPivot(['awarded_at']);
     }
 
     public function isAdmin(): bool
