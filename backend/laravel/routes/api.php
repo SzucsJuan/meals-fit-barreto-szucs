@@ -22,15 +22,15 @@ use App\Http\Controllers\{
 Route::post('/auth/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/user', fn (Request $request) => $request->user());
+    Route::get('/user', fn(Request $request) => $request->user());
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 });
 
 
 // --------- Auth de SPA (cookie de sesión) -----------
 Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no-store'])
-    ->get('/user', fn (Request $request) => $request->user());
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    ->get('/user', fn(Request $request) => $request->user());
+Route::post('/auth/logout', [AuthController::class, 'logout']);
 
 
 Route::post('register', [AuthController::class, 'register']);
@@ -50,21 +50,20 @@ Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no
 
     Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show', 'store']);
 
-    Route::post('/me/goals', [GoalsController::class, 'store']);      
-    Route::get('/me/goals/latest', [GoalsController::class, 'latest']); 
+    Route::post('/me/goals', [GoalsController::class, 'store']);
+    Route::get('/me/goals/latest', [GoalsController::class, 'latest']);
 
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/recipes/{recipe}/favorite', [FavoriteController::class, 'store'])
-    ->whereNumber('recipe');
+        ->whereNumber('recipe');
     Route::delete('/recipes/{recipe}/favorite', [FavoriteController::class, 'destroy'])
-    ->whereNumber('recipe');
+        ->whereNumber('recipe');
 
     Route::apiResource('meals', MealLogController::class)->only(['index', 'show', 'store']);
     Route::apiResource('meal-details', MealDetailController::class)->only(['destroy', 'update']);
     Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
 
     Route::get('/me/achievements', [AchievementController::class, 'me']);
-
 });
 
 // ===================== RUTAS ADMIN =====================
