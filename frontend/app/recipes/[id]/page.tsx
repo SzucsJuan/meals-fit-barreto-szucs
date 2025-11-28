@@ -112,7 +112,7 @@ export default function RecipeDetailPage() {
           </Link>
 
           {isAdmin && (
-            <Link href="/admin">
+            <Link href="/admin/recipes">
               <Button variant="outline">Back to Admin Panel</Button>
             </Link>
           )}
