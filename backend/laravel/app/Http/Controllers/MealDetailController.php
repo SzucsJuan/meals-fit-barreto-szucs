@@ -24,7 +24,7 @@ public function update(MealDetailUpdateRequest $request, MealDetail $mealDetail)
 
         return DB::transaction(function() use ($mealDetail, $data) {
             if (array_key_exists('meal_type',$data)) $mealDetail->meal_type = $data['meal_type'];
-            if (array_key_exists('logged_at',$data)) $mealDetail->logged_at = $data['logged_at']; // mutador maneja TZ
+            if (array_key_exists('logged_at',$data)) $mealDetail->logged_at = $data['logged_at']; 
 
             if (!empty($data['ingredient_id'])) {
                 $ing   = Ingredient::findOrFail($data['ingredient_id']);

@@ -3,26 +3,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   ChefHat,
   Plus,
   Heart,
   Target,
   TrendingUp,
-  Trophy,
-  Award,
-  Star,
   Flame,
-  Share2,
   User,
   UtensilsCrossed,
   Binoculars,
@@ -40,7 +27,7 @@ import RequireAuth from "@/components/RequireAuth";
 import { useMyFavorites } from "@/lib/useMyFavorites";
 import React, { useEffect, useState } from "react";
 
-/** ----- Helpers de sanctum ----- */
+//Helpers de Sanctum
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
@@ -92,65 +79,6 @@ export default function HomePage() {
   const [loadingPlan, setLoadingPlan] = useState<boolean>(true);
   const [planError, setPlanError] = useState<string | null>(null);
 
-  const achievements = [
-    {
-      id: 1,
-      title: "First Steps",
-      description: "Log your first meal",
-      icon: Target,
-      unlocked: true,
-      unlockedDate: "2024-01-15",
-      category: "Getting Started",
-    },
-    {
-      id: 2,
-      title: "Recipe Creator",
-      description: "Create your first custom recipe",
-      icon: ChefHat,
-      unlocked: true,
-      unlockedDate: "2024-01-18",
-      category: "Creativity",
-    },
-    {
-      id: 3,
-      title: "Protein Champion",
-      description: "Hit your protein goal for 7 consecutive days",
-      icon: Award,
-      unlocked: true,
-      unlockedDate: "2024-01-25",
-      category: "Nutrition Goals",
-    },
-    {
-      id: 4,
-      title: "Streak Master",
-      description: "Log meals for 30 consecutive days",
-      icon: Flame,
-      unlocked: false,
-      progress: 23,
-      total: 30,
-      category: "Consistency",
-    },
-    {
-      id: 5,
-      title: "Recipe Collector",
-      description: "Create 10 different recipes",
-      icon: Star,
-      unlocked: false,
-      progress: 6,
-      total: 10,
-      category: "Creativity",
-    },
-    {
-      id: 6,
-      title: "Macro Master",
-      description: "Hit all macro goals in a single day",
-      icon: Trophy,
-      unlocked: true,
-      unlockedDate: "2024-01-20",
-      category: "Nutrition Goals",
-    },
-  ];
-
   const routineTypes = {
     maintain: {
       title: "Maintain",
@@ -186,11 +114,8 @@ export default function HomePage() {
 
   const currentRoutine = selectedRoutine ? routineTypes[selectedRoutine] : null;
 
-  const unlockedCount = achievements.filter((a) => a.unlocked).length;
-  const totalCount = achievements.length;
   const canSave = !!selectedRoutine && !!experienceLevel;
 
-  // últimos 3 favoritos
   const {
     data: favorites = [],
     loading: favLoading,
@@ -201,7 +126,7 @@ export default function HomePage() {
     return m === "maintain" ? "maintenance" : m === "lose" ? "loss" : "gain";
   }
 
-  // ---- Se carga el plan actual ----
+  // Esto se encarga de que se muestre el plan actual
   async function loadLatestPlan() {
     try {
       setLoadingPlan(true);
@@ -280,7 +205,7 @@ export default function HomePage() {
         "Profile & goals saved. Plan version " + (data?.plan?.version ?? "?")
       );
 
-      // refrescar resumen del plan + esto hará que desaparezca el bloque de Personal Information
+      // Refresca una vez que el usuario selecciona por primera vez el plan y "desaparece" del home
       setLatestPlan(data?.plan ?? null);
     } catch (e: any) {
       setSaveMsg(e?.message || "Unexpected error");
@@ -299,7 +224,7 @@ export default function HomePage() {
       ? (Math.round(n * 10) / 10).toFixed(1)
       : "-";
 
-  // 👉 Si ya hay plan cargado, ocultamos el bloque de Personal Information
+  // Entonces, si hay plan ocultamos
   const showPersonalInfo = !loadingPlan && !latestPlan;
 
   return (
@@ -308,7 +233,6 @@ export default function HomePage() {
         <Navigation />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -322,162 +246,9 @@ export default function HomePage() {
                   </p>
                 </div>
               </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 hover:from-yellow-100 hover:to-orange-100"
-                  >
-                    <Trophy className="h-4 w-4 text-yellow-600" />
-                    <span className="text-yellow-700">Achievements</span>
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 bg-yellow-100 text-yellow-800"
-                    >
-                      {unlockedCount}/{totalCount}
-                    </Badge>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl lg:max-w-4xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
-                  <DialogHeader className="pb-4">
-                    <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
-                      <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
-                      Your Achievements
-                    </DialogTitle>
-                    <DialogDescription className="text-sm sm:text-base">
-                      You've unlocked {unlockedCount} out of {totalCount} achievements. Keep going to earn more trophies!
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="mt-4 sm:mt-6 space-y-6 sm:space-y-8">
-                    {["Getting Started", "Nutrition Goals", "Creativity", "Consistency"].map(
-                      (category) => {
-                        const categoryAchievements = achievements.filter(
-                          (a) => a.category === category
-                        );
-                        return (
-                          <div key={category} className="space-y-3 sm:space-y-4">
-                            <h3 className="text-base sm:text-lg font-semibold text-foreground">
-                              {category}
-                            </h3>
-                            <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                              {categoryAchievements.map((achievement) => {
-                                const IconComponent = achievement.icon;
-                                return (
-                                  <Card
-                                    key={achievement.id}
-                                    className={`${
-                                      achievement.unlocked
-                                        ? "bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200"
-                                        : "opacity-60"
-                                    }`}
-                                  >
-                                    <CardContent className="p-3 sm:p-4">
-                                      <div className="flex items-start gap-3">
-                                        <div
-                                          className={`p-2 rounded-lg flex-shrink-0 ${
-                                            achievement.unlocked
-                                              ? "bg-yellow-100"
-                                              : "bg-muted"
-                                          }`}
-                                        >
-                                          <IconComponent
-                                            className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                                              achievement.unlocked
-                                                ? "text-yellow-600"
-                                                : "text-muted-foreground"
-                                            }`}
-                                          />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center justify-between mb-1 gap-2">
-                                            <h4 className="font-semibold text-sm sm:text-base text-foreground truncate">
-                                              {achievement.title}
-                                            </h4>
-                                            {achievement.unlocked && (
-                                              <Badge
-                                                variant="secondary"
-                                                className="bg-yellow-100 text-yellow-800 text-xs flex-shrink-0"
-                                              >
-                                                Unlocked
-                                              </Badge>
-                                            )}
-                                          </div>
-                                          <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-2">
-                                            {achievement.description}
-                                          </p>
-                                          {achievement.unlocked ? (
-                                            <div className="flex items-center justify-between gap-2">
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-6 px-2 text-xs flex-shrink-0"
-                                              >
-                                                <Share2 className="h-3 w-3 mr-1" />
-                                                Share
-                                              </Button>
-                                            </div>
-                                          ) : (
-                                            (achievement as any).progress !==
-                                              undefined && (
-                                              <div className="space-y-1">
-                                                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                  <span>Progress</span>
-                                                  <span>
-                                                    {(achievement as any)
-                                                      .progress}
-                                                    /
-                                                    {(achievement as any).total}
-                                                  </span>
-                                                </div>
-                                                <Progress
-                                                  value={
-                                                    (((achievement as any)
-                                                      .progress || 0) /
-                                                      ((achievement as any)
-                                                        .total || 1)) *
-                                                    100
-                                                  }
-                                                  className="h-2"
-                                                />
-                                              </div>
-                                            )
-                                          )}
-                                        </div>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      }
-                    )}
-                  </div>
-
-                  <div className="mt-6 pt-4 sm:pt-6 border-t border-border">
-                    <div className="flex flex-col gap-3 sm:gap-4">
-                      <div className="text-center sm:text-left">
-                        <h4 className="font-semibold text-sm sm:text-base text-foreground">
-                          Share Your Progress
-                        </h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          Let the community know about your achievements!
-                        </p>
-                      </div>
-                      <Button className="w-full sm:w-auto sm:self-start">
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share with Community
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </div>
           </div>
 
-          {/* 🔹 PERSONAL INFORMATION SOLO SI NO HAY PLAN */}
           {showPersonalInfo && (
             <Card className="mb-6 overflow-hidden">
               <CardHeader className="pt-4">
@@ -790,7 +561,6 @@ export default function HomePage() {
             </Card>
           )}
 
-          {/* Your Current Plan */}
           <Card className="mb-8">
             <CardHeader className="pt-4">
               <CardTitle className="flex items-center gap-2">
@@ -923,7 +693,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Favorite Recipes */}
           <Card className="mb-8">
             <CardHeader className="pt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1021,7 +790,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Quick actions */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
             <Link href="/recipes/create">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -1109,7 +877,6 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Weekly Progress & Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader className="pt-4">

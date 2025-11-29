@@ -7,7 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Target, TrendingUp, Edit, Trash2, X, Search } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
 import { useTodayMealLog } from "@/lib/useTodayMealLog";
 import { useWeeklyMealLog } from "@/lib/useWeeklyMealLog";
 import RequireAuth from "@/components/RequireAuth";
@@ -32,11 +43,28 @@ type MealCard = {
   mealLogId?: number;
 };
 
+type PlanDTO = {
+  id: number;
+  mode: "maintenance" | "gain" | "loss";
+  experience: "beginner" | "advanced" | "professional";
+  activity_level: "sedentary" | "light" | "moderate" | "high" | "athlete";
+  bmr: number;
+  tdee: number;
+  calorie_target: number;
+  protein_g: number;
+  fat_g: number;
+  carbs_g: number;
+  fiber_g: number;
+  water_l: number;
+  version?: number;
+};
+
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
   return match ? match[2] : null;
 }
+
 async function ensureCsrfCookie(apiBase = "") {
   await fetch(`${apiBase}/sanctum/csrf-cookie`, {
     method: "GET",
@@ -167,7 +195,6 @@ function IngredientSelector({
   );
 }
 
-// ================== API helpers (CSRF) ==================
 function xsrfHeaderValue() {
   const xsrf = getCookie("XSRF-TOKEN");
   return xsrf ? decodeURIComponent(xsrf) : "";
@@ -226,13 +253,63 @@ async function apiBulkDeleteDetails(detailIds: number[], apiBase = "") {
   return true;
 }
 
-const nutritionGoals = { calories: 2200, protein: 165, carbs: 275, fats: 73 };
-
 export default function MealsPage() {
   const [selectedView, setSelectedView] = useState<"today" | "week">("today");
 
   const { dayTotals, mealCards, loading, error, refetch } = useTodayMealLog();
-  const { barData: weeklyData, loading: wLoading, error: wError, refetch: wRefetch } = useWeeklyMealLog();
+  const {
+    barData: weeklyData,
+    loading: wLoading,
+    error: wError,
+    refetch: wRefetch,
+  } = useWeeklyMealLog();
+
+  // Trae las goals desde el plan del usuario
+  const [goals, setGoals] = useState({
+    calories: 2200,
+    protein: 165,
+    carbs: 275,
+    fats: 73,
+  });
+  const [loadingGoals, setLoadingGoals] = useState(true);
+  const [goalsError, setGoalsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingGoals(true);
+        setGoalsError(null);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals/latest`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+          }
+        );
+
+        if (!res.ok) throw new Error("Failed to load goals");
+
+        const data: any = await res.json();
+        const plan: PlanDTO | null = (data?.plan as PlanDTO) ?? null;
+
+        if (plan) {
+          setGoals({
+            calories: Math.round(plan.calorie_target ?? 0),
+            protein: Math.round(plan.protein_g ?? 0),
+            carbs: Math.round(plan.carbs_g ?? 0),
+            fats: Math.round(plan.fat_g ?? 0),
+          });
+        }
+      } catch (e: any) {
+        setGoalsError(e?.message || "Unexpected error");
+      } finally {
+        setLoadingGoals(false);
+      }
+    })();
+  }, []);
 
   const macroData = useMemo(
     () => [
@@ -243,7 +320,6 @@ export default function MealsPage() {
     [dayTotals]
   );
 
-  // ===== Editar (solo ingrediente)
   const [editOpen, setEditOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -253,13 +329,11 @@ export default function MealsPage() {
   const [ingredientNameHint, setIngredientNameHint] = useState<string>("");
   const [grams, setGrams] = useState<number | "">("");
 
-  // ===== Modal delete (detail)
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingDetail, setDeletingDetail] = useState<Detail | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // ===== Modal delete (meal log completo)
   const [deleteLogOpen, setDeleteLogOpen] = useState(false);
   const [deletingMeal, setDeletingMeal] = useState<MealCard | null>(null);
   const [deleteLogLoading, setDeleteLogLoading] = useState(false);
@@ -349,10 +423,8 @@ export default function MealsPage() {
       setDeleteLogError(null);
 
       if (deletingMeal.mealLogId) {
-        // Endpoint directo
         await apiDeleteMealLog(deletingMeal.mealLogId);
       } else {
-        // Fallback: borrar todos los detalles del meal
         const ids = deletingMeal.details.map((d) => d.id);
         await apiBulkDeleteDetails(ids);
       }
@@ -365,6 +437,16 @@ export default function MealsPage() {
       setDeleteLogLoading(false);
     }
   }
+
+  const caloriesGoal = goals.calories || 1;
+  const proteinGoal = goals.protein || 1;
+  const carbsGoal = goals.carbs || 1;
+  const fatsGoal = goals.fats || 1;
+
+  const caloriesPct = Math.min(100, (dayTotals.calories / caloriesGoal) * 100);
+  const proteinPct = Math.min(100, (dayTotals.protein / proteinGoal) * 100);
+  const carbsPct = Math.min(100, (dayTotals.carbs / carbsGoal) * 100);
+  const fatsPct = Math.min(100, (dayTotals.fats / fatsGoal) * 100);
 
   return (
     <RequireAuth>
@@ -412,6 +494,11 @@ export default function MealsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {loading && <div className="text-sm text-muted-foreground">Loading...</div>}
           {error && <div className="text-sm text-red-600">Error: {error}</div>}
+          {goalsError && (
+            <div className="text-xs text-red-600 mb-4">
+              Error loading goals: {goalsError} (usando valores por defecto)
+            </div>
+          )}
 
           {selectedView === "today" ? (
             <>
@@ -421,9 +508,9 @@ export default function MealsPage() {
                     <CardTitle className="text-sm font-medium text-muted-foreground">Calories</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-foreground">{dayTotals.calories}</div>
-                    <div className="text-xs text-muted-foreground">of {nutritionGoals.calories} goal</div>
-                    <Progress value={(dayTotals.calories / nutritionGoals.calories) * 100} className="mt-2" />
+                    <div className="text-2xl font-bold text-foreground">{Math.round(dayTotals.calories)}</div>
+                    <div className="text-xs text-muted-foreground">of {Math.round(goals.calories)} goal</div>
+                    <Progress value={caloriesPct} className="mt-2" />
                   </CardContent>
                 </Card>
 
@@ -432,9 +519,9 @@ export default function MealsPage() {
                     <CardTitle className="text-sm font-medium text-muted-foreground">Protein</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-foreground">{dayTotals.protein}g</div>
-                    <div className="text-xs text-muted-foreground">of {nutritionGoals.protein}g goal</div>
-                    <Progress value={(dayTotals.protein / nutritionGoals.protein) * 100} className="mt-2" />
+                    <div className="text-2xl font-bold text-foreground">{Math.round(dayTotals.protein)}g</div>
+                    <div className="text-xs text-muted-foreground">of {Math.round(goals.protein)}g goal</div>
+                    <Progress value={proteinPct} className="mt-2" />
                   </CardContent>
                 </Card>
 
@@ -443,9 +530,9 @@ export default function MealsPage() {
                     <CardTitle className="text-sm font-medium text-muted-foreground">Carbs</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-foreground">{dayTotals.carbs}g</div>
-                    <div className="text-xs text-muted-foreground">of {nutritionGoals.carbs}g goal</div>
-                    <Progress value={(dayTotals.carbs / nutritionGoals.carbs) * 100} className="mt-2" />
+                    <div className="text-2xl font-bold text-foreground">{Math.round(dayTotals.carbs)}g</div>
+                    <div className="text-xs text-muted-foreground">of {Math.round(goals.carbs)}g goal</div>
+                    <Progress value={carbsPct} className="mt-2" />
                   </CardContent>
                 </Card>
 
@@ -454,9 +541,9 @@ export default function MealsPage() {
                     <CardTitle className="text-sm font-medium text-muted-foreground">Fats</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-foreground">{dayTotals.fats}g</div>
-                    <div className="text-xs text-muted-foreground">of {nutritionGoals.fats}g goal</div>
-                    <Progress value={(dayTotals.fats / nutritionGoals.fats) * 100} className="mt-2" />
+                    <div className="text-2xl font-bold text-foreground">{Math.round(dayTotals.fats)}g</div>
+                    <div className="text-xs text-muted-foreground">of {Math.round(goals.fats)}g goal</div>
+                    <Progress value={fatsPct} className="mt-2" />
                   </CardContent>
                 </Card>
               </div>
@@ -471,7 +558,15 @@ export default function MealsPage() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={macroData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                          <Pie
+                            data={macroData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
                             {macroData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
@@ -483,7 +578,10 @@ export default function MealsPage() {
                     <div className="flex justify-center gap-6 mt-4">
                       {macroData.map((macro) => (
                         <div key={macro.name} className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: macro.color }} />
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: macro.color }}
+                          />
                           <span className="text-sm text-muted-foreground">{macro.name}</span>
                         </div>
                       ))}
@@ -500,19 +598,23 @@ export default function MealsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Current Intake</span>
-                        <span className="font-bold text-2xl text-primary">{dayTotals.calories}</span>
+                        <span className="font-bold text-2xl text-primary">
+                          {Math.round(dayTotals.calories)}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Daily Goal</span>
-                        <span className="font-medium">{nutritionGoals.calories}</span>
+                        <span className="font-medium">{Math.round(goals.calories)}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Remaining</span>
-                        <span className="font-medium">{nutritionGoals.calories - dayTotals.calories}</span>
+                        <span className="font-medium">
+                          {Math.round(goals.calories - dayTotals.calories)}
+                        </span>
                       </div>
-                      <Progress value={(dayTotals.calories / nutritionGoals.calories) * 100} className="h-3" />
+                      <Progress value={caloriesPct} className="h-3" />
                       <div className="text-center text-sm text-muted-foreground">
-                        {Math.round((dayTotals.calories / nutritionGoals.calories) * 100)}% of daily goal
+                        {Math.round(caloriesPct)}% of daily goal
                       </div>
                     </div>
                   </CardContent>
@@ -534,13 +636,15 @@ export default function MealsPage() {
 
                 {mealCards.length === 0 && !loading && (
                   <Card>
-                    <CardContent className="py-6 text-sm text-muted-foreground">No meals logged today.</CardContent>
+                    <CardContent className="py-6 text-sm text-muted-foreground">
+                      No meals logged today.
+                    </CardContent>
                   </Card>
                 )}
 
                 {mealCards.map((meal: MealCard, idx: number) => (
                   <Card key={idx}>
-                    <CardHeader>
+                    <CardHeader className="pt-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Badge variant="outline">{meal.type}</Badge>
@@ -560,7 +664,8 @@ export default function MealsPage() {
                     <CardContent>
                       <div className="space-y-3">
                         {meal.details.map((d) => {
-                          const label = d.ingredient?.name ?? d.recipe?.title ?? `Item #${d.id}`;
+                          const label =
+                            d.ingredient?.name ?? d.recipe?.title ?? `Item #${d.id}`;
                           return (
                             <div
                               key={d.id}
@@ -569,11 +674,18 @@ export default function MealsPage() {
                               <div>
                                 <div className="font-medium text-foreground">{label}</div>
                                 <div className="text-sm text-muted-foreground">
-                                  {Math.round(d.calories)} cal • {Math.round(d.protein)}g protein • {Math.round(d.carbs)}g carbs • {Math.round(d.fat)}g fats
+                                  {Math.round(d.calories)} cal •{" "}
+                                  {Math.round(d.protein)}g protein •{" "}
+                                  {Math.round(d.carbs)}g carbs • {Math.round(d.fat)}g fats
                                 </div>
                               </div>
                               <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="sm" onClick={() => openEdit(d)} aria-label="Editar">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openEdit(d)}
+                                  aria-label="Editar"
+                                >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -592,8 +704,12 @@ export default function MealsPage() {
                         <div className="flex items-center justify-between pt-3 border-t border-border">
                           <span className="font-medium text-foreground">Meal Total</span>
                           <div className="text-sm text-muted-foreground">
-                            <span className="font-medium text-primary">{Math.round(meal.totals.calories)} cal</span> •
-                            {Math.round(meal.totals.protein)}g protein • {Math.round(meal.totals.carbs)}g carbs • {Math.round(meal.totals.fats)}g fats
+                            <span className="font-medium text-primary">
+                              {Math.round(meal.totals.calories)} cal
+                            </span>{" "}
+                            • {Math.round(meal.totals.protein)}g protein •{" "}
+                            {Math.round(meal.totals.carbs)}g carbs •{" "}
+                            {Math.round(meal.totals.fats)}g fats
                           </div>
                         </div>
                       </div>
@@ -609,7 +725,9 @@ export default function MealsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle>Weekly Nutrition Trends</CardTitle>
-                      <CardDescription>Your nutrition intake over the past week</CardDescription>
+                      <CardDescription>
+                        Your nutrition intake over the past week
+                      </CardDescription>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => wRefetch()}>
                       Refresh
@@ -617,8 +735,14 @@ export default function MealsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {wLoading && <div className="text-sm text-muted-foreground">Loading weekly data…</div>}
-                  {wError && <div className="text-sm text-red-600">Error: {wError}</div>}
+                  {wLoading && (
+                    <div className="text-sm text-muted-foreground">
+                      Loading weekly data…
+                    </div>
+                  )}
+                  {wError && (
+                    <div className="text-sm text-red-600">Error: {wError}</div>
+                  )}
                   {!wLoading && !wError && (
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
@@ -637,7 +761,7 @@ export default function MealsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
-                  <CardHeader  className="pt-4">
+                  <CardHeader className="pt-4">
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-primary" />
                       Weekly Average
@@ -647,7 +771,10 @@ export default function MealsPage() {
                     {!wLoading && !wError ? (
                       <div className="text-sm text-muted-foreground">
                         {Math.round(
-                          weeklyData.reduce((a, d) => a + (d.calories || 0), 0) / Math.max(weeklyData.length, 1)
+                          weeklyData.reduce(
+                            (a, d) => a + (d.calories || 0),
+                            0
+                          ) / Math.max(weeklyData.length, 1)
                         )}{" "}
                         cal/día
                       </div>
@@ -682,7 +809,11 @@ export default function MealsPage() {
           <div className="relative z-10 w-full max-w-lg rounded-2xl bg-background shadow-xl border border-border p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">Edit Log</h3>
-              <button onClick={closeEdit} className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted" aria-label="Close">
+              <button
+                onClick={closeEdit}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
+                aria-label="Close"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -701,14 +832,18 @@ export default function MealsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Quantity (grams or units)</label>
+                  <label className="text-sm text-muted-foreground">
+                    Quantity (grams or units)
+                  </label>
                   <input
                     type="number"
                     inputMode="decimal"
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     placeholder="Ej: 150"
                     value={grams}
-                    onChange={(e) => setGrams(e.target.value === "" ? "" : Number(e.target.value))}
+                    onChange={(e) =>
+                      setGrams(e.target.value === "" ? "" : Number(e.target.value))
+                    }
                   />
                 </div>
               </div>
@@ -734,7 +869,11 @@ export default function MealsPage() {
           <div className="relative z-10 w-full max-w-md rounded-2xl bg-background shadow-xl border border-border p-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-foreground">Delete ítem</h3>
-              <button onClick={closeDelete} className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted" aria-label="Close">
+              <button
+                onClick={closeDelete}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
+                aria-label="Close"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -742,18 +881,26 @@ export default function MealsPage() {
             <p className="text-sm text-muted-foreground mb-4">
               Are you sure you want to delete{" "}
               <span className="font-medium text-foreground">
-                {deletingDetail.ingredient?.name ?? deletingDetail.recipe?.title ?? `Item #${deletingDetail.id}`}
+                {deletingDetail.ingredient?.name ??
+                  deletingDetail.recipe?.title ??
+                  `Item #${deletingDetail.id}`}
               </span>
               ? This action can't be undone.
             </p>
 
-            {deleteError && <div className="text-sm text-red-600 mb-3">{deleteError}</div>}
+            {deleteError && (
+              <div className="text-sm text-red-600 mb-3">{deleteError}</div>
+            )}
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={closeDelete} disabled={deleteLoading}>
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleConfirmDelete} disabled={deleteLoading}>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={deleteLoading}
+              >
                 {deleteLoading ? "Deleting…" : "Delete"}
               </Button>
             </div>
@@ -767,22 +914,37 @@ export default function MealsPage() {
           <div className="relative z-10 w-full max-w-md rounded-2xl bg-background shadow-xl border border-border p-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-foreground">Delete entire log</h3>
-              <button onClick={closeDeleteLog} className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted" aria-label="Close">
+              <button
+                onClick={closeDeleteLog}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
+                aria-label="Close"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <p className="text-sm text-muted-foreground mb-4">
-              Are you sure you want to delete the entire meal? This action can't be undone.
+              Are you sure you want to delete the entire meal? This action can't be
+              undone.
             </p>
 
-            {deleteLogError && <div className="text-sm text-red-600 mb-3">{deleteLogError}</div>}
+            {deleteLogError && (
+              <div className="text-sm text-red-600 mb-3">{deleteLogError}</div>
+            )}
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={closeDeleteLog} disabled={deleteLogLoading}>
+              <Button
+                variant="outline"
+                onClick={closeDeleteLog}
+                disabled={deleteLogLoading}
+              >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleConfirmDeleteLog} disabled={deleteLogLoading}>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDeleteLog}
+                disabled={deleteLogLoading}
+              >
                 {deleteLogLoading ? "Deleting..." : "Delete"}
               </Button>
             </div>

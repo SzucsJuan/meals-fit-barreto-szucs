@@ -24,7 +24,6 @@ class AchievementService
 
     public function checkStreak(User $user)
     {
-        // Get all distinct dates where the user has logged a meal, ordered descending
         $dates = MealLog::where('user_id', $user->id)
             ->selectRaw('DATE(log_date) as date')
             ->distinct()
@@ -36,12 +35,10 @@ class AchievementService
             return;
         }
 
-        // Check if the most recent log is today or yesterday (to keep streak alive)
         $today = Carbon::today()->toDateString();
         $yesterday = Carbon::yesterday()->toDateString();
 
         if ($dates[0] !== $today && $dates[0] !== $yesterday) {
-            // Streak broken or not started recently
             return;
         }
 
