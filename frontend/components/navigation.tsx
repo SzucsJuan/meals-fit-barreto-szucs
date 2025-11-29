@@ -129,6 +129,8 @@ export default function Navigation() {
           Discover
         </Button>
       </Link>
+      {/* Solo usuarios pueden ver achievements */}
+      {user?.role === "user" && (
       <Link href="/achievements" onClick={onLinkClick}>
         <Button
           variant={isActive("/achievements") ? "default" : "ghost"}
@@ -141,6 +143,7 @@ export default function Navigation() {
           Achievements
         </Button>
       </Link>
+      )}
 
       {/* Solo va al panel del Admin si el user es admin  */}
       {user?.role === "admin" && (

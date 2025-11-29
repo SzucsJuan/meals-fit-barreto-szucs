@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +59,13 @@ type PlanDTO = {
   fiber_g: number;
   water_l: number;
   version?: number;
+};
+
+// Colores de macros reutilizando la paleta del admin
+const MEAL_MACRO_COLORS = {
+  protein: "#388E3C", // mismo verde que CATEGORY_COLORS[2]
+  carbs: "#FF9800",   // mismo naranja que CATEGORY_COLORS[1]
+  fats: "#FFD54F",    // mismo amarillo que CATEGORY_COLORS[0]
 };
 
 function getCookie(name: string): string | null {
@@ -313,9 +322,9 @@ export default function MealsPage() {
 
   const macroData = useMemo(
     () => [
-      { name: "Protein", value: dayTotals.protein, color: "#F74800" },
-      { name: "Carbs", value: dayTotals.carbs, color: "#629178" },
-      { name: "Fats", value: dayTotals.fats, color: "#475569" },
+      { name: "Protein", value: dayTotals.protein, color: MEAL_MACRO_COLORS.protein },
+      { name: "Carbs", value: dayTotals.carbs, color: MEAL_MACRO_COLORS.carbs },
+      { name: "Fats", value: dayTotals.fats, color: MEAL_MACRO_COLORS.fats },
     ],
     [dayTotals]
   );
@@ -689,10 +698,9 @@ export default function MealsPage() {
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button
-                                  variant="ghost"
+                                  variant="destructive"
                                   size="sm"
                                   onClick={() => openDelete(d)}
-                                  className="text-red-600 hover:text-red-700"
                                   aria-label="Eliminar ítem"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -821,7 +829,7 @@ export default function MealsPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Ingredient</label>
+                  <Label className="text-sm text-muted-foreground">Ingredient</Label>
                   <IngredientSelector
                     valueId={ingredientId}
                     defaultLabel={ingredientNameHint}
@@ -832,10 +840,10 @@ export default function MealsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">
+                  <Label className="text-sm text-muted-foreground">
                     Quantity (grams or units)
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="number"
                     inputMode="decimal"
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"

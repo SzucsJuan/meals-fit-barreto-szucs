@@ -14,7 +14,13 @@ import {
   EggFried,
   LogOut,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -127,20 +133,22 @@ function AdminDashboardContent() {
     <div className="min-h-screen bg-background">
       <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg">
                 <Shield className="h-8 w-8" style={{ color: "#FF9800" }} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-2xl font-bold text-foreground">
+                  Admin Dashboard
+                </h1>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Manage your nutrition and fitness platform
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 justify-start sm:justify-end">
               <Badge variant="secondary" style={{ color: "#4caf50" }}>
                 Administrator
               </Badge>
@@ -149,6 +157,7 @@ function AdminDashboardContent() {
                 size="sm"
                 onClick={handleLogout}
                 disabled={loggingOut}
+                className="w-full xs:w-auto sm:w-auto"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 {loggingOut ? "Logging out..." : "Logout"}
@@ -158,14 +167,13 @@ function AdminDashboardContent() {
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <Card>
             <CardHeader className="pt-4">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Total Users
+                Total Users (Admins excluded)
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -209,16 +217,19 @@ function AdminDashboardContent() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <Link href="/admin/users">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+        {/* NAV CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Link href="/admin/users" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="pt-2">
                 <div className="flex items-center gap-3">
                   <div className="p-2">
                     <Users className="h-5 w-5" style={{ color: "#FF9800" }} />
                   </div>
                   <div>
-                    <CardTitle className="text-base">User Management</CardTitle>
+                    <CardTitle className="text-base">
+                      User Management
+                    </CardTitle>
                     <CardDescription className="text-xs">
                       Manage user accounts
                     </CardDescription>
@@ -228,15 +239,20 @@ function AdminDashboardContent() {
             </Card>
           </Link>
 
-          <Link href="/admin/recipes">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Link href="/admin/recipes" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="pt-2">
                 <div className="flex items-center gap-3">
                   <div className="p-2">
-                    <ChefHat className="h-5 w-5" style={{ color: "#FF9800" }} />
+                    <ChefHat
+                      className="h-5 w-5"
+                      style={{ color: "#FF9800" }}
+                    />
                   </div>
                   <div>
-                    <CardTitle className="text-base">Recipe Management</CardTitle>
+                    <CardTitle className="text-base">
+                      Recipe Management
+                    </CardTitle>
                     <CardDescription className="text-xs">
                       Moderate recipes
                     </CardDescription>
@@ -246,12 +262,15 @@ function AdminDashboardContent() {
             </Card>
           </Link>
 
-          <Link href="/home">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Link href="/home" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="pt-2">
                 <div className="flex items-center gap-3">
                   <div className="p-2">
-                    <EggFried className="h-5 w-5" style={{ color: "#FF9800" }} />
+                    <EggFried
+                      className="h-5 w-5"
+                      style={{ color: "#FF9800" }}
+                    />
                   </div>
                   <div>
                     <CardTitle className="text-base">Back to App</CardTitle>
@@ -265,8 +284,8 @@ function AdminDashboardContent() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="min-h-[280px]">
             <CardHeader className="pt-4">
               <CardTitle>Weekly Activity</CardTitle>
               <CardDescription>
@@ -274,7 +293,7 @@ function AdminDashboardContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div className="h-64 sm:h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats?.weekly_activity ?? []}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -290,13 +309,16 @@ function AdminDashboardContent() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Categories Pie */}
+          <Card className="min-h-[280px]">
             <CardHeader className="pt-4">
               <CardTitle>Recipe Category Distribution</CardTitle>
-              <CardDescription>Breakdown of recipes by meal type</CardDescription>
+              <CardDescription>
+                Breakdown of recipes by meal type
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div className="h-64 sm:h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -324,12 +346,12 @@ function AdminDashboardContent() {
                 </ResponsiveContainer>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-4 mt-4">
+              <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mt-4">
                 {(stats?.recipe_category_distribution ?? []).map(
                   (category, index) => (
                     <div
                       key={category.name}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 text-xs sm:text-sm"
                     >
                       <div
                         className="w-3 h-3 rounded-full"
@@ -338,7 +360,7 @@ function AdminDashboardContent() {
                             CATEGORY_COLORS[index % CATEGORY_COLORS.length],
                         }}
                       />
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground">
                         {category.name} ({category.value})
                       </span>
                     </div>
@@ -349,7 +371,7 @@ function AdminDashboardContent() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1">
           <Card>
             <CardHeader className="pt-4">
               <CardTitle className="flex items-center gap-2">
@@ -386,7 +408,7 @@ function AdminDashboardContent() {
                     <div
                       key={idx}
                       className={`flex items-start gap-3 pb-3 ${
-                        idx !== (stats.recent_activity.length - 1)
+                        idx !== stats.recent_activity.length - 1
                           ? "border-b border-border"
                           : ""
                       }`}

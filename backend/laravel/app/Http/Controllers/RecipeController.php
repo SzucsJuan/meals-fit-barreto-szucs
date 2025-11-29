@@ -81,10 +81,17 @@ class RecipeController extends Controller
     // GET
     public function show(Recipe $recipe, Request $request)
     {
-        $userId = optional($request->user())->id;
+        $user   = $request->user();
+        $userId = optional($user)->id;
+
         $isOwner = $recipe->user_id === $userId;
 
-        abort_unless($recipe->visibility === 'public' || $isOwner, 404);
+        $isAdmin = $user->role === 'admin'; 
+
+        abort_unless(
+            $recipe->visibility === 'public' || $isOwner || $isAdmin,
+            404
+        );
 
         $recipe = Recipe::query()
             ->whereKey($recipe->id)
