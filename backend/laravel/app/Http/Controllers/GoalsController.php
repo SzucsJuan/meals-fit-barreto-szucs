@@ -63,7 +63,22 @@ class GoalsController extends Controller
     /** GET /api/me/goals/latest */
     public function latest(Request $req)
     {
-        $plan = $req->user()->nutritionPlans()->latest('effective_from')->first();
-        return response()->json(['plan' => $plan]);
+        $user = $req->user();
+
+        //Se encarga de traer el último plan seleccionado por el usuario
+        $plan = $user->nutritionPlans()
+            ->orderByDesc('effective_from') 
+            ->orderByDesc('version')        
+            ->orderByDesc('id')             
+            ->first();
+
+        return response()->json([
+            'plan' => $plan,
+            'profile' => [
+                'age'    => $user->age,
+                'weight' => $user->weight,
+                'height' => $user->height,
+            ],
+        ]);
     }
 }
