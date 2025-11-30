@@ -39,23 +39,27 @@ const onSubmit = async (e: React.FormEvent) => {
   try {
     setLoading(true);
 
-    const { refresh } = useAuth();
-
     await authApi.login({ email, password });
 
-    await refresh();
+    const u = await refresh();
 
-    window.localStorage.setItem("mf-auth-event", Date.now().toString());
-    router.push("/home");
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("mf-auth-event", Date.now().toString());
+    }
 
+    const role = u?.role;
+
+    if (role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push("/home");
+    }
   } catch (err: any) {
     console.error(err);
-    setFormError(err.message || "Error al iniciar sesión.");
+    setFormError(err.message || "Credenciales inválidas.");
   } finally {
     setLoading(false);
   }
-
-
 };
 
   return (
