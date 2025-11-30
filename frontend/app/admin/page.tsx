@@ -68,7 +68,7 @@ type AdminStats = {
   recent_activity: RecentActivityItem[];
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const CATEGORY_COLORS = ["#FFD54F", "#FF9800", "#388E3C", "#A5D6A7"];
 
 export default function AdminPage() {

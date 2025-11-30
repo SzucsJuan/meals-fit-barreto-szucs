@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 export type AuthState = { user: any | null; loading: boolean; authed: boolean };
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 async function ensureCsrfCookie() {
   await fetch(`${API}sanctum/csrf-cookie`, {

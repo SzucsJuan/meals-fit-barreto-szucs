@@ -1,9 +1,15 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const RAW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
+// Normalizamos la base: sin / al final
+const BASE = RAW_BASE.replace(/\/+$/, "");
 
+// Helper para armar URLs sin dobles barras
+function buildUrl(path: string) {
+  const cleanPath = path.replace(/^\/+/, ""); // sin / al inicio
+  return `${BASE}/${cleanPath}`;
+}
 
 // Lee la cookie
-
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
   const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
@@ -11,7 +17,7 @@ function getCookie(name: string) {
 }
 
 export async function ensureCsrf() {
-  await fetch(`${BASE}sanctum/csrf-cookie`, {
+  await fetch(buildUrl("sanctum/csrf-cookie"), {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -55,7 +61,9 @@ export async function api<T>(
   const xsrf = getCookie("XSRF-TOKEN");
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
 
-  const res = await fetch(`${BASE}${path}`, {
+  const url = buildUrl(path);
+
+  const res = await fetch(url, {
     ...init,
     credentials: "include",
     cache: "no-store",
@@ -79,30 +87,34 @@ export async function api<T>(
   return body as T;
 }
 
-
-// LLamada a Usuarios
+// ==================== AUTENTICACIÓN ====================
 
 export type UserDTO = { id: number; name: string; email: string };
 
 export const authApi = {
   register: (payload: {
-    name: string; email: string; password: string; password_confirmation: string;
-  }) => api<{ user: UserDTO; token: string }>("api/register", {
-    method: "POST", json: payload,
-  }),
-
-  login: (payload: { email: string; password: string }) =>
-    api<{ message: string; user: UserDTO }>("/login", {
-      method: "POST", json: payload,
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }) =>
+    api<{ user: UserDTO; token: string }>("api/register", {
+      method: "POST",
+      json: payload,
     }),
 
-  logout: () => api<{ message?: string }>("/logout", { method: "POST" }),
+  login: (payload: { email: string; password: string }) =>
+    api<{ message: string; user: UserDTO }>("login", {
+      method: "POST",
+      json: payload,
+    }),
 
-  me: () => api<UserDTO>("/api/user", { method: "GET" }),
+  logout: () => api<{ message?: string }>("logout", { method: "POST" }),
+
+  me: () => api<UserDTO>("api/user", { method: "GET" }),
 };
 
-
-// LLamada a Recetas
+// ==================== RECETAS ====================
 
 export type RecipeDTO = {
   id: number;
@@ -144,17 +156,20 @@ export type RecipeDTO = {
 };
 
 export const apiRecipes = {
-  create: (payload: any) => api<RecipeDTO>("/api/recipes", {
-    method: "POST", json: payload,
-  }),
-  show: (id: number | string) => api<RecipeDTO>(`/api/recipes/${id}`),
-  update: (id: number | string, payload: any) => api<RecipeDTO>(`/api/recipes/${id}`, {
-    method: "PUT", json: payload,
-  }),
+  create: (payload: any) =>
+    api<RecipeDTO>("api/recipes", {
+      method: "POST",
+      json: payload,
+    }),
+  show: (id: number | string) => api<RecipeDTO>(`api/recipes/${id}`),
+  update: (id: number | string, payload: any) =>
+    api<RecipeDTO>(`api/recipes/${id}`, {
+      method: "PUT",
+      json: payload,
+    }),
 };
 
-
-// Llamado a imagenes
+// ==================== IMÁGENES ====================
 
 export type UploadRecipeImageResponse = {
   image_url: string;
@@ -168,18 +183,16 @@ export const apiRecipeImages = {
   upload: (id: number | string, file: File) => {
     const form = new FormData();
     form.append("image", file);
-    return api<UploadRecipeImageResponse>(`/api/recipes/${id}/image`, {
+    return api<UploadRecipeImageResponse>(`api/recipes/${id}/image`, {
       method: "POST",
-      body: form, 
+      body: form,
     });
   },
   remove: (id: number | string) =>
-    api<void>(`/api/recipes/${id}/image`, { method: "DELETE" }),
+    api<void>(`api/recipes/${id}/image`, { method: "DELETE" }),
 };
 
-
-
-//Llamado a achievements
+// ==================== ACHIEVEMENTS ====================
 
 export type AchievementDTO = {
   id: number;
@@ -191,8 +204,5 @@ export type AchievementDTO = {
 };
 
 export const apiAchievements = {
-  me: () =>
-    api<AchievementDTO[]>("/api/me/achievements", {
-      method: "GET",
-    }),
+  me: () => api<AchievementDTO[]>("api/me/achievements", { method: "GET" }),
 };
