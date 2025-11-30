@@ -7,25 +7,32 @@ const BASE = RAW_BASE;
 
 // Helper definitivo: usa URL para evitar dobles barras
 export function buildUrl(path: string) {
-  // Si el path empieza con "/", URL lo resuelve igual
   return new URL(path, BASE).toString();
 }
 
 // Lee la cookie
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
-  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
+  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;])"));
   return m ? decodeURIComponent(m[2]) : null;
 }
 
+let csrfReady = false;
+
 export async function ensureCsrf() {
+  if (csrfReady) return;
   const url = buildUrl("sanctum/csrf-cookie");
   console.log("ensureCsrf", url);
-  await fetch(url, {
+  const res = await fetch(url, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
+    headers: { "X-Requested-With": "XMLHttpRequest" },
   });
+  if (!res.ok) {
+    throw new Error("CSRF cookie failed: " + res.status);
+  }
+  csrfReady = true;
 }
 
 function isMutating(method?: string) {
@@ -55,18 +62,18 @@ export async function api<T>(
     await ensureCsrf();
   }
 
-  const headers = new Headers(init.headers || {});
+   const headers = new Headers(init.headers || {});
   headers.set("Accept", "application/json");
+  headers.set("X-Requested-With", "XMLHttpRequest");
 
   if (init.json !== undefined) {
     headers.set("Content-Type", "application/json");
   }
 
-  const xsrf = getCookie("XSRF-TOKEN");
+   const xsrf = getCookie("XSRF-TOKEN");
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
 
   const url = buildUrl(path);
-
   const res = await fetch(url, {
     ...init,
     credentials: "include",
@@ -74,14 +81,15 @@ export async function api<T>(
     headers,
     body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
   });
+  
 
-  if (res.status === 204) return {} as T;
+    if (res.status === 204) return {} as T;
 
   let body: any = null;
   try {
     body = await res.json();
   } catch {
-    // va sin JSON la respuesta
+    // respuesta sin JSON
   }
 
   if (!res.ok) {
