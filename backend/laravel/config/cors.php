@@ -17,10 +17,10 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'user'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['www.mealsandfit.com','mealsandfit.onrender.com'],
+    'allowed_origins' => ['FRONTEND_URL','http://localhost:3000','www.mealsandfit.com','mealsandfit.onrender.com'],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
-    'supports_credentials' => true,   // ← CLAVE
+    'supports_credentials' => true,  // ← CLAVE
 
 ];
