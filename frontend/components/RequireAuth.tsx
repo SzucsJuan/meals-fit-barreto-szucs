@@ -1,43 +1,38 @@
 "use client";
 
-import { PropsWithChildren, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-type RequireAuthProps = PropsWithChildren<{
-  requireAdmin?: boolean;
-}>;
+type Props = {
+  children: React.ReactNode;
+  redirectTo?: string;
+};
 
-export default function RequireAuth({ children, requireAdmin }: RequireAuthProps) {
-  const { status, user } = useAuth(); 
+export default function RequireAuth({ children, redirectTo = "/signin" }: Props) {
+  const { status } = useAuth();
   const router = useRouter();
 
+  // Si el usuario es guest, lo mandamos a /signin
   useEffect(() => {
     if (status === "guest") {
-      router.replace("/signin");
-      return;
+      router.replace(redirectTo);
     }
-
-    if (status === "authed" && requireAdmin && user && user.role !== "admin") {
-      router.replace("/home");
-      return;
-    }
-  }, [status, requireAdmin, user, router]);
+  }, [status, redirectTo, router]);
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center text-sm text-muted-foreground">
-        Verificando sesión...
+      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
+        Checking your session…
       </div>
     );
   }
 
-  if (
-    status === "guest" ||
-    (status === "authed" && requireAdmin && user && user.role !== "admin")
-  ) {
+  if (status === "guest") {
+    // Mientras hacemos el replace no mostramos contenido para que no parpadee
     return null;
   }
 
+  // status === "authed"
   return <>{children}</>;
 }

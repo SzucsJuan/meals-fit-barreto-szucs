@@ -17,7 +17,7 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'user'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
+    'allowed_origins' => ['https://meals-fit-barreto-szucs.vercel.app/', 'http://localhost:3000'],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
