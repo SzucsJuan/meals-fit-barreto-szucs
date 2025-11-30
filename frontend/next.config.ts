@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:8000/api/:path*",
+        destination: "http://mealsandfit.onrender.com/api/:path*",
       },
     ];
   },
@@ -18,14 +18,14 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "localhost",
-        port: "8000",
+        hostname: "mealsandfit.onrender.com",
+        port: "10000",
         pathname: "/storage/**",
       },
       {
         protocol: "http",
-        hostname: "127.0.0.1",
-        port: "8000",
+        hostname: "mealsandfit.onrender.com",
+        port: "10000",
         pathname: "/storage/**",
       },
       // Prod (si aplica)
