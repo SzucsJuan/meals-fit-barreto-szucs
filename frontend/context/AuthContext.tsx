@@ -12,10 +12,15 @@ type AuthCtx = {
 };
 
 const AuthContext = createContext<AuthCtx | null>(null);
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const RAW_API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/";
+const API_BASE = RAW_API;
+
+function buildUrl(path: string) {
+  return new URL(path, API_BASE).toString();
+}
 
 async function ensureCsrfCookie() {
-  await fetch(`${API}sanctum/csrf-cookie`, {
+  await fetch(buildUrl("sanctum/csrf-cookie"), {
     credentials: "include",
     cache: "no-store",
     headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -23,7 +28,7 @@ async function ensureCsrfCookie() {
 }
 
 async function fetchUser() {
-  const res = await fetch(`${API}api/user`, {
+  const res = await fetch(buildUrl("api/user"), {
     credentials: "include",
     cache: "no-store",
     headers: { "X-Requested-With": "XMLHttpRequest" },

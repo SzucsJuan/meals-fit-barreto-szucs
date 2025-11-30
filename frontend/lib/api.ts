@@ -1,12 +1,14 @@
+// lib/api.ts
+
 const RAW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-// Normalizamos la base: sin / al final
-const BASE = RAW_BASE.replace(/\/+$/, "");
+// Siempre una URL absoluta válida
+const BASE = RAW_BASE;
 
-// Helper para armar URLs sin dobles barras
+// Helper definitivo: usa URL para evitar dobles barras
 function buildUrl(path: string) {
-  const cleanPath = path.replace(/^\/+/, ""); // sin / al inicio
-  return `${BASE}/${cleanPath}`;
+  // Si el path empieza con "/", URL lo resuelve igual
+  return new URL(path, BASE).toString();
 }
 
 // Lee la cookie
@@ -17,7 +19,8 @@ function getCookie(name: string) {
 }
 
 export async function ensureCsrf() {
-  await fetch(buildUrl("sanctum/csrf-cookie"), {
+  const url = buildUrl("sanctum/csrf-cookie");
+  await fetch(url, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
