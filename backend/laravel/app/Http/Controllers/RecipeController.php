@@ -117,7 +117,6 @@ class RecipeController extends Controller
         
 
         $recipe = $request->user()->recipes()->create($data);
-        $achievementService->checkAfterRecipeCreated($user);
 
         // Ingredientes y macros
         if (!empty($data['ingredients'])) {
