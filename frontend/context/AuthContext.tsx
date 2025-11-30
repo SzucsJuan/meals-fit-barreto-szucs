@@ -20,6 +20,8 @@ function buildUrl(path: string) {
 }
 
 async function ensureCsrfCookie() {
+  const url = buildUrl("sanctum/csrf-cookie");
+  console.log("ensureCsrfCookie", url);
   await fetch(buildUrl("sanctum/csrf-cookie"), {
     credentials: "include",
     cache: "no-store",

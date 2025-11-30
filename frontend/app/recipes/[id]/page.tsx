@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Navigation from "@/components/navigation";
 import {
@@ -18,9 +19,7 @@ import { detailRecipe } from "@/lib/detailRecipe";
 import { useDeleteRecipe } from "@/lib/useDeleteRecipe";
 import DeleteModalRecipe from "@/components/DeleteModalRecipe";
 import FavoriteButton from "@/components/FavoriteButton";
-import { ensureCsrf, xsrfHeader } from "@/lib/csrf";
-
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+import { api } from "@/lib/api";
 
 function splitSteps(steps?: string | null) {
   if (!steps) return [];
@@ -61,22 +60,11 @@ export default function RecipeDetailPage() {
     try {
       setUpdatingVis(true);
 
-      await ensureCsrf(BASE);
-
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
-
-      Object.assign(headers, xsrfHeader());
-      const res = await fetch(`${BASE}api/recipes/${r.id}`, {
+      await api(`api/recipes/${r.id}`, {
         method: "PUT",
-        credentials: "include",
-        headers,
-        body: JSON.stringify({ visibility: nextVis }),
+        json: { visibility: nextVis },
       });
 
-      if (!res.ok) throw new Error(`Failed to update visibility (${res.status})`);
       setVisibility(nextVis);
     } catch (e) {
       console.error(e);
@@ -236,8 +224,8 @@ export default function RecipeDetailPage() {
                         open={showConfirm}
                         onClose={() => setShowConfirm(false)}
                         onConfirm={() => {
-                          setShowConfirm(false)
-                          handleDelete()
+                          setShowConfirm(false);
+                          handleDelete();
                         }}
                       />
                     </>
@@ -340,3 +328,4 @@ export default function RecipeDetailPage() {
     </div>
   );
 }
+
