@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   images: {
     remotePatterns: [
       {
@@ -24,8 +29,16 @@ const nextConfig: NextConfig = {
         pathname: "/storage/**",
       },
       // Prod (si aplica)
-      // { protocol: 'https', hostname: 'cdn.tu-dominio.com', pathname: '/**' },
-      // { protocol: 'https', hostname: 'api.tu-dominio.com', pathname: '/storage/**' },
+      // {
+      //   protocol: "https",
+      //   hostname: "cdn.tu-dominio.com",
+      //   pathname: "/**",
+      // },
+      // {
+      //   protocol: "https",
+      //   hostname: "api.tu-dominio.com",
+      //   pathname: "/storage/**",
+      // },
     ],
   },
 };

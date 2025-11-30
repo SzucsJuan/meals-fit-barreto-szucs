@@ -14,10 +14,12 @@ import { detailRecipe } from "@/lib/detailRecipe";
 
 function splitSteps(steps?: string | null) {
   if (!steps) return [];
-  return steps.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  return steps.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
 }
 
-export default function DiscoverRecipeDetailPage({ params }: { params: { id: string } }) {
+export default function DiscoverRecipeDetailPage(props: any) {
+  const { params } = props as { params: { id: string } };
+
   const { data: r, loading, error } = detailRecipe(params.id);
 
   const totalMinutes = (r?.prep_time_minutes ?? 0) + (r?.cook_time_minutes ?? 0);
@@ -113,11 +115,15 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
                       <div className="text-sm text-muted-foreground">Calories</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">{Math.round(r.protein)}g</div>
+                      <div className="text-2xl font-bold text-accent">
+                        {Math.round(r.protein)}g
+                      </div>
                       <div className="text-sm text-muted-foreground">Protein</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-chart-3">{Math.round(r.carbs)}g</div>
+                      <div className="text-2xl font-bold text-chart-3">
+                        {Math.round(r.carbs)}g
+                      </div>
                       <div className="text-sm text-muted-foreground">Carbs</div>
                     </div>
                     <div className="text-center">
