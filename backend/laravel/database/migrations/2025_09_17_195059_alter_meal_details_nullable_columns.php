@@ -8,12 +8,18 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
-        if (DB::getDriverName() === 'sqlite') {
-            return;
+
+        $driver = DB::getDriverName();
+
+        if ($driver === 'mysql') {
+            DB::statement('ALTER TABLE meal_details MODIFY logged_at TIMESTAMP NULL');
+        }
+
+        if ($driver === 'pgsql') {
+            DB::statement('ALTER TABLE meal_details ALTER COLUMN logged_at DROP NOT NULL');
         }
 
         Schema::table('meal_details', function (Blueprint $table) {
-            // Eliminar FKs existentes
             try {
                 $table->dropForeign(['ingredient_id']);
             } catch (\Throwable $e) {
@@ -23,14 +29,12 @@ return new class extends Migration {
             } catch (\Throwable $e) {
             }
 
-            // Hacer columnas nullable
             $table->unsignedBigInteger('ingredient_id')->nullable()->change();
             $table->unsignedBigInteger('recipe_id')->nullable()->change();
             $table->decimal('servings', 8, 2)->nullable()->change();
             $table->decimal('grams', 8, 2)->nullable()->change();
 
             DB::statement('ALTER TABLE meal_details MODIFY logged_at TIMESTAMP NULL');
-            // Volver a crear FKs con nullOnDelete
             $table->foreign('ingredient_id')
                 ->references('id')->on('ingredients')
                 ->nullOnDelete();
@@ -42,9 +46,17 @@ return new class extends Migration {
 
     public function down(): void
     {
-        if (DB::getDriverName() === 'sqlite') {
-            return;
+
+        $driver = DB::getDriverName();
+
+        if ($driver === 'mysql') {
+            DB::statement('ALTER TABLE meal_details MODIFY logged_at TIMESTAMP NOT NULL');
         }
+
+        if ($driver === 'pgsql') {
+            DB::statement('ALTER TABLE meal_details ALTER COLUMN logged_at SET NOT NULL');
+        }
+
         Schema::table('meal_details', function (Blueprint $table) {});
     }
 };
