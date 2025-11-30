@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Apple, Target, TrendingUp, Award, EggFried } from "lucide-react";
 import { authApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 // Se valida simple
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -16,6 +17,8 @@ const minLen = (v: string, n: number) => v.trim().length >= n;
 
 export default function SignupPage() {
   const router = useRouter();
+  const { setUser, refresh } = useAuth();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,12 +44,27 @@ export default function SignupPage() {
 
     try {
       setLoading(true);
-      await authApi.register({ name, email, password, password_confirmation: confirm });
 
-      await authApi.login({ email, password });
+      // 1) Registramos al usuario (esto ya debería autenticarlo en el backend)
+      const res = await authApi.register({
+        name,
+        email,
+        password,
+        password_confirmation: confirm,
+      });
 
+      // 2) Actualizamos el contexto de auth en el front
+      if (res?.user) {
+        setUser(res.user);
+      } else {
+        // opcional: por si preferís leer siempre de /api/user
+        await refresh();
+      }
+
+      // 3) Redirigimos al home
       router.push("/home");
     } catch (err: any) {
+      console.error(err);
       setFormError(err.message || "Error al registrarte.");
     } finally {
       setLoading(false);
