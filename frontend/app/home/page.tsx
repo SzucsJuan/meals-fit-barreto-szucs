@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,14 +16,14 @@ import {
   Target,
   TrendingUp,
   Flame,
-  User,
-  UtensilsCrossed,
-  Binoculars,
   Home,
   Dumbbell,
   Activity,
   Gauge,
   FlameKindling,
+  UtensilsCrossed,
+  Binoculars,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import Navigation from "@/components/navigation";
@@ -26,22 +32,7 @@ import { Label } from "@/components/ui/label";
 import RequireAuth from "@/components/RequireAuth";
 import { useMyFavorites } from "@/lib/useMyFavorites";
 import React, { useEffect, useState } from "react";
-
-//Helpers de Sanctum
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-async function ensureCsrf() {
-  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-  await fetch(`${BASE}sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-}
+import { api } from "@/lib/api";
 
 type Plan = {
   id: number;
@@ -114,7 +105,7 @@ export default function HomePage() {
 
   const currentRoutine = selectedRoutine ? routineTypes[selectedRoutine] : null;
 
-  const canSave = !!selectedRoutine && !!experienceLevel;
+  const canSave = !!selectedRoutine && !!experienceLevel && !!weight && !!height && !!age;
 
   const {
     data: favorites = [],
@@ -131,17 +122,10 @@ export default function HomePage() {
     try {
       setLoadingPlan(true);
       setPlanError(null);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals/latest`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: { Accept: "application/json" },
-          cache: "no-store",
-        }
+      const data = await api<{ plan: Plan | null }>(
+        "api/me/goals/latest",
+        { method: "GET" }
       );
-      if (!res.ok) throw new Error("Failed to load plan");
-      const data = await res.json();
       setLatestPlan(data?.plan ?? null);
     } catch (e: any) {
       setPlanError(e?.message || "Unexpected error");
@@ -170,42 +154,26 @@ export default function HomePage() {
     try {
       setSaving(true);
 
-      await ensureCsrf();
-      const xsrf = getCookie("XSRF-TOKEN") || "";
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals?source=ai`,
+      const data = await api<{ plan: Plan | null }>(
+        "api/me/goals?source=ai",
         {
           method: "POST",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-XSRF-TOKEN": xsrf,
-          },
-          body: JSON.stringify({
+          json: {
             mode: mapMode(selectedRoutine),
             experience: experienceLevel,
             activity_level: activityLevel,
             age: Number(age),
             weight: Number(weight),
             height: Number(height),
-          }),
+          },
         }
       );
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || "Failed to save goals");
-      }
-
-      const data = await res.json();
       setSaveMsg(
         "Profile & goals saved. Plan version " + (data?.plan?.version ?? "?")
       );
 
-      // Refresca una vez que el usuario selecciona por primera vez el plan y "desaparece" del home
+      // Refresca una vez que el usuario selecciona por primera vez el plan
       setLatestPlan(data?.plan ?? null);
     } catch (e: any) {
       setSaveMsg(e?.message || "Unexpected error");
@@ -224,7 +192,6 @@ export default function HomePage() {
       ? (Math.round(n * 10) / 10).toFixed(1)
       : "-";
 
-  // Entonces, si hay plan ocultamos
   const showPersonalInfo = !loadingPlan && !latestPlan;
 
   return (

@@ -1,4 +1,6 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+// lib/fetchDiscover.ts (o donde lo tengas)
+
+import { api } from "@/lib/api";
 
 export type DiscoverRecipe = {
   id: number;
@@ -12,28 +14,31 @@ export type DiscoverRecipe = {
   prep_time_minutes: number;
   user: { id: number; name: string };
   is_favorited?: boolean;
-  image_url?: string | null;        
-  image_thumb_url?: string | null; 
+  image_url?: string | null;
+  image_thumb_url?: string | null;
 };
 
 export async function fetchDiscover({
-  q = '',
-  order = 'latest',
+  q = "",
+  order = "latest",
   page = 1,
   per_page = 12,
-}: { q?: string; order?: string; page?: number; per_page?: number }) {
+}: {
+  q?: string;
+  order?: string;
+  page?: number;
+  per_page?: number;
+}) {
   const params = new URLSearchParams({
-    discover: '1',
+    discover: "1",
     q,
     order,
     page: String(page),
     per_page: String(per_page),
   });
 
-  const res = await fetch(`${BASE}api/recipes?${params.toString()}`, {
-    credentials: 'include',
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error('Failed to fetch discover recipes');
-  return res.json(); 
+
+  return api<{ data: DiscoverRecipe[]; meta?: any }>(
+    `/api/recipes?${params.toString()}`
+    );
 }
