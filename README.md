@@ -58,8 +58,6 @@ cp .env.example .env
 # Generar APP_KEY
 php artisan key:generate
 
-# Instalar dependencias JS
-npm install  
 
 -------------------------------------------------------------------------------------
 
