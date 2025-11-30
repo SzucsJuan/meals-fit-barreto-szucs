@@ -8,11 +8,11 @@ return new class extends Migration {
     {
         $driver = DB::getDriverName();
 
-        if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE meal_logs MODIFY log_date DATE NOT NULL");
-        }
-        if($driver === 'pgsql') {
-            DB::statement("ALTER TABLE meal_logs ALTER COLUMN log_date TYPE DATE USING log_date::DATE");
+        if ($driver === 'mysql') {
+            DB::statement('ALTER TABLE meal_logs MODIFY log_date DATE NOT NULL');
+        } elseif ($driver === 'pgsql') {
+            DB::statement('ALTER TABLE meal_logs ALTER COLUMN log_date TYPE DATE USING log_date::DATE');
+            DB::statement('ALTER TABLE meal_logs ALTER COLUMN log_date SET NOT NULL');
         }
     }
 
@@ -20,11 +20,11 @@ return new class extends Migration {
     {
         $driver = DB::getDriverName();
 
-        if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE meal_logs MODIFY log_date DATETIME NOT NULL");
-        }
-        if($driver === 'pgsql') {
-            DB::statement("ALTER TABLE meal_logs ALTER COLUMN log_date TYPE TIMESTAMP USING log_date::TIMESTAMP");
+        if ($driver === 'mysql') {
+            DB::statement('ALTER TABLE meal_logs MODIFY log_date DATETIME NOT NULL');
+        } elseif ($driver === 'pgsql') {
+            DB::statement('ALTER TABLE meal_logs ALTER COLUMN log_date TYPE TIMESTAMP USING log_date::TIMESTAMP');
+            DB::statement('ALTER TABLE meal_logs ALTER COLUMN log_date SET NOT NULL');
         }
     }
 };
