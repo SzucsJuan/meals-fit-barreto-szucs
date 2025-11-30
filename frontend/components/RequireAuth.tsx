@@ -4,21 +4,33 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-type Props = {
+type RequireAuthProps = {
   children: React.ReactNode;
+  requireAdmin?: boolean;
   redirectTo?: string;
 };
 
-export default function RequireAuth({ children, redirectTo = "/signin" }: Props) {
-  const { status } = useAuth();
+export default function RequireAuth({
+  children,
+  requireAdmin = false,
+  redirectTo = "/signin",
+}: RequireAuthProps) {
+  const { user, status } = useAuth();
   const router = useRouter();
 
-  // Si el usuario es guest, lo mandamos a /signin
   useEffect(() => {
+    // Invitado → siempre a /signin
     if (status === "guest") {
-      router.replace(redirectTo);
+      router.replace("/signin");
+      return;
     }
-  }, [status, redirectTo, router]);
+
+    // Logueado pero sin rol admin en una ruta de admin
+    if (status === "authed" && requireAdmin && user?.role !== "admin") {
+      // Podés cambiar "/home" por lo que prefieras
+      router.replace("/home");
+    }
+  }, [status, requireAdmin, user, router]);
 
   if (status === "loading") {
     return (
@@ -28,11 +40,17 @@ export default function RequireAuth({ children, redirectTo = "/signin" }: Props)
     );
   }
 
+  // Mientras hacemos el replace, no mostramos nada para evitar parpadeos
   if (status === "guest") {
-    // Mientras hacemos el replace no mostramos contenido para que no parpadee
     return null;
   }
 
-  // status === "authed"
+  if (requireAdmin && user?.role !== "admin") {
+    return null;
+  }
+
+  // status === "authed" y (si requiere admin) lo es.
   return <>{children}</>;
 }
+
+export const useRequireAuth = () => useAuth();
