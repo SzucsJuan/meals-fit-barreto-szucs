@@ -72,7 +72,7 @@ function getXsrfToken(): string {
 }
 
 async function ensureCsrf() {
-  await fetch(`${API}/sanctum/csrf-cookie`, {
+  await fetch(`${API}sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
     headers: { "X-Requested-With": "XMLHttpRequest" },

@@ -8,7 +8,7 @@ function getCookie(name: string) {
 // Llama /sanctum/csrf-cookie una vez por sesión y deja listo el XSRF-TOKEN cookie
 export async function ensureCsrf(baseUrl: string) {
   if (csrfReady) return;
-  const res = await fetch(`${baseUrl}/sanctum/csrf-cookie`, {
+  const res = await fetch(`${baseUrl}sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
   });

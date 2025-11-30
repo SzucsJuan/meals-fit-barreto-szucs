@@ -36,7 +36,7 @@ function getCookie(name: string) {
 
 async function ensureCsrf() {
   const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-  await fetch(`${BASE}/sanctum/csrf-cookie`, {
+  await fetch(`${BASE}sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",

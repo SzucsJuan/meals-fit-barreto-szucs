@@ -11,7 +11,7 @@ function getCookie(name: string) {
 
 async function ensureCsrfCookie() {
   // Pide la cookie de CSRF a Laravel Sanctum
-  await fetch(`${API}/sanctum/csrf-cookie`, {
+  await fetch(`${API}sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
   });

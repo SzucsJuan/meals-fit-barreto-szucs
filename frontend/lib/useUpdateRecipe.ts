@@ -23,7 +23,7 @@ export function useUpdateRecipe() {
 
   async function ensureCsrfCookie() {
     // Carga / renueva XSRF-TOKEN en caso de que haga falta
-    await fetch(`${API}/sanctum/csrf-cookie`, {
+    await fetch(`${API}sanctum/csrf-cookie`, {
       method: "GET",
       credentials: "include",
       cache: "no-store",

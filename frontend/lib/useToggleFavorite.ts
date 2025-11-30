@@ -10,7 +10,7 @@ function readCookie(name: string): string | null {
 }
 
 async function ensureCsrfCookie() {
-  await fetch(`${API}/sanctum/csrf-cookie`, {
+  await fetch(`${API}sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",

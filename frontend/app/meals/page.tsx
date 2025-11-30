@@ -75,7 +75,7 @@ function getCookie(name: string): string | null {
 }
 
 async function ensureCsrfCookie(apiBase = "") {
-  await fetch(`${apiBase}/sanctum/csrf-cookie`, {
+  await fetch(`${apiBase}sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",

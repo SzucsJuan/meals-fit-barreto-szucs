@@ -11,7 +11,7 @@ function getCookie(name: string) {
 }
 
 export async function ensureCsrf() {
-  await fetch(`${BASE}/sanctum/csrf-cookie`, {
+  await fetch(`${BASE}sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -87,7 +87,7 @@ export type UserDTO = { id: number; name: string; email: string };
 export const authApi = {
   register: (payload: {
     name: string; email: string; password: string; password_confirmation: string;
-  }) => api<{ user: UserDTO; token: string }>("/api/register", {
+  }) => api<{ user: UserDTO; token: string }>("api/register", {
     method: "POST", json: payload,
   }),
 
