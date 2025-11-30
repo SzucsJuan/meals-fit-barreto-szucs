@@ -1,14 +1,9 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { buildUrl } from "@/lib/api";
 
 export type AuthState = { user: any | null; loading: boolean; authed: boolean };
-
-type Props = {
-  children: React.ReactNode;
-  redirectTo?: string;
-};
 
 async function ensureCsrfCookie() {
   await fetch(buildUrl("sanctum/csrf-cookie"), {
