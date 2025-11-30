@@ -36,6 +36,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { buildUrl } from "@/lib/api";
 
 type UserRow = {
   id: number;
@@ -50,9 +51,6 @@ type UserRow = {
   last_activity_date: string | null;
 };
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
-
 function getXsrfToken(): string {
   if (typeof document === "undefined") return "";
   const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
@@ -60,7 +58,7 @@ function getXsrfToken(): string {
 }
 
 async function ensureCsrf() {
-  await fetch(`${API}sanctum/csrf-cookie`, {
+  await fetch(buildUrl("sanctum/csrf-cookie"), {
     method: "GET",
     credentials: "include",
     headers: {
@@ -107,7 +105,7 @@ export default function AdminUsersPage() {
         if (filterRole !== "all") params.set("role", filterRole);
         if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
-        const res = await fetch(`${API}/api/admin/users?${params.toString()}`, {
+        const res = await fetch(buildUrl(`/api/admin/users?${params.toString()}`), {
           method: "GET",
           credentials: "include",
           headers: {
@@ -163,7 +161,7 @@ export default function AdminUsersPage() {
       await ensureCsrf();
       const token = getXsrfToken();
 
-      const res = await fetch(`${API}/api/admin/users/${editingUser.id}`, {
+      const res = await fetch(buildUrl(`/api/admin/users/${editingUser.id}`), {
         method: "PATCH",
         credentials: "include",
         headers: {
@@ -212,7 +210,7 @@ export default function AdminUsersPage() {
       await ensureCsrf();
       const token = getXsrfToken();
 
-      const res = await fetch(`${API}/api/admin/users/${userToDelete.id}`, {
+      const res = await fetch(buildUrl(`/api/admin/users/${userToDelete.id}`), {
         method: "DELETE",
         credentials: "include",
         headers: {
@@ -248,7 +246,7 @@ export default function AdminUsersPage() {
       await ensureCsrf();
       const token = getXsrfToken();
 
-      const res = await fetch(`${API}/api/admin/users`, {
+      const res = await fetch(buildUrl("/api/admin/users"), {
         method: "POST",
         credentials: "include",
         headers: {
@@ -275,7 +273,7 @@ export default function AdminUsersPage() {
         if (filterRole !== "all") params.set("role", filterRole);
         if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
-        const resList = await fetch(`${API}/api/admin/users?${params.toString()}`, {
+        const resList = await fetch(buildUrl(`/api/admin/users?${params.toString()}`), {
           method: "GET",
           credentials: "include",
           headers: { Accept: "application/json" },

@@ -6,7 +6,7 @@ const RAW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 const BASE = RAW_BASE;
 
 // Helper definitivo: usa URL para evitar dobles barras
-function buildUrl(path: string) {
+export function buildUrl(path: string) {
   // Si el path empieza con "/", URL lo resuelve igual
   return new URL(path, BASE).toString();
 }

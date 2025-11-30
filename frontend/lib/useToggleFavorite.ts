@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-
-const API = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+import { buildUrl } from "@/lib/api";
 
 function readCookie(name: string): string | null {
   const m = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([$?*|{}\]\\^])/g, "\\$1") + "=([^;]*)"));
@@ -10,7 +9,7 @@ function readCookie(name: string): string | null {
 }
 
 async function ensureCsrfCookie() {
-  await fetch(`${API}sanctum/csrf-cookie`, {
+  await fetch(buildUrl("sanctum/csrf-cookie"), {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -32,7 +31,7 @@ export function useToggleFavorite() {
 
       const method = currentlyFavorited ? "DELETE" : "POST";
 
-      const res = await fetch(`${API}api/recipes/${encodeURIComponent(String(recipeId))}/favorite`, {
+      const res = await fetch(buildUrl(`/api/recipes/${recipeId}/favorite`), {
         method,
         credentials: "include",
         headers: {

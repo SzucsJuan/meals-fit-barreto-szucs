@@ -44,6 +44,7 @@ import Image from "next/image";
 import { useIngredients as useIngredientsHook } from "@/lib/useIngredients";
 import { useCreateRecipe, type FormRow, type Unit } from "@/lib/useCreateRecipe";
 import { apiRecipeImages } from "@/lib/api";
+import { buildUrl } from "@/lib/api";
 
 type RecipeRow = {
   id: number;
@@ -62,8 +63,6 @@ type RecipeRow = {
 
 type VisibilityFilter = "all" | "public" | "private";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
 // Helpers de sanctum
 function getXsrfToken(): string {
   if (typeof document === "undefined") return "";
@@ -72,7 +71,7 @@ function getXsrfToken(): string {
 }
 
 async function ensureCsrf() {
-  await fetch(`${API}sanctum/csrf-cookie`, {
+  await fetch(buildUrl("sanctum/csrf-cookie"), {
     method: "GET",
     credentials: "include",
     headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -151,7 +150,7 @@ export default function AdminRecipesPage() {
       if (filterVisibility !== "all") params.set("visibility", filterVisibility);
       if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
-      const res = await fetch(`${API}/api/admin/recipes?${params.toString()}`, {
+      const res = await fetch(buildUrl(`/api/admin/recipes?${params.toString()}`), {
         method: "GET",
         credentials: "include",
         headers: {
@@ -215,7 +214,7 @@ export default function AdminRecipesPage() {
       await ensureCsrf();
       const token = getXsrfToken();
 
-      const res = await fetch(`${API}/api/admin/recipes/${editingRecipe.id}`, {
+      const res = await fetch(buildUrl(`/api/admin/recipes/${editingRecipe.id}`), {
         method: "PATCH",
         credentials: "include",
         headers: {
@@ -255,7 +254,7 @@ export default function AdminRecipesPage() {
       await ensureCsrf();
       const token = getXsrfToken();
 
-      const res = await fetch(`${API}/api/admin/recipes/${recipeId}`, {
+      const res = await fetch(buildUrl(`/api/admin/recipes/${recipeId}`), {
         method: "DELETE",
         credentials: "include",
         headers: {

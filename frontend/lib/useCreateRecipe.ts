@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { buildUrl } from "@/lib/api";
 
 export type Unit = "g" | "ml" | "unit" | ""; 
 
@@ -11,8 +12,6 @@ export type FormRow = {
   notes?: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
-
 function readCookie(name: string): string | null {
   const m = document.cookie.match(
     new RegExp("(?:^|; )" + name.replace(/([$?*|{}\]\\^])/g, "\\$1") + "=([^;]*)")
@@ -21,7 +20,7 @@ function readCookie(name: string): string | null {
 }
 
 async function ensureCsrfCookie() {
-  await fetch(`${API}sanctum/csrf-cookie`, {
+  await fetch(buildUrl("sanctum/csrf-cookie"), {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -71,7 +70,7 @@ export function useCreateRecipe() {
         ingredients,
       };
 
-      const res = await fetch(`${API}api/recipes`, {
+      const res = await fetch(buildUrl("/api/recipes"), {
         method: "POST",
         credentials: "include",
         headers: {

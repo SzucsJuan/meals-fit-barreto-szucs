@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { buildUrl } from "@/lib/api";
 
 export interface Me {
   id: number;
@@ -8,8 +9,6 @@ export interface Me {
   email: string;
   role?: string | null;
 }
-
-const API = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
 
 export function useMe() {
   const [user, setUser] = useState<Me | null>(null);
@@ -22,7 +21,7 @@ export function useMe() {
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API}api/user`, {
+        const res = await fetch(buildUrl("/api/me"), {
           method: "GET",
           headers: { Accept: "application/json" },
           credentials: "include",

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-
-const API = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+import { buildUrl } from "@/lib/api";
 
 export function useMyFavorites(perPage = 12, page = 1) {
   const [data, setData] = useState<any[]>([]);
@@ -11,7 +10,7 @@ export function useMyFavorites(perPage = 12, page = 1) {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    const url = new URL(`${API}/api/favorites`);
+    const url = new URL(buildUrl("/api/recipes/favorites"));
     url.searchParams.set("per_page", String(perPage));
     url.searchParams.set("page", String(page));
 

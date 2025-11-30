@@ -37,6 +37,7 @@ import {
 } from "recharts";
 import RequireAuth from "@/components/RequireAuth";
 import { authApi } from "@/lib/api";
+import { buildUrl } from "@/lib/api";
 
 type WeeklyPoint = {
   name: string;
@@ -68,7 +69,6 @@ type AdminStats = {
   recent_activity: RecentActivityItem[];
 };
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const CATEGORY_COLORS = ["#FFD54F", "#FF9800", "#388E3C", "#A5D6A7"];
 
 export default function AdminPage() {
@@ -92,7 +92,7 @@ function AdminDashboardContent() {
         setLoadingStats(true);
         setError(null);
 
-        const res = await fetch(`${API}/api/admin/stats`, {
+        const res = await fetch(buildUrl("/api/admin/stats"), {
           method: "GET",
           credentials: "include",
           headers: {
