@@ -1,0 +1,11 @@
+/vendor
+/node_modules
+/storage/*.key
+/storage/app/public
+/public/storage
+.env
+.env.*
+.git
+.gitignore
+npm-debug.log
+yarn-error.log
