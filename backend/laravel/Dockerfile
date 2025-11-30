@@ -20,7 +20,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Instalar dependencias de Laravel y optimizar autoloader
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader --no-interaction --prefer-dist
 
 # Opcional: cachear config y rutas (si tus env vars ya están listas)
 # RUN php artisan config:cache && php artisan route:cache
