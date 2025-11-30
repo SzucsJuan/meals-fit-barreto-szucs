@@ -22,7 +22,7 @@ export function useMe() {
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API}/api/user`, {
+        const res = await fetch(`${API}api/user`, {
           method: "GET",
           headers: { Accept: "application/json" },
           credentials: "include",

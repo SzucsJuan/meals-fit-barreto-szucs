@@ -16,7 +16,7 @@ async function ensureCsrfCookie() {
 
 async function fetchUser(): Promise<any | null> {
   try {
-    const res = await fetch(`${API}/api/user`, {
+    const res = await fetch(`${API}api/user`, {
       credentials: "include",
       cache: "no-store",
       headers: {

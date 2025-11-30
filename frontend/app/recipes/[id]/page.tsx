@@ -69,7 +69,7 @@ export default function RecipeDetailPage() {
       };
 
       Object.assign(headers, xsrfHeader());
-      const res = await fetch(`${BASE}/api/recipes/${r.id}`, {
+      const res = await fetch(`${BASE}api/recipes/${r.id}`, {
         method: "PUT",
         credentials: "include",
         headers,

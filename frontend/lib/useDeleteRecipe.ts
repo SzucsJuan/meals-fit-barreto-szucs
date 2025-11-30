@@ -30,7 +30,7 @@ export function useDeleteRecipe() {
     headers.set("X-Requested-With", "XMLHttpRequest");
     if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
 
-    const res = await fetch(`${API}/api/recipes/${id}`, {
+    const res = await fetch(`${API}api/recipes/${id}`, {
       method: "DELETE",
       headers,
       credentials: "include",

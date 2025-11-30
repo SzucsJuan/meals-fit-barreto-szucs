@@ -74,7 +74,7 @@ export function useUpdateRecipe() {
       };
 
       const res = await fetch(
-        `${API}/api/recipes/${encodeURIComponent(String(id))}`,
+        `${API}api/recipes/${encodeURIComponent(String(id))}`,
         {
           method: "PUT",
           headers: {

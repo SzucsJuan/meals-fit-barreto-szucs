@@ -215,7 +215,7 @@ async function apiUpdateMealDetail(
   apiBase = ""
 ) {
   await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-details/${detailId}`, {
+  const res = await fetch(`${apiBase}api/meal-details/${detailId}`, {
     method: "PUT",
     credentials: "include",
     headers: {
@@ -232,7 +232,7 @@ async function apiUpdateMealDetail(
 
 async function apiDeleteMealDetail(detailId: number, apiBase = "") {
   await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-details/${detailId}`, {
+  const res = await fetch(`${apiBase}api/meal-details/${detailId}`, {
     method: "DELETE",
     credentials: "include",
     headers: { Accept: "application/json", "X-XSRF-TOKEN": xsrfHeaderValue() },
@@ -244,7 +244,7 @@ async function apiDeleteMealDetail(detailId: number, apiBase = "") {
 
 async function apiDeleteMealLog(mealLogId: number, apiBase = "") {
   await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-logs/${mealLogId}`, {
+  const res = await fetch(`${apiBase}api/meal-logs/${mealLogId}`, {
     method: "DELETE",
     credentials: "include",
     headers: { Accept: "application/json", "X-XSRF-TOKEN": xsrfHeaderValue() },

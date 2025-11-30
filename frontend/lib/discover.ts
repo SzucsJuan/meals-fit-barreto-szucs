@@ -30,7 +30,7 @@ export async function fetchDiscover({
     per_page: String(per_page),
   });
 
-  const res = await fetch(`${BASE}/api/recipes?${params.toString()}`, {
+  const res = await fetch(`${BASE}api/recipes?${params.toString()}`, {
     credentials: 'include',
     cache: 'no-store',
   });

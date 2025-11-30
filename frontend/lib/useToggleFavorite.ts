@@ -32,7 +32,7 @@ export function useToggleFavorite() {
 
       const method = currentlyFavorited ? "DELETE" : "POST";
 
-      const res = await fetch(`${API}/api/recipes/${encodeURIComponent(String(recipeId))}/favorite`, {
+      const res = await fetch(`${API}api/recipes/${encodeURIComponent(String(recipeId))}/favorite`, {
         method,
         credentials: "include",
         headers: {

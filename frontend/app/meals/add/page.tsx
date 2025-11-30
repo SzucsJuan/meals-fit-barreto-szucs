@@ -107,7 +107,7 @@ export default function AddMealPage() {
   };
 
   async function fetchRecipe(id: number): Promise<RecipeForImport> {
-    const res = await fetch(`${API}/api/recipes/${recipeId}`, {
+    const res = await fetch(`${API}api/recipes/${recipeId}`, {
       headers: { Accept: "application/json" },
       credentials: "include",
       cache: "no-store",
@@ -120,7 +120,7 @@ export default function AddMealPage() {
   }
 
   async function fetchIngredient(id: number): Promise<IngredientShow> {
-    const res = await fetch(`${API}/api/ingredients/${id}`, {
+    const res = await fetch(`${API}api/ingredients/${id}`, {
       method: "GET",
       headers: { Accept: "application/json" },
       credentials: "include",
@@ -157,7 +157,7 @@ export default function AddMealPage() {
         setImportError(null);
         setImporting(true);
 
-        const res = await fetch(`${API}/api/recipes/${recipeId}`, {
+        const res = await fetch(`${API}api/recipes/${recipeId}`, {
           headers: { Accept: "application/json" },
           credentials: "include",
           cache: "no-store",

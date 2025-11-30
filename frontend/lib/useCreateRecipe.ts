@@ -71,7 +71,7 @@ export function useCreateRecipe() {
         ingredients,
       };
 
-      const res = await fetch(`${API}/api/recipes`, {
+      const res = await fetch(`${API}api/recipes`, {
         method: "POST",
         credentials: "include",
         headers: {

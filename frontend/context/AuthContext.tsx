@@ -23,7 +23,7 @@ async function ensureCsrfCookie() {
 }
 
 async function fetchUser() {
-  const res = await fetch(`${API}/api/user`, {
+  const res = await fetch(`${API}api/user`, {
     credentials: "include",
     cache: "no-store",
     headers: { "X-Requested-With": "XMLHttpRequest" },
