@@ -118,6 +118,7 @@ export const authApi = {
   login: (payload: { email: string; password: string }) =>
     api<{ message: string; user: UserDTO }>("login", {
       method: "POST",
+      credentials: "include",
       json: payload,
     }),
 
