@@ -20,10 +20,11 @@ return [
     'allowed_origins' => [
         'https://meals-fit-barreto-szucs.vercel.app',
         'https://meals-fit-barreto-szucs-git-master-juanszucs-2565s-projects.vercel.app',
-        'http://localhost:3000'
+        'http://localhost:3000',
+        'https://mealsandfit.onrender.com',
     ],
     'allowed_headers' => ['*'],
-    'exposed_headers' => [],
+    'exposed_headers' => ['XSRF-TOKEN'],
     'max_age' => 0,
     'supports_credentials' => true,  // ← CLAVE
 
