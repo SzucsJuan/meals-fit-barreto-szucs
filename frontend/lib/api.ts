@@ -13,7 +13,7 @@ export function buildUrl(path: string) {
 // Lee la cookie
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
-  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;])"));
+  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
   return m ? decodeURIComponent(m[2]) : null;
 }
 
