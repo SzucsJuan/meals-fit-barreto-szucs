@@ -55,19 +55,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>("loading");
   const booted = useRef(false);
 
-  const refresh = async (): Promise<User | null> => {
-    try {
-      const u = await fetchUser();
-      setUser(u);
-      setStatus(u ? "authed" : "guest");
-      return u;
-    } catch (err) {
-      console.error("Error en refresh()", err);
-      setUser(null);
-      setStatus("guest");
-      return null;
-    }
-  };
+const refresh = async (): Promise<User | null> => {
+  try {
+    const u = await fetchUser();
+    console.log("refresh() -> user", u);
+    setUser(u);
+    setStatus(u ? "authed" : "guest");
+    return u;
+  } catch (err) {
+    console.error("Error en refresh()", err);
+    setUser(null);
+    setStatus("guest");
+    return null;
+  }
+};
 
   useEffect(() => {
     if (booted.current) return;
