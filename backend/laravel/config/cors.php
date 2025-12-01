@@ -17,7 +17,11 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'user'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['https://meals-fit-barreto-szucs.vercel.app/', 'http://localhost:3000'],
+    'allowed_origins' => [
+        'https://meals-fit-barreto-szucs.vercel.app',
+        'https://meals-fit-barreto-szucs-git-master-juanszucs-2565s-projects.vercel.app',
+        'http://localhost:3000'
+    ],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
