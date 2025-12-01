@@ -22,7 +22,8 @@ COPY . .
 # Instalar dependencias de Laravel (incluyendo require-dev)
 RUN composer install --optimize-autoloader --no-interaction --prefer-dist
 
+# Puerto por defecto (Render suele inyectar PORT desde el entorno)
 ENV PORT=10000
 
-# Comando de arranque: migrar y levantar servidor
-CMD php artisan migrate --force && php artisan serve --host 0.0.0.0 --port=${PORT}
+# Comando de arranque: migrar + seedear y levantar servidor
+CMD php artisan migrate --force --seed && php artisan serve --host 0.0.0.0 --port=${PORT}
