@@ -40,15 +40,20 @@ const onSubmit = async (e: React.FormEvent) => {
     setLoading(true);
 
     await authApi.login({ email, password });
-
+    console.log("login OK, llamando a refresh()");
     const u = await refresh();
+    console.log("user después de login", u);
+
+    if (!u) {
+      setFormError("Login correcto pero no se pudo obtener el usuario (api/user).");
+      return;
+    }
 
     if (typeof window !== "undefined") {
       window.localStorage.setItem("mf-auth-event", Date.now().toString());
     }
 
-    const role = u?.role;
-
+    const role = u.role;
     if (role === "admin") {
       router.push("/admin");
     } else {
