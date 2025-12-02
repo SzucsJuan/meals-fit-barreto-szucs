@@ -26,6 +26,6 @@ RUN composer install --optimize-autoloader --no-interaction --prefer-dist
 ENV PORT=10000
 
 # Comando de arranque: migrar + seedear y levantar servidor
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --class=MealsAndFitSeeder --force && php artisan db:seed --class=AchievementSeeder --force && php artisan serve --host=0.0.0.0 --port=$PORT"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"]
 
 

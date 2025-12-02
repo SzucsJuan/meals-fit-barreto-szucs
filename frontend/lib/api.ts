@@ -20,9 +20,7 @@ function getCookie(name: string) {
 let csrfReady = false;
 
 export async function ensureCsrf() {
-  if (csrfReady) return;
   const url = buildUrl("sanctum/csrf-cookie");
-  console.log("ensureCsrf", url);
   const res = await fetch(url, {
     method: "GET",
     credentials: "include",
@@ -53,24 +51,22 @@ function parseError(status: number, body: any): string {
   return `HTTP ${status}`;
 }
 
-/** Cliente base con CSRF + cookies de sesión */
-export async function api<T>(
+/** Hace la request una sola vez (sin reintentos) */
+async function doRequestOnce<T>(
   path: string,
   init: RequestInit & { json?: any } = {}
-): Promise<T> {
-  if (isMutating(init.method)) {
-    await ensureCsrf();
-  }
-
-   const headers = new Headers(init.headers || {});
+): Promise<{ status: number; body: any }> {
+  const headers = new Headers(init.headers || {});
   headers.set("Accept", "application/json");
   headers.set("X-Requested-With", "XMLHttpRequest");
 
-  if (init.json !== undefined) {
+  // Solo ponemos Content-Type json cuando usamos .json
+  if (init.json !== undefined && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
 
-   const xsrf = getCookie("XSRF-TOKEN");
+  // Header CSRF desde la cookie
+  const xsrf = getCookie("XSRF-TOKEN");
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
 
   const url = buildUrl(path);
@@ -81,19 +77,47 @@ export async function api<T>(
     headers,
     body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
   });
-  
 
-    if (res.status === 204) return {} as T;
+  if (res.status === 204) {
+    return { status: res.status, body: {} as T };
+  }
 
   let body: any = null;
   try {
     body = await res.json();
   } catch {
-    // respuesta sin JSON
+    // respuesta sin JSON, dejamos body = null
   }
 
-  if (!res.ok) {
-    throw new Error(parseError(res.status, body));
+  return { status: res.status, body };
+}
+
+/** Cliente base con CSRF + cookies de sesión + retry si 419 */
+export async function api<T>(
+  path: string,
+  init: RequestInit & { json?: any } = {}
+): Promise<T> {
+  const mutating = isMutating(init.method);
+
+  // Para mutaciones, siempre nos aseguramos de tener CSRF fresco
+  if (mutating) {
+    await ensureCsrf();
+  }
+
+  // Primer intento
+  let { status, body } = await doRequestOnce<T>(path, init);
+
+  // Si Laravel devuelve 419 (CSRF mismatch) en una mutación,
+  // forzamos un refresh del CSRF y reintentamos UNA vez.
+  if (mutating && status === 419) {
+    console.warn("Got 419, refreshing CSRF and retrying once:", path);
+    csrfReady = false;
+    await ensureCsrf();
+    ({ status, body } = await doRequestOnce<T>(path, init));
+  }
+
+  if (!String(status).startsWith("2")) {
+    throw new Error(parseError(status, body));
   }
 
   return body as T;
@@ -118,7 +142,6 @@ export const authApi = {
   login: (payload: { email: string; password: string }) =>
     api<{ message: string; user: UserDTO }>("login", {
       method: "POST",
-      credentials: "include",
       json: payload,
     }),
 
