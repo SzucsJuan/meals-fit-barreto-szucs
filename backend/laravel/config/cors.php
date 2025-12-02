@@ -15,11 +15,11 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'user'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'user', 'register'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
-        'https://meals-fit-barreto-szucs.vercel.app',
-        'https://meals-fit-barreto-szucs-git-master-juanszucs-2565s-projects.vercel.app',
+        'https://mealsandfit.netlify.app',
+        'https://mealsandfit.com',
         'http://localhost:3000',
         'https://mealsandfit.onrender.com',
     ],
