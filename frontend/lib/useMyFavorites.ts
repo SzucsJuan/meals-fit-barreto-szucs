@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+const rawBase =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
 
-export function useMyFavorites(perPage = 12, page = 1) {
+const API_BASE = rawBase.replace(/\/+$/, "");
+
+export function useMyFavorites(perPage = 12, page = 1, q = "") {
   const [data, setData] = useState<any[]>([]);
   const [meta, setMeta] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -11,14 +14,19 @@ export function useMyFavorites(perPage = 12, page = 1) {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    const url = new URL(`${API}/api/favorites`);
-    url.searchParams.set("per_page", String(perPage));
-    url.searchParams.set("page", String(page));
+
+    const params = new URLSearchParams();
+    params.set("mine", "1");
+    params.set("per_page", String(perPage));
+    params.set("page", String(page));
+    if (q) params.set("q", q);
+
+    const url = `${API_BASE}/favorites?${params.toString()}`;
 
     setLoading(true);
     setError(null);
 
-    fetch(url.toString(), {
+    fetch(url, {
       signal: ctrl.signal,
       credentials: "include",
       headers: { Accept: "application/json" },
@@ -34,8 +42,8 @@ export function useMyFavorites(perPage = 12, page = 1) {
           total: json.total,
         });
       })
-      .catch((e) => {
-        if (e.name !== "AbortError") setError(e.message);
+      .catch((e: any) => {
+        if (e.name !== "AbortError") setError(e.message || "Error desconocido");
       })
       .finally(() => setLoading(false));
 

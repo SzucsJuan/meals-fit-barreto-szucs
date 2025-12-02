@@ -1,7 +1,7 @@
 "use client";
 
 const API =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
 
 function getCookie(name: string) {
   const cookies = document.cookie.split(";").map(c => c.trim());

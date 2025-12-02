@@ -1,7 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+// 🧠 Regla:
+// - En producción (Netlify): NEXT_PUBLIC_API_BASE_URL = "/api"
+//   → fetch irá a "/api/recipes" (mismo dominio del front, y Netlify proxea al túnel)
+// - En local, si no definís esa env: fallback a "http://localhost:8000/api"
+const rawBase =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+
+// saco barras finales ("/api///" → "/api")
+const API_BASE = rawBase.replace(/\/+$/, "");
 
 export function useMyRecipes(perPage = 12, page = 1, q = "") {
   const [data, setData] = useState<any[]>([]);
@@ -11,16 +19,22 @@ export function useMyRecipes(perPage = 12, page = 1, q = "") {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    const url = new URL(`${API}/api/recipes`);
-    url.searchParams.set("mine", "1");
-    url.searchParams.set("per_page", String(perPage));
-    url.searchParams.set("page", String(page));
-    if (q) url.searchParams.set("q", q);
+
+    const params = new URLSearchParams();
+    params.set("mine", "1");
+    params.set("per_page", String(perPage));
+    params.set("page", String(page));
+    if (q) params.set("q", q);
+
+    // 👇 acá se arma la URL final
+    // - En local:  "http://localhost:8000/api/recipes?..."
+    // - En Netlify: "/api/recipes?..."  (mismo dominio del front)
+    const url = `${API_BASE}/recipes?${params.toString()}`;
 
     setLoading(true);
     setError(null);
 
-    fetch(url.toString(), {
+    fetch(url, {
       signal: ctrl.signal,
       credentials: "include",
       headers: { Accept: "application/json" },
@@ -36,8 +50,8 @@ export function useMyRecipes(perPage = 12, page = 1, q = "") {
           total: json.total,
         });
       })
-      .catch((e) => {
-        if (e.name !== "AbortError") setError(e.message);
+      .catch((e: any) => {
+        if (e.name !== "AbortError") setError(e.message || "Error desconocido");
       })
       .finally(() => setLoading(false));
 
