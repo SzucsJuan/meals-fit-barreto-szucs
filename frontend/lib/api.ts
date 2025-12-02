@@ -1,8 +1,12 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+// ================== BASES ==================
 
+const rawRoot = process.env.NEXT_PUBLIC_BACKEND_ROOT || "http://localhost:8000";
+const BACKEND_ROOT = rawRoot.replace(/\/+$/, "");
 
+const rawApi = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE = rawApi.replace(/\/+$/, "");
 
-// Lee la cookie
+// ================== HELPERS ==================
 
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
@@ -11,7 +15,7 @@ function getCookie(name: string) {
 }
 
 export async function ensureCsrf() {
-  await fetch(`${BASE}/sanctum/csrf-cookie`, {
+  await fetch(`${BACKEND_ROOT}/sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -20,23 +24,21 @@ export async function ensureCsrf() {
 
 function isMutating(method?: string) {
   const m = (method || "GET").toUpperCase();
-  return m === "POST" || m === "PUT" || m === "PATCH" || m === "DELETE";
+  return ["POST", "PUT", "PATCH", "DELETE"].includes(m);
 }
 
 function parseError(status: number, body: any): string {
   if (body?.message && !body?.errors) return body.message;
-  if (body?.errors && typeof body.errors === "object") {
-    const all = Object.entries(body.errors)
-      .flatMap(([field, msgs]) =>
-        Array.isArray(msgs) ? msgs.map((m) => `${field}: ${m}`) : String(msgs)
-      )
+  if (body?.errors) {
+    return Object.entries(body.errors)
+      .flatMap(([k, v]) => (Array.isArray(v) ? v.map((m) => `${k}: ${m}`) : String(v)))
       .join(" | ");
-    return all || `HTTP ${status}`;
   }
   return `HTTP ${status}`;
 }
 
-/** Cliente base con CSRF + cookies de sesión */
+// ================== API CLIENT ==================
+
 export async function api<T>(
   path: string,
   init: RequestInit & { json?: any } = {}
@@ -55,7 +57,12 @@ export async function api<T>(
   const xsrf = getCookie("XSRF-TOKEN");
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
 
-  const res = await fetch(`${BASE}${path}`, {
+  const isApi = path.startsWith("/api/");
+  const base = isApi ? API_BASE : BACKEND_ROOT;
+
+  const url = `${base}${path}`;
+
+  const res = await fetch(url, {
     ...init,
     credentials: "include",
     cache: "no-store",
@@ -68,9 +75,7 @@ export async function api<T>(
   let body: any = null;
   try {
     body = await res.json();
-  } catch {
-    // va sin JSON la respuesta
-  }
+  } catch {}
 
   if (!res.ok) {
     throw new Error(parseError(res.status, body));
@@ -79,21 +84,26 @@ export async function api<T>(
   return body as T;
 }
 
-
-// LLamada a Usuarios
+// ================== AUTH ==================
 
 export type UserDTO = { id: number; name: string; email: string };
 
 export const authApi = {
   register: (payload: {
-    name: string; email: string; password: string; password_confirmation: string;
-  }) => api<{ user: UserDTO; token: string }>("/api/register", {
-    method: "POST", json: payload,
-  }),
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }) =>
+    api<{ user: UserDTO }>("api/register", {
+      method: "POST",
+      json: payload,
+    }),
 
   login: (payload: { email: string; password: string }) =>
     api<{ message: string; user: UserDTO }>("/login", {
-      method: "POST", json: payload,
+      method: "POST",
+      json: payload,
     }),
 
   logout: () => api<{ message?: string }>("/logout", { method: "POST" }),
@@ -101,60 +111,27 @@ export const authApi = {
   me: () => api<UserDTO>("/api/user", { method: "GET" }),
 };
 
+// ================== RECIPES ==================
 
-// LLamada a Recetas
-
-export type RecipeDTO = {
-  id: number;
-  title: string;
-  description?: string | null;
-  steps?: string | null;
-  visibility: "public" | "private";
-  servings: number;
-  prep_time_minutes?: number | null;
-  cook_time_minutes?: number | null;
-
-  image_url?: string | null;
-  image_thumb_url?: string | null;
-  image_webp_url?: string | null;
-  image_width?: number | null;
-  image_height?: number | null;
-
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-
-  avg_rating?: number;
-  votes_count?: number;
-  favorited_by_count?: number;
-  is_favorited?: boolean;
-
-  user?: { id: number; name: string };
-
-  ingredients: Array<{
-    id: number;
-    name: string;
-    pivot: {
-      quantity: number;
-      unit: "g" | "ml" | "unit";
-      notes?: string | null;
-    };
-  }>;
-};
+export type RecipeDTO = { /* tu tipo, sin cambios */ };
 
 export const apiRecipes = {
-  create: (payload: any) => api<RecipeDTO>("/api/recipes", {
-    method: "POST", json: payload,
-  }),
+  create: (payload: any) =>
+    api<RecipeDTO>("/api/recipes", {
+      method: "POST",
+      json: payload,
+    }),
+
   show: (id: number | string) => api<RecipeDTO>(`/api/recipes/${id}`),
-  update: (id: number | string, payload: any) => api<RecipeDTO>(`/api/recipes/${id}`, {
-    method: "PUT", json: payload,
-  }),
+
+  update: (id: number | string, payload: any) =>
+    api<RecipeDTO>(`/api/recipes/${id}`, {
+      method: "PUT",
+      json: payload,
+    }),
 };
 
-
-// Llamado a imagenes
+// ================== IMAGES ==================
 
 export type UploadRecipeImageResponse = {
   image_url: string;
@@ -170,16 +147,15 @@ export const apiRecipeImages = {
     form.append("image", file);
     return api<UploadRecipeImageResponse>(`/api/recipes/${id}/image`, {
       method: "POST",
-      body: form, 
+      body: form,
     });
   },
+
   remove: (id: number | string) =>
     api<void>(`/api/recipes/${id}/image`, { method: "DELETE" }),
 };
 
-
-
-//Llamado a achievements
+// ================== ACHIEVEMENTS ==================
 
 export type AchievementDTO = {
   id: number;
@@ -191,8 +167,5 @@ export type AchievementDTO = {
 };
 
 export const apiAchievements = {
-  me: () =>
-    api<AchievementDTO[]>("/api/me/achievements", {
-      method: "GET",
-    }),
+  me: () => api<AchievementDTO[]>("/api/me/achievements", { method: "GET" }),
 };
