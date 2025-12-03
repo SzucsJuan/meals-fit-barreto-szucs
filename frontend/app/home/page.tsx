@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import RequireAuth  from "@/components/RequireAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -214,6 +214,7 @@ export default function HomePage() {
   const showPersonalInfo = !loadingPlan && !latestPlan;
 
   return (
+    <RequireAuth>
       <div className="min-h-screen bg-background">
         <Navigation />
 
@@ -927,5 +928,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+    </RequireAuth>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -163,40 +163,37 @@ export default function RecipesPage() {
 
   const tab = sp.get("tab") === "fav" ? "fav" : "mine";
 
-  // paginación por tab
   const pageMine = Math.max(1, Number(sp.get("pageMine") || 1));
   const pageFav = Math.max(1, Number(sp.get("pageFav") || 1));
 
   const perPage = 12;
 
-  const { data: myRecipes, meta: metaMine, loading: loadingMine, error: errMine } =
-    useMyRecipes(perPage, pageMine);
+  const {
+    data: myRecipes,
+    meta: metaMine,
+    loading: loadingMine,
+    error: errMine,
+  } = useMyRecipes(perPage, pageMine);
 
-  const { data: favs, meta: metaFav, loading: loadingFav, error: errFav } =
-    useMyFavorites(perPage, pageFav);
+  const {
+    data: favs,
+    meta: metaFav,
+    loading: loadingFav,
+    error: errFav,
+  } = useMyFavorites(perPage, pageFav);
 
-  interface PaginationMeta {
-    current_page: number;
-    last_page: number;
-    total: number;
-    per_page: number;
-  }
-
-  const [favData, setFavData] = useState<any[]>([]);
-  const [favMeta, setFavMeta] = useState<PaginationMeta | null>(null);
-
+  // solo duplicamos las listas para poder mutarlas con favoritos
   const [myData, setMyData] = useState<any[]>([]);
-  const [myMeta, setMyMeta] = useState<PaginationMeta | null>(null);
+  const [favData, setFavData] = useState<any[]>([]);
 
+  // sincronizar cuando vienen datos nuevos del server
   useEffect(() => {
     setMyData(myRecipes ?? []);
-    setMyMeta(metaMine ?? null);
-  }, [myRecipes, metaMine]);
+  }, [myRecipes]);
 
   useEffect(() => {
     setFavData(favs ?? []);
-    setFavMeta(metaFav ?? null);
-  }, [favs, metaFav]);
+  }, [favs]);
 
   const setQuery = (patch: Record<string, string>) => {
     const next = new URLSearchParams(sp);
@@ -215,28 +212,33 @@ export default function RecipesPage() {
   function addToFavIfNeeded(recipe: any) {
     setFavData((prev) => {
       if (prev.some((x) => x.id === recipe.id)) return prev;
-      if ((favMeta?.current_page ?? 1) === 1) return [{ ...recipe, is_favorited: true }, ...prev];
+      // solo agregamos al principio si estamos en page 1
+      if ((metaFav?.current_page ?? 1) === 1) {
+        return [{ ...recipe, is_favorited: true }, ...prev];
+      }
       return prev;
     });
-    setFavMeta((m) => (m ? { ...m, total: (m.total ?? 0) + 1 } : m));
   }
 
   function removeFromFavIfPresent(id: number) {
     setFavData((prev) => {
       const next = prev.filter((x) => x.id !== id);
-      if (next.length === 0 && (favMeta?.current_page ?? 1) > 1) {
-        setQuery({ tab: "fav", pageFav: String((favMeta!.current_page as number) - 1) });
+
+      // si la página queda vacía y no es la primera, retroceder una página
+      if (next.length === 0 && (metaFav?.current_page ?? 1) > 1) {
+        setQuery({
+          tab: "fav",
+          pageFav: String((metaFav!.current_page as number) - 1),
+        });
       }
+
       return next;
     });
-    setFavMeta((m) => (m ? { ...m, total: Math.max(0, (m.total ?? 0) - 1) } : m));
   }
 
-  // callback central: sincroniza ambas listas
   function handleFavoriteChange(recipe: any, isFav: boolean) {
     updateMyDataById(recipe.id, isFav);
 
-    // actualización de lista de favoritos
     if (isFav) addToFavIfNeeded(recipe);
     else removeFromFavIfPresent(recipe.id);
   }
@@ -269,8 +271,12 @@ export default function RecipesPage() {
             </TabsList>
 
             <TabsContent value="mine" className="mt-6">
-              {loadingMine && <div className="text-sm text-muted-foreground">Loading...</div>}
-              {errMine && <div className="text-sm text-red-600">Error: {errMine}</div>}
+              {loadingMine && (
+                <div className="text-sm text-muted-foreground">Loading...</div>
+              )}
+              {errMine && (
+                <div className="text-sm text-red-600">Error: {errMine}</div>
+              )}
 
               {!loadingMine && !errMine && (
                 <>
@@ -281,19 +287,24 @@ export default function RecipesPage() {
                   />
 
                   <Pagination
-                    current={myMeta?.current_page ?? 1}
-                    last={myMeta?.last_page ?? 1}
+                    current={metaMine?.current_page ?? 1}
+                    last={metaMine?.last_page ?? 1}
                     onPrev={() =>
                       setQuery({
                         tab: "mine",
-                        pageMine: String(Math.max(1, (myMeta?.current_page ?? 1) - 1)),
+                        pageMine: String(
+                          Math.max(1, (metaMine?.current_page ?? 1) - 1)
+                        ),
                       })
                     }
                     onNext={() =>
                       setQuery({
                         tab: "mine",
                         pageMine: String(
-                          Math.min(myMeta?.last_page ?? 1, (myMeta?.current_page ?? 1) + 1)
+                          Math.min(
+                            metaMine?.last_page ?? 1,
+                            (metaMine?.current_page ?? 1) + 1
+                          )
                         ),
                       })
                     }
@@ -303,8 +314,12 @@ export default function RecipesPage() {
             </TabsContent>
 
             <TabsContent value="fav" className="mt-6">
-              {loadingFav && <div className="text-sm text-muted-foreground">Loading...</div>}
-              {errFav && <div className="text-sm text-red-600">Error: {errFav}</div>}
+              {loadingFav && (
+                <div className="text-sm text-muted-foreground">Loading...</div>
+              )}
+              {errFav && (
+                <div className="text-sm text-red-600">Error: {errFav}</div>
+              )}
 
               {!loadingFav && !errFav && (
                 <>
@@ -315,19 +330,24 @@ export default function RecipesPage() {
                   />
 
                   <Pagination
-                    current={(favMeta?.current_page ?? 1)}
-                    last={(favMeta?.last_page ?? 1)}
+                    current={metaFav?.current_page ?? 1}
+                    last={metaFav?.last_page ?? 1}
                     onPrev={() =>
                       setQuery({
                         tab: "fav",
-                        pageFav: String(Math.max(1, (favMeta?.current_page ?? 1) - 1)),
+                        pageFav: String(
+                          Math.max(1, (metaFav?.current_page ?? 1) - 1)
+                        ),
                       })
                     }
                     onNext={() =>
                       setQuery({
                         tab: "fav",
                         pageFav: String(
-                          Math.min(favMeta?.last_page ?? 1, (favMeta?.current_page ?? 1) + 1)
+                          Math.min(
+                            metaFav?.last_page ?? 1,
+                            (metaFav?.current_page ?? 1) + 1
+                          )
                         ),
                       })
                     }

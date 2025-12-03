@@ -1,41 +1,49 @@
+// components/RequireAuth.tsx
 "use client";
 
-import { PropsWithChildren, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-type RequireAuthProps = PropsWithChildren<{
+type Props = {
+  children: React.ReactNode;
   requireAdmin?: boolean;
-}>;
+};
 
-export default function RequireAuth({ children, requireAdmin }: RequireAuthProps) {
-  const { status, user } = useAuth(); 
+export default function RequireAuth({ children, requireAdmin }: Props) {
+  const { user, status } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (status === "guest") {
-      router.replace("/signin");
+    if (status === "loading") return;
+
+    // No logueado → a /signin
+    if (status === "guest" || !user) {
+      const from = pathname || "/";
+      router.replace(`/signin?from=${encodeURIComponent(from)}`);
       return;
     }
 
-    if (status === "authed" && requireAdmin && user && user.role !== "admin") {
+    if (requireAdmin && user.role !== "admin") {
       router.replace("/home");
       return;
     }
-  }, [status, requireAdmin, user, router]);
+  }, [status, user, requireAdmin, pathname, router]);
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center text-sm text-muted-foreground">
-        Verificando sesión...
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
-  if (
-    status === "guest" ||
-    (status === "authed" && requireAdmin && user && user.role !== "admin")
-  ) {
+  if (status === "guest" || !user) {
+    return null;
+  }
+
+  if (requireAdmin && user.role !== "admin") {
     return null;
   }
 

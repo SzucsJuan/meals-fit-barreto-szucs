@@ -8,7 +8,7 @@ import { useToggleFavorite } from "@/lib/useToggleFavorite";
 type Props = {
   recipeId: number;
   initialFavorited?: boolean;
-  onChange?: (isFavorited: boolean) => void; 
+  onChange?: (isFavorited: boolean) => void;
   className?: string;
   size?: "sm" | "default" | "lg" | "icon";
 };
@@ -31,7 +31,6 @@ export default function FavoriteButton({
       setFavorited(isFavorited);
       onChange?.(isFavorited);
     } catch {
-      // si falla se revierte
       setFavorited(prev);
     }
   }
@@ -46,7 +45,11 @@ export default function FavoriteButton({
       aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
       title={favorited ? "Remove from favorites" : "Add to favorites"}
     >
-      <Heart className={`h-4 w-4 ${favorited ? "text-destructive" : "text-muted-foreground"}`} />
+      <Heart
+        className={`h-4 w-4 ${
+          favorited ? "text-destructive" : "text-muted-foreground"
+        }`}
+      />
     </Button>
   );
 }

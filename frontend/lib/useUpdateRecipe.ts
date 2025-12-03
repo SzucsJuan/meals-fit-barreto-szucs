@@ -1,4 +1,8 @@
+"use client";
+
 import { useState } from "react";
+import { api } from "@/lib/api";
+
 export type Unit = "g" | "ml" | "unit";
 
 export interface EditRow {
@@ -9,26 +13,9 @@ export interface EditRow {
   notes?: string;
 }
 
-const API =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
-
-function readCookie(name: string): string | null {
-  const m = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([$?*|{}\]\\^])/g, "\\$1") + "=([^;]*)"));
-  return m ? m[1] : null;
-}
-
 export function useUpdateRecipe() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  async function ensureCsrfCookie() {
-    // Carga / renueva XSRF-TOKEN en caso de que haga falta
-    await fetch(`${API}/sanctum/csrf-cookie`, {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-  }
 
   async function updateRecipe(
     id: number | string,
@@ -47,12 +34,6 @@ export function useUpdateRecipe() {
     setError(null);
 
     try {
-      // Aseguramos que tengamos el XSRF-TOKEN
-      await ensureCsrfCookie();
-
-      const xsrfCookie = readCookie("XSRF-TOKEN");
-      const xsrfHeader = xsrfCookie ? decodeURIComponent(xsrfCookie) : null;
-
       const ingredients = payload.rows
         .filter((r) => r.ingredient_id && r.quantity && r.unit)
         .map((r) => ({
@@ -73,33 +54,18 @@ export function useUpdateRecipe() {
         ingredients,
       };
 
-      const res = await fetch(
-        `${API}/api/recipes/${encodeURIComponent(String(id))}`,
+      const json = await api<any>(
+        `/api/recipes/${encodeURIComponent(String(id))}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            ...(xsrfHeader ? { "X-XSRF-TOKEN": xsrfHeader } : {}),
-          },
-          credentials: "include",
-          body: JSON.stringify(body),
+          json: body,
         }
       );
 
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try {
-          const err = await res.json();
-          if (err?.message) msg += ` - ${err.message}`;
-        } catch {
-        }
-        setError(msg);
-        throw new Error(msg);
-      }
-
-      const json = await res.json();
       return json;
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to update recipe");
+      throw e;
     } finally {
       setLoading(false);
     }

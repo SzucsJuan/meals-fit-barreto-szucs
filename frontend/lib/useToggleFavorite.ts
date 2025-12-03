@@ -1,64 +1,46 @@
 "use client";
 
 import { useCallback, useState } from "react";
-
-const API = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
-
-function readCookie(name: string): string | null {
-  const m = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([$?*|{}\]\\^])/g, "\\$1") + "=([^;]*)"));
-  return m ? m[1] : null;
-}
-
-async function ensureCsrfCookie() {
-  await fetch(`${API}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-}
+import { api } from "@/lib/api";
 
 export function useToggleFavorite() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const toggle = useCallback(async (recipeId: number, currentlyFavorited: boolean) => {
-    setLoading(true);
-    setError(null);
+  const toggle = useCallback(
+    async (recipeId: number, currentlyFavorited: boolean) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      await ensureCsrfCookie();
-      const xsrfCookie = readCookie("XSRF-TOKEN");
-      const xsrfHeader = xsrfCookie ? decodeURIComponent(xsrfCookie) : null;
+      try {
+        const method = currentlyFavorited ? "DELETE" : "POST";
 
-      const method = currentlyFavorited ? "DELETE" : "POST";
+        const res = await api<any>(
+          `/api/recipes/${encodeURIComponent(String(recipeId))}/favorite`,
+          { method }
+        );
 
-      const res = await fetch(`${API}/api/recipes/${encodeURIComponent(String(recipeId))}/favorite`, {
-        method,
-        credentials: "include",
-        headers: {
-        Accept: "application/json",
-        "X-XSRF-TOKEN": xsrfHeader ?? "",
-        },
-      });
+        const nextIsFav =
+          typeof res?.is_favorited === "boolean"
+            ? res.is_favorited
+            : !currentlyFavorited;
 
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try {
-          const err = await res.json();
-          if (err?.message) msg += ` - ${err.message}`;
-        } catch {}
-        throw new Error(msg);
+        const returnedId =
+          typeof res?.recipe_id === "number" ? res.recipe_id : recipeId;
+
+        return {
+          recipeId: returnedId,
+          isFavorited: nextIsFav,
+        };
+      } catch (e: any) {
+        setError(e?.message ?? "Favorite toggle failed");
+        throw e;
+      } finally {
+        setLoading(false);
       }
-
-      const json = await res.json().catch(() => ({}));
-      return { recipeId: json?.recipe_id ?? recipeId, isFavorited: json?.is_favorited ?? !currentlyFavorited };
-    } catch (e: any) {
-      setError(e?.message ?? "Favorite toggle failed");
-      throw e;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   return { toggle, loading, error };
 }

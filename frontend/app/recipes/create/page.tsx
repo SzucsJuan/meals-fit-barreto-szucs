@@ -70,7 +70,7 @@ export default function CreateRecipePage() {
     setSteps(steps.map(s => s.id === id ? { ...s, step } : s));
   };
 
-    function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return alert("Formato no soportado (usa JPG/PNG/WebP).");
@@ -118,7 +118,6 @@ export default function CreateRecipePage() {
     } catch {
     }
   };
-
   return (
     <RequireAuth>
       <div className="min-h-screen bg-background">
