@@ -1,39 +1,68 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+// lib/discover.ts
+import { api } from "@/lib/api";
+import type { RecipeDTO } from "@/lib/api";
 
-export type DiscoverRecipe = {
-  id: number;
-  title: string;
-  description?: string | null;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  servings: number;
-  prep_time_minutes: number;
-  user: { id: number; name: string };
-  is_favorited?: boolean;
-  image_url?: string | null;        
-  image_thumb_url?: string | null; 
+export type DiscoverRecipe = RecipeDTO;
+
+type DiscoverMeta = {
+  current_page: number;
+  last_page: number;
+  total: number;
 };
 
-export async function fetchDiscover({
-  q = '',
-  order = 'latest',
-  page = 1,
-  per_page = 12,
-}: { q?: string; order?: string; page?: number; per_page?: number }) {
-  const params = new URLSearchParams({
-    discover: '1',
-    q,
-    order,
-    page: String(page),
-    per_page: String(per_page),
-  });
+type DiscoverParams = {
+  q?: string;
+  order?: string;
+  page?: number;
+  per_page?: number;
+};
 
-  const res = await fetch(`${BASE}/api/recipes?${params.toString()}`, {
-    credentials: 'include',
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error('Failed to fetch discover recipes');
-  return res.json(); 
+type RawPaginated<T> = {
+  data?: T[];
+  current_page?: number;
+  last_page?: number;
+  total?: number;
+};
+
+
+export async function fetchDiscover(
+  params: DiscoverParams
+): Promise<{ data: DiscoverRecipe[]; meta: DiscoverMeta }> {
+  const qs = new URLSearchParams();
+
+  if (params.q) qs.set("q", params.q);
+  if (params.order) qs.set("order", params.order);
+  if (params.page) qs.set("page", String(params.page));
+  if (params.per_page) qs.set("per_page", String(params.per_page));
+
+  const raw = await api<RawPaginated<DiscoverRecipe> | DiscoverRecipe[]>(
+    `/api/recipes?${qs.toString()}`,
+    {
+      method: "GET",
+    }
+  );
+
+  let data: DiscoverRecipe[] = [];
+  let current_page = 1;
+  let last_page = 1;
+  let total = 0;
+
+  if (Array.isArray(raw)) {
+    data = raw;
+    total = raw.length;
+  } else {
+    data = raw.data ?? [];
+    current_page = raw.current_page ?? 1;
+    last_page = raw.last_page ?? 1;
+    total = raw.total ?? data.length;
+  }
+
+  return {
+    data,
+    meta: {
+      current_page,
+      last_page,
+      total,
+    },
+  };
 }

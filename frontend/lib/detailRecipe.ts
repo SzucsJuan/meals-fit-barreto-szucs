@@ -21,7 +21,7 @@ export function detailRecipe(id: string | number): State {
       try {
         setLoading(true);
         setError(null);
-        const json = await apiRecipes.show(id); 
+        const json = await apiRecipes.show(id);
         if (!cancelled) setData(json);
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? "Error fetching recipe");
@@ -30,7 +30,9 @@ export function detailRecipe(id: string | number): State {
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   return { data, loading, error };
