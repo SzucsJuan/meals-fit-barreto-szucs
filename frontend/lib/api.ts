@@ -95,21 +95,30 @@ export const authApi = {
     password: string;
     password_confirmation: string;
   }) =>
-    api<{ user: UserDTO }>("api/register", {
+    api<{ user: UserDTO }>("/api/register", {
       method: "POST",
       json: payload,
+      credentials: "include",
     }),
 
   login: (payload: { email: string; password: string }) =>
     api<{ message: string; user: UserDTO }>("/login", {
-      credentials: "include",
       method: "POST",
       json: payload,
+      credentials: "include",
     }),
 
-  logout: () => api<{ message?: string }>("/logout", { method: "POST" }),
+  logout: () =>
+    api<{ message?: string }>("/logout", {
+      method: "POST",
+      credentials: "include",
+    }),
 
-  me: () => api<UserDTO>("/api/user", { method: "GET" }),
+  me: () =>
+    api<UserDTO>("/api/user", {
+      method: "GET",
+      credentials: "include",
+    }),
 };
 
 // ================== RECIPES ==================
