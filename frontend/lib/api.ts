@@ -1,18 +1,6 @@
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const API_PREFIX = "/api";
 
-// --- VALIDACIÓN CRUCIAL ---
-// La variable BASE DEBE terminar en /api si todas las rutas de Laravel la usan,
-// o DEBE ser el dominio base si el prefijo /api se agrega en cada llamada.
-// Dado el error, asumimos que NEXT_PUBLIC_API_BASE_URL ya contiene "https://mealsandfit.onrender.com/api".
-// Si BASE es solo el dominio "https://mealsandfit.onrender.com", ignora esta corrección y déjalo como estaba.
-// Si tu archivo .env de Next.js configura NEXT_PUBLIC_API_BASE_URL como SÓLO el dominio:
-// NEXT_PUBLIC_API_BASE_URL="https://mealsandfit.onrender.com"
-// Entonces, las rutas de abajo *DEBEN* incluir /api.
-// Si el problema es solo con el register, revisa tu router de Laravel.
-
-// --- Corregido el problema de doble /api en las llamadas authApi y apiRecipes ---
-
-// Lee la cookie
 
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
@@ -21,7 +9,6 @@ function getCookie(name: string) {
 }
 
 export async function ensureCsrf() {
-  // Sanctum CSRF endpoint
   await fetch(`${BASE}/sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
@@ -67,9 +54,13 @@ export async function api<T>(
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
   
   // Normalizar el path: asegurar que el path siempre empiece con /, pero no sea doble //
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
-  const res = await fetch(`${BASE}${normalizedPath}`, {
+  const apiPath = normalizedPath.startsWith("/api")
+    ? normalizedPath
+    : `${API_PREFIX}${normalizedPath}`;
+
+  const res = await fetch(`${BASE}${apiPath}`, {
     ...init,
     credentials: "include",
     cache: "no-store",
@@ -83,7 +74,6 @@ export async function api<T>(
   try {
     body = await res.json();
   } catch {
-    // va sin JSON la respuesta
   }
 
   if (!res.ok) {
