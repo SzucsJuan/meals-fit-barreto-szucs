@@ -1,11 +1,11 @@
 ======== SANCTUM + AUTH (web.php) ========
-/sanctum/*    https://185d9338814b.ngrok-free.app/sanctum/:splat    200
-/login        https://185d9338814b.ngrok-free.app/login             200
-/logout       https://185d9338814b.ngrok-free.app/logout            200
-/register     https://185d9338814b.ngrok-free.app/register          200
+/sanctum/*    https://f0e890341e72.ngrok-free.app/sanctum/:splat    200
+/login        https://f0e890341e72.ngrok-free.app/login             200
+/logout       https://f0e890341e72.ngrok-free.app/logout            200
+/register     https://f0e890341e72.ngrok-free.app/register          200
 
 ======== API (api.php) ========
-/api/*        https://185d9338814b.ngrok-free.app/api/:splat        200
+/api/*        https://f0e890341e72.ngrok-free.app/api/:splat        200
 
 ======== STORAGE (imágenes) ========
-/storage/*    https://185d9338814b.ngrok-free.app/storage/:splat    200
+/storage/*    https://f0e890341e72.ngrok-free.app/storage/:splat    200
