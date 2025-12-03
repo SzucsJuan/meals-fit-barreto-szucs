@@ -1,6 +1,16 @@
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
+// --- VALIDACIÓN CRUCIAL ---
+// La variable BASE DEBE terminar en /api si todas las rutas de Laravel la usan,
+// o DEBE ser el dominio base si el prefijo /api se agrega en cada llamada.
+// Dado el error, asumimos que NEXT_PUBLIC_API_BASE_URL ya contiene "https://mealsandfit.onrender.com/api".
+// Si BASE es solo el dominio "https://mealsandfit.onrender.com", ignora esta corrección y déjalo como estaba.
+// Si tu archivo .env de Next.js configura NEXT_PUBLIC_API_BASE_URL como SÓLO el dominio:
+// NEXT_PUBLIC_API_BASE_URL="https://mealsandfit.onrender.com"
+// Entonces, las rutas de abajo *DEBEN* incluir /api.
+// Si el problema es solo con el register, revisa tu router de Laravel.
 
+// --- Corregido el problema de doble /api en las llamadas authApi y apiRecipes ---
 
 // Lee la cookie
 
@@ -11,6 +21,7 @@ function getCookie(name: string) {
 }
 
 export async function ensureCsrf() {
+  // Sanctum CSRF endpoint
   await fetch(`${BASE}/sanctum/csrf-cookie`, {
     method: "GET",
     credentials: "include",
@@ -54,8 +65,11 @@ export async function api<T>(
 
   const xsrf = getCookie("XSRF-TOKEN");
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+  
+  // Normalizar el path: asegurar que el path siempre empiece con /, pero no sea doble //
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${BASE}${normalizedPath}`, {
     ...init,
     credentials: "include",
     cache: "no-store",
@@ -85,20 +99,21 @@ export async function api<T>(
 export type UserDTO = { id: number; name: string; email: string };
 
 export const authApi = {
+  // CORRECCIÓN: Quitamos '/api' del path para evitar la duplicidad
   register: (payload: {
     name: string; email: string; password: string; password_confirmation: string;
-  }) => api<{ user: UserDTO; token: string }>("/api/register", {
+  }) => api<{ user: UserDTO; token: string }>("register", {
     method: "POST", json: payload,
   }),
 
   login: (payload: { email: string; password: string }) =>
-    api<{ message: string; user: UserDTO }>("/login", {
+    api<{ message: string; user: UserDTO }>("login", {
       method: "POST", json: payload,
     }),
 
-  logout: () => api<{ message?: string }>("/logout", { method: "POST" }),
+  logout: () => api<{ message?: string }>("logout", { method: "POST" }),
 
-  me: () => api<UserDTO>("/api/user", { method: "GET" }),
+  me: () => api<UserDTO>("user", { method: "GET" }),
 };
 
 
@@ -144,11 +159,14 @@ export type RecipeDTO = {
 };
 
 export const apiRecipes = {
-  create: (payload: any) => api<RecipeDTO>("/api/recipes", {
+  // CORRECCIÓN: Quitamos '/api' del path
+  create: (payload: any) => api<RecipeDTO>("recipes", {
     method: "POST", json: payload,
   }),
-  show: (id: number | string) => api<RecipeDTO>(`/api/recipes/${id}`),
-  update: (id: number | string, payload: any) => api<RecipeDTO>(`/api/recipes/${id}`, {
+  // CORRECCIÓN: Quitamos '/api' del path
+  show: (id: number | string) => api<RecipeDTO>(`recipes/${id}`),
+  // CORRECCIÓN: Quitamos '/api' del path
+  update: (id: number | string, payload: any) => api<RecipeDTO>(`recipes/${id}`, {
     method: "PUT", json: payload,
   }),
 };
@@ -168,15 +186,16 @@ export const apiRecipeImages = {
   upload: (id: number | string, file: File) => {
     const form = new FormData();
     form.append("image", file);
-    return api<UploadRecipeImageResponse>(`/api/recipes/${id}/image`, {
+    // CORRECCIÓN: Quitamos '/api' del path
+    return api<UploadRecipeImageResponse>(`recipes/${id}/image`, {
       method: "POST",
       body: form, 
     });
   },
+  // CORRECCIÓN: Quitamos '/api' del path
   remove: (id: number | string) =>
-    api<void>(`/api/recipes/${id}/image`, { method: "DELETE" }),
+    api<void>(`recipes/${id}/image`, { method: "DELETE" }),
 };
-
 
 
 //Llamado a achievements
@@ -191,8 +210,9 @@ export type AchievementDTO = {
 };
 
 export const apiAchievements = {
+  // CORRECCIÓN: Quitamos '/api' del path
   me: () =>
-    api<AchievementDTO[]>("/api/me/achievements", {
+    api<AchievementDTO[]>("me/achievements", {
       method: "GET",
     }),
 };

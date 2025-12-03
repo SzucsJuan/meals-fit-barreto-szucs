@@ -34,4 +34,4 @@ ENV PORT=10000
 #Ejecutar migraciones (obligatorio)
 #Ejecutar seeding (si es necesario)
 #Levantar el servidor de desarrollo de Laravel
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"]
