@@ -1,12 +1,5 @@
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
-const API_PREFIX = "/api";
 
-
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
-  return m ? decodeURIComponent(m[2]) : null;
-}
 
 export async function ensureCsrf() {
   await fetch(`${BASE}/sanctum/csrf-cookie`, {
@@ -20,6 +13,13 @@ function isMutating(method?: string) {
   const m = (method || "GET").toUpperCase();
   return m === "POST" || m === "PUT" || m === "PATCH" || m === "DELETE";
 }
+
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
+  return m ? decodeURIComponent(m[2]) : null;
+}
+
 
 function parseError(status: number, body: any): string {
   if (body?.message && !body?.errors) return body.message;
@@ -52,15 +52,11 @@ export async function api<T>(
 
   const xsrf = getCookie("XSRF-TOKEN");
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+
   
-  // Normalizar el path: asegurar que el path siempre empiece con /, pero no sea doble //
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
-  const apiPath = normalizedPath.startsWith("/api")
-    ? normalizedPath
-    : `${API_PREFIX}${normalizedPath}`;
-
-  const res = await fetch(`${BASE}${apiPath}`, {
+  const res = await fetch(`${BASE}${normalizedPath}`, {
     ...init,
     credentials: "include",
     cache: "no-store",
@@ -68,12 +64,14 @@ export async function api<T>(
     body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
   });
 
+
   if (res.status === 204) return {} as T;
 
   let body: any = null;
   try {
     body = await res.json();
   } catch {
+    // respuesta sin JSON
   }
 
   if (!res.ok) {
@@ -89,21 +87,33 @@ export async function api<T>(
 export type UserDTO = { id: number; name: string; email: string };
 
 export const authApi = {
-  // CORRECCIÓN: Quitamos '/api' del path para evitar la duplicidad
+  // /api/register  -> api.php
   register: (payload: {
-    name: string; email: string; password: string; password_confirmation: string;
-  }) => api<{ user: UserDTO; token: string }>("register", {
-    method: "POST", json: payload,
-  }),
-
-  login: (payload: { email: string; password: string }) =>
-    api<{ message: string; user: UserDTO }>("login", {
-      method: "POST", json: payload,
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }) =>
+    api<{ user: UserDTO; token?: string }>("/api/register", {
+      method: "POST",
+      json: payload,
     }),
 
-  logout: () => api<{ message?: string }>("logout", { method: "POST" }),
+  // /login  -> web.php
+  login: (payload: { email: string; password: string }) =>
+    api<{ message?: string; user: UserDTO }>("/login", {
+      method: "POST",
+      json: payload,
+    }),
 
-  me: () => api<UserDTO>("user", { method: "GET" }),
+  // /logout  -> web.php
+  logout: () =>
+    api<{ message?: string }>("/logout", {
+      method: "POST",
+    }),
+
+  // /api/user  -> api.php (Sanctum stateful)
+  me: () => api<UserDTO>("/api/user", { method: "GET" }),
 };
 
 
@@ -149,16 +159,17 @@ export type RecipeDTO = {
 };
 
 export const apiRecipes = {
-  // CORRECCIÓN: Quitamos '/api' del path
-  create: (payload: any) => api<RecipeDTO>("recipes", {
-    method: "POST", json: payload,
-  }),
-  // CORRECCIÓN: Quitamos '/api' del path
-  show: (id: number | string) => api<RecipeDTO>(`recipes/${id}`),
-  // CORRECCIÓN: Quitamos '/api' del path
-  update: (id: number | string, payload: any) => api<RecipeDTO>(`recipes/${id}`, {
-    method: "PUT", json: payload,
-  }),
+  create: (payload: any) =>
+    api<RecipeDTO>("/api/recipes", {
+      method: "POST",
+      json: payload,
+    }),
+  show: (id: number | string) => api<RecipeDTO>(`/api/recipes/${id}`),
+  update: (id: number | string, payload: any) =>
+    api<RecipeDTO>(`/api/recipes/${id}`, {
+      method: "PUT",
+      json: payload,
+    }),
 };
 
 
@@ -176,17 +187,14 @@ export const apiRecipeImages = {
   upload: (id: number | string, file: File) => {
     const form = new FormData();
     form.append("image", file);
-    // CORRECCIÓN: Quitamos '/api' del path
-    return api<UploadRecipeImageResponse>(`recipes/${id}/image`, {
+    return api<UploadRecipeImageResponse>(`/api/recipes/${id}/image`, {
       method: "POST",
-      body: form, 
+      body: form,
     });
   },
-  // CORRECCIÓN: Quitamos '/api' del path
   remove: (id: number | string) =>
-    api<void>(`recipes/${id}/image`, { method: "DELETE" }),
+    api<void>(`/api/recipes/${id}/image`, { method: "DELETE" }),
 };
-
 
 //Llamado a achievements
 
@@ -199,10 +207,7 @@ export type AchievementDTO = {
   awarded_at: string | null;
 };
 
+
 export const apiAchievements = {
-  // CORRECCIÓN: Quitamos '/api' del path
-  me: () =>
-    api<AchievementDTO[]>("me/achievements", {
-      method: "GET",
-    }),
+  me: () => api<AchievementDTO[]>("/api/me/achievements", { method: "GET" }),
 };
