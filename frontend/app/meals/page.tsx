@@ -204,6 +204,11 @@ function IngredientSelector({
   );
 }
 
+// Base de API (relativa, Netlify la proxyea al backend)
+const rawApi = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
+const API_BASE = rawApi.replace(/\/+$/, ""); // "/api"
+
+// XSRF helper
 function xsrfHeaderValue() {
   const xsrf = getCookie("XSRF-TOKEN");
   return xsrf ? decodeURIComponent(xsrf) : "";
@@ -211,11 +216,11 @@ function xsrfHeaderValue() {
 
 async function apiUpdateMealDetail(
   detailId: number,
-  payload: { ingredient_id: number; grams: number },
-  apiBase = ""
+  payload: { ingredient_id: number; grams: number }
 ) {
-  await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-details/${detailId}`, {
+  await ensureCsrfCookie(API_BASE);
+
+  const res = await fetch(`${API_BASE}/meal-details/${detailId}`, {
     method: "PUT",
     credentials: "include",
     headers: {
@@ -226,38 +231,64 @@ async function apiUpdateMealDetail(
     cache: "no-store",
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error((await res.text().catch(() => "")) || `HTTP ${res.status}`);
+
+  if (!res.ok) {
+    throw new Error(
+      (await res.text().catch(() => "")) || `HTTP ${res.status}`
+    );
+  }
+
   return res.json();
 }
 
-async function apiDeleteMealDetail(detailId: number, apiBase = "") {
-  await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-details/${detailId}`, {
+async function apiDeleteMealDetail(detailId: number) {
+  await ensureCsrfCookie(API_BASE);
+
+  const res = await fetch(`${API_BASE}/meal-details/${detailId}`, {
     method: "DELETE",
     credentials: "include",
-    headers: { Accept: "application/json", "X-XSRF-TOKEN": xsrfHeaderValue() },
+    headers: {
+      Accept: "application/json",
+      "X-XSRF-TOKEN": xsrfHeaderValue(),
+    },
     cache: "no-store",
   });
-  if (!res.ok && res.status !== 204) throw new Error((await res.text().catch(() => "")) || `HTTP ${res.status}`);
+
+  if (!res.ok && res.status !== 204) {
+    throw new Error(
+      (await res.text().catch(() => "")) || `HTTP ${res.status}`
+    );
+  }
+
   return true;
 }
 
-async function apiDeleteMealLog(mealLogId: number, apiBase = "") {
-  await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-logs/${mealLogId}`, {
+async function apiDeleteMealLog(mealLogId: number) {
+  await ensureCsrfCookie(API_BASE);
+
+  const res = await fetch(`${API_BASE}/meal-logs/${mealLogId}`, {
     method: "DELETE",
     credentials: "include",
-    headers: { Accept: "application/json", "X-XSRF-TOKEN": xsrfHeaderValue() },
+    headers: {
+      Accept: "application/json",
+      "X-XSRF-TOKEN": xsrfHeaderValue(),
+    },
     cache: "no-store",
   });
-  if (!res.ok && res.status !== 204) throw new Error((await res.text().catch(() => "")) || `HTTP ${res.status}`);
+
+  if (!res.ok && res.status !== 204) {
+    throw new Error(
+      (await res.text().catch(() => "")) || `HTTP ${res.status}`
+    );
+  }
+
   return true;
 }
 
 // Fallback: borrar todos los detalles de un meal
-async function apiBulkDeleteDetails(detailIds: number[], apiBase = "") {
+async function apiBulkDeleteDetails(detailIds: number[]) {
   for (const id of detailIds) {
-    await apiDeleteMealDetail(id, apiBase);
+    await apiDeleteMealDetail(id);
   }
   return true;
 }
@@ -289,15 +320,12 @@ export default function MealsPage() {
         setLoadingGoals(true);
         setGoalsError(null);
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals/latest`,
-          {
-            method: "GET",
-            credentials: "include",
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }
-        );
+        const res = await fetch(`${API_BASE}/me/goals/latest`, {
+          method: "GET",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        });
 
         if (!res.ok) throw new Error("Failed to load goals");
 

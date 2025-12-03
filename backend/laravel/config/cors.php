@@ -17,11 +17,10 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'user'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['http://localhost:3000','http://127.0.0.1:3000','http://localhost:5173','http://localhost:8000', 'https://mealsandfit.com','https://f0e890341e72.ngrok-free.app'],
+    'allowed_origins' => ['http://localhost:3000','http://127.0.0.1:3000','http://localhost:5173','http://localhost:8000', 'https://mealsandfit.com'],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
-    'allowed_credentials' => true,
     'supports_credentials' => true,   // ← CLAVE
 
 ];
