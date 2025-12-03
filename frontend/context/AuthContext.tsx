@@ -12,10 +12,18 @@ type AuthCtx = {
 };
 
 const AuthContext = createContext<AuthCtx | null>(null);
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+// Asumimos que NEXT_PUBLIC_API_BASE_URL es la URL completa de la API, ej: "http://localhost:8000/api"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+// Derivamos la URL Raíz para llamadas que no van al grupo /api (como sanctum/csrf-cookie)
+const ROOT_URL = API_BASE_URL.endsWith("/api")
+  ? API_BASE_URL.slice(0, -4) // Elimina '/api'
+  : API_BASE_URL;
 
 async function ensureCsrfCookie() {
-  await fetch(`${API}/sanctum/csrf-cookie`, {
+  // CRITICAL FIX: Llama a sanctum/csrf-cookie desde la URL raíz, no desde la URL /api.
+  await fetch(`${ROOT_URL}/sanctum/csrf-cookie`, {
     credentials: "include",
     cache: "no-store",
     headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -23,7 +31,8 @@ async function ensureCsrfCookie() {
 }
 
 async function fetchUser() {
-  const res = await fetch(`${API}/api/user`, {
+  // CORRECCIÓN: Quitamos el redundante '/api' si API_BASE_URL ya lo incluye
+  const res = await fetch(`${API_BASE_URL}/user`, {
     credentials: "include",
     cache: "no-store",
     headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -45,6 +54,8 @@ const refresh = async (): Promise<User | null> => {
     setStatus(u ? "authed" : "guest");
     return u;
   } catch (err) {
+    // Es normal que fetchUser falle si el usuario no está autenticado,
+    // pero el error 500 debe ser manejado en la configuración del servidor.
     console.error("Error en refresh()", err);
     setUser(null);
     setStatus("guest");
@@ -79,4 +90,4 @@ export const useAuth = () => {
 };
 
 
-export default useAuth; 
+export default useAuth;
