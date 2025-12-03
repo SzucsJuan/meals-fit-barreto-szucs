@@ -14,21 +14,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RequireAuth from "@/components/RequireAuth";
 import Navigation from "@/components/navigation";
+import { api } from "@/lib/api";
 
 interface SelectedFood {
   id: number;
-  name: string; 
-  calories: number; 
+  name: string;
+  calories: number;
   protein: number;
   carbs: number;
   fats: number;
   serving_size: number;
   serving_unit: "g" | "ml" | "unit";
-  quantity: number; 
+  quantity: number;
 }
-
-const API =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
 
 export default function AddMealPage() {
   const router = useRouter();
@@ -63,15 +61,24 @@ export default function AddMealPage() {
     };
     const existing = selectedFoods.find((f) => f.id === food.id);
     if (existing) {
-      setSelectedFoods(selectedFoods.map((f) => (f.id === food.id ? { ...f, quantity: f.quantity + 1 } : f)));
+      setSelectedFoods(
+        selectedFoods.map((f) =>
+          f.id === food.id ? { ...f, quantity: f.quantity + 1 } : f
+        )
+      );
     } else {
       setSelectedFoods([...selectedFoods, food]);
     }
   };
 
   const updateQuantity = (id: number, quantity: number) => {
-    if (quantity <= 0) setSelectedFoods(selectedFoods.filter((f) => f.id !== id));
-    else setSelectedFoods(selectedFoods.map((f) => (f.id === id ? { ...f, quantity } : f)));
+    if (quantity <= 0) {
+      setSelectedFoods(selectedFoods.filter((f) => f.id !== id));
+    } else {
+      setSelectedFoods(
+        selectedFoods.map((f) => (f.id === id ? { ...f, quantity } : f))
+      );
+    }
   };
 
   const totals = useMemo(() => {
@@ -86,7 +93,11 @@ export default function AddMealPage() {
     );
   }, [selectedFoods]);
 
-  type RecipeIngredientPivot = { quantity: number; unit: "g" | "ml" | "unit"; notes?: string | null };
+  type RecipeIngredientPivot = {
+    quantity: number;
+    unit: "g" | "ml" | "unit";
+    notes?: string | null;
+  };
   type RecipeIngredient = { id: number; name: string; pivot: RecipeIngredientPivot };
   type RecipeForImport = {
     id: number;
@@ -94,59 +105,7 @@ export default function AddMealPage() {
     ingredients: RecipeIngredient[];
   };
 
-  type IngredientShow = {
-    id: number;
-    name: string;
-    serving_size: number;
-    serving_unit: "g" | "ml" | "unit";
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    is_verified: boolean;
-  };
-
-  async function fetchRecipe(id: number): Promise<RecipeForImport> {
-    const res = await fetch(`${API}/api/recipes/${recipeId}`, {
-      headers: { Accept: "application/json" },
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
-    }
-    return (await res.json()) as RecipeForImport;
-  }
-
-  async function fetchIngredient(id: number): Promise<IngredientShow> {
-    const res = await fetch(`${API}/api/ingredients/${id}`, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      throw new Error(`Ingredient ${id}: HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
-    }
-
-    const json = await res.json();
-    const raw = (json?.data ?? json) as Partial<IngredientShow>;
-
-    return {
-      id: Number(raw.id),
-      name: String(raw.name ?? ""),
-      serving_size: Number(raw.serving_size ?? 0),
-      serving_unit: (raw.serving_unit ?? "g") as "g" | "ml" | "unit",
-      calories: Number(raw.calories ?? 0),
-      protein: Number(raw.protein ?? 0),
-      carbs: Number(raw.carbs ?? 0),
-      fat: Number(raw.fat ?? 0),
-      is_verified: Boolean(raw.is_verified),
-    };
-  }
-
+  // Importar ingredientes desde una receta
   useEffect(() => {
     if (!recipeId) return;
 
@@ -157,16 +116,8 @@ export default function AddMealPage() {
         setImportError(null);
         setImporting(true);
 
-        const res = await fetch(`${API}/api/recipes/${recipeId}`, {
-          headers: { Accept: "application/json" },
-          credentials: "include",
-          cache: "no-store",
-        });
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const data = await res.json();
-        const recipe = data.data ?? data;
+        const data = await api<any>(`/api/recipes/${recipeId}`);
+        const recipe: RecipeForImport = (data?.data ?? data) as RecipeForImport;
 
         if (!recipe?.ingredients?.length) return;
 
@@ -267,11 +218,14 @@ export default function AddMealPage() {
                   )}
                   {importedFrom && !importing && (
                     <span className="block text-xs text-muted-foreground mt-1">
-                      Ingredients imported from <span className="font-medium">“{importedFrom}”</span>.
+                      Ingredients imported from{" "}
+                      <span className="font-medium">“{importedFrom}”</span>.
                     </span>
                   )}
                   {importError && (
-                    <span className="block text-xs text-red-600 mt-1">{importError}</span>
+                    <span className="block text-xs text-red-600 mt-1">
+                      {importError}
+                    </span>
                   )}
                 </div>
               </div>
@@ -345,7 +299,8 @@ export default function AddMealPage() {
                               </Badge>
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {ing.calories} cal • {ing.protein}g protein • {ing.carbs}g carbs • {ing.fat}g fat
+                              {ing.calories} cal • {ing.protein}g protein • {ing.carbs}g carbs
+                              • {ing.fat}g fat
                             </div>
                           </div>
                           <Button onClick={() => addFood(ing)} size="sm" variant="outline">
@@ -367,7 +322,8 @@ export default function AddMealPage() {
                 <CardHeader className="pt-4">
                   <CardTitle>Selected Foods</CardTitle>
                   <CardDescription>
-                    {selectedFoods.length} item{selectedFoods.length !== 1 ? "s" : ""} selected
+                    {selectedFoods.length} item
+                    {selectedFoods.length !== 1 ? "s" : ""} selected
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -392,11 +348,25 @@ export default function AddMealPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button onClick={() => updateQuantity(food.id, food.quantity - 1)} size="sm" variant="outline">
+                            <Button
+                              onClick={() =>
+                                updateQuantity(food.id, food.quantity - 1)
+                              }
+                              size="sm"
+                              variant="outline"
+                            >
                               <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="w-8 text-center text-sm font-medium">{food.quantity}</span>
-                            <Button onClick={() => updateQuantity(food.id, food.quantity + 1)} size="sm" variant="outline">
+                            <span className="w-8 text-center text-sm font-medium">
+                              {food.quantity}
+                            </span>
+                            <Button
+                              onClick={() =>
+                                updateQuantity(food.id, food.quantity + 1)
+                              }
+                              size="sm"
+                              variant="outline"
+                            >
                               <Plus className="h-3 w-3" />
                             </Button>
                           </div>
@@ -415,19 +385,27 @@ export default function AddMealPage() {
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-primary/5 rounded-lg">
-                      <div className="text-2xl font-bold text-primary">{Math.round(totals.calories)}</div>
+                      <div className="text-2xl font-bold text-primary">
+                        {Math.round(totals.calories)}
+                      </div>
                       <div className="text-sm text-muted-foreground">Calories</div>
                     </div>
                     <div className="text-center p-4 bg-accent/5 rounded-lg">
-                      <div className="text-2xl font-bold text-accent">{Math.round(totals.protein)}g</div>
+                      <div className="text-2xl font-bold text-accent">
+                        {Math.round(totals.protein)}g
+                      </div>
                       <div className="text-sm text-muted-foreground">Protein</div>
                     </div>
                     <div className="text-center p-4 bg-chart-3/5 rounded-lg">
-                      <div className="text-2xl font-bold text-chart-3">{Math.round(totals.carbs)}g</div>
+                      <div className="text-2xl font-bold text-chart-3">
+                        {Math.round(totals.carbs)}g
+                      </div>
                       <div className="text-sm text-muted-foreground">Carbs</div>
                     </div>
                     <div className="text-center p-4 bg-chart-5/5 rounded-lg">
-                      <div className="text-2xl font-bold text-chart-5">{Math.round(totals.fats)}g</div>
+                      <div className="text-2xl font-bold text-chart-5">
+                        {Math.round(totals.fats)}g
+                      </div>
                       <div className="text-sm text-muted-foreground">Fats</div>
                     </div>
                   </div>

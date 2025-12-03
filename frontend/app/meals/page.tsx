@@ -25,6 +25,7 @@ import { useTodayMealLog } from "@/lib/useTodayMealLog";
 import { useWeeklyMealLog } from "@/lib/useWeeklyMealLog";
 import RequireAuth from "@/components/RequireAuth";
 import Navigation from "@/components/navigation";
+import { api } from "@/lib/api";
 
 type IngredientOpt = { id: number; name: string };
 
@@ -68,20 +69,6 @@ const MEAL_MACRO_COLORS = {
   fats: "#FFD54F",    // mismo amarillo que CATEGORY_COLORS[0]
 };
 
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
-  return match ? match[2] : null;
-}
-
-async function ensureCsrfCookie(apiBase = "") {
-  await fetch(`${apiBase}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-}
-
 function IngredientSelector({
   valueId,
   onChange,
@@ -97,49 +84,71 @@ function IngredientSelector({
   const [options, setOptions] = useState<IngredientOpt[]>([]);
   const [selectedLabel, setSelectedLabel] = useState(defaultLabel);
 
+  // Búsqueda por texto
   useEffect(() => {
     let alive = true;
+    const ctrl = new AbortController();
+
     const t = setTimeout(async () => {
-      setLoading(true);
       try {
-        const url = `/api/ingredients?search=${encodeURIComponent(query)}&limit=20`;
-        const res = await fetch(url, {
-          credentials: "include",
-          headers: { Accept: "application/json" },
-          cache: "no-store",
+        setLoading(true);
+
+        const params = new URLSearchParams();
+        if (query) params.set("q", query);
+        params.set("per_page", "20");
+
+        const data = await api<any>(`/api/ingredients?${params.toString()}`, {
+          signal: ctrl.signal,
         });
-        const data = await res.json();
-        if (alive) setOptions(Array.isArray(data) ? data : data?.data ?? []);
+
+        if (!alive) return;
+        const list = Array.isArray(data) ? data : data?.data ?? [];
+        setOptions(list);
       } catch {
         if (alive) setOptions([]);
       } finally {
         if (alive) setLoading(false);
       }
     }, 250);
+
     return () => {
       alive = false;
       clearTimeout(t);
+      ctrl.abort();
     };
   }, [query]);
 
+  // Carga inicial cuando se abre por primera vez
   useEffect(() => {
     if (!open || options.length) return;
+
+    let alive = true;
+    const ctrl = new AbortController();
+
     (async () => {
-      setLoading(true);
       try {
-        const res = await fetch(`/api/ingredients?limit=20`, {
-          credentials: "include",
-          headers: { Accept: "application/json" },
-          cache: "no-store",
+        setLoading(true);
+        const params = new URLSearchParams();
+        params.set("per_page", "20");
+
+        const data = await api<any>(`/api/ingredients?${params.toString()}`, {
+          signal: ctrl.signal,
         });
-        const data = await res.json();
-        setOptions(Array.isArray(data) ? data : data?.data ?? []);
+
+        if (!alive) return;
+        const list = Array.isArray(data) ? data : data?.data ?? [];
+        setOptions(list);
       } catch {
-        setOptions([]);
+        if (alive) setOptions([]);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     })();
+
+    return () => {
+      alive = false;
+      ctrl.abort();
+    };
   }, [open, options.length]);
 
   useEffect(() => {
@@ -167,7 +176,11 @@ function IngredientSelector({
               placeholder="Buscar ingrediente…"
               className="flex-1 bg-transparent text-sm outline-none"
             />
-            <button className="p-1 rounded hover:bg-muted" onClick={() => setOpen(false)} aria-label="Cerrar">
+            <button
+              className="p-1 rounded hover:bg-muted"
+              onClick={() => setOpen(false)}
+              aria-label="Cerrar"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -204,60 +217,34 @@ function IngredientSelector({
   );
 }
 
-function xsrfHeaderValue() {
-  const xsrf = getCookie("XSRF-TOKEN");
-  return xsrf ? decodeURIComponent(xsrf) : "";
-}
+// === APIs con token (sin CSRF) ======================
 
-async function apiUpdateMealDetail(
-  detailId: number,
-  payload: { ingredient_id: number; grams: number },
-  apiBase = ""
-) {
-  await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-details/${detailId}`, {
+async function apiUpdateMealDetail(detailId: number, payload: { ingredient_id: number; grams: number }) {
+  const json = await api<any>(`/api/meal-details/${detailId}`, {
     method: "PUT",
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "X-XSRF-TOKEN": xsrfHeaderValue(),
-    },
-    cache: "no-store",
-    body: JSON.stringify(payload),
+    json: payload,
   });
-  if (!res.ok) throw new Error((await res.text().catch(() => "")) || `HTTP ${res.status}`);
-  return res.json();
+  return json;
 }
 
-async function apiDeleteMealDetail(detailId: number, apiBase = "") {
-  await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-details/${detailId}`, {
+async function apiDeleteMealDetail(detailId: number) {
+  await api<void>(`/api/meal-details/${detailId}`, {
     method: "DELETE",
-    credentials: "include",
-    headers: { Accept: "application/json", "X-XSRF-TOKEN": xsrfHeaderValue() },
-    cache: "no-store",
   });
-  if (!res.ok && res.status !== 204) throw new Error((await res.text().catch(() => "")) || `HTTP ${res.status}`);
   return true;
 }
 
-async function apiDeleteMealLog(mealLogId: number, apiBase = "") {
-  await ensureCsrfCookie(apiBase);
-  const res = await fetch(`${apiBase}/api/meal-logs/${mealLogId}`, {
+async function apiDeleteMealLog(mealLogId: number) {
+  await api<void>(`/api/meal-logs/${mealLogId}`, {
     method: "DELETE",
-    credentials: "include",
-    headers: { Accept: "application/json", "X-XSRF-TOKEN": xsrfHeaderValue() },
-    cache: "no-store",
   });
-  if (!res.ok && res.status !== 204) throw new Error((await res.text().catch(() => "")) || `HTTP ${res.status}`);
   return true;
 }
 
 // Fallback: borrar todos los detalles de un meal
-async function apiBulkDeleteDetails(detailIds: number[], apiBase = "") {
+async function apiBulkDeleteDetails(detailIds: number[]) {
   for (const id of detailIds) {
-    await apiDeleteMealDetail(id, apiBase);
+    await apiDeleteMealDetail(id);
   }
   return true;
 }
@@ -289,19 +276,7 @@ export default function MealsPage() {
         setLoadingGoals(true);
         setGoalsError(null);
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals/latest`,
-          {
-            method: "GET",
-            credentials: "include",
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }
-        );
-
-        if (!res.ok) throw new Error("Failed to load goals");
-
-        const data: any = await res.json();
+        const data = await api<any>("/api/me/goals/latest");
         const plan: PlanDTO | null = (data?.plan as PlanDTO) ?? null;
 
         if (plan) {
@@ -511,6 +486,7 @@ export default function MealsPage() {
 
           {selectedView === "today" ? (
             <>
+              {/* Cards de macros */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card>
                   <CardHeader className="pb-2 pt-4">
@@ -557,6 +533,7 @@ export default function MealsPage() {
                 </Card>
               </div>
 
+              {/* Macro pie + calorie progress */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <Card>
                   <CardHeader className="pt-4">
@@ -630,6 +607,7 @@ export default function MealsPage() {
                 </Card>
               </div>
 
+              {/* Meals del día */}
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-foreground">Today's Meals</h2>
@@ -811,6 +789,7 @@ export default function MealsPage() {
         </div>
       </div>
 
+      {/* Modal edición detalle */}
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeEdit} />
@@ -871,6 +850,7 @@ export default function MealsPage() {
         </div>
       )}
 
+      {/* Modal delete detalle */}
       {deleteOpen && deletingDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeDelete} />
@@ -916,6 +896,7 @@ export default function MealsPage() {
         </div>
       )}
 
+      {/* Modal delete meal completo */}
       {deleteLogOpen && deletingMeal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeDeleteLog} />

@@ -2,7 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use App\Http\Controllers\{
     FavoriteController,
     AchievementController,
@@ -18,64 +17,80 @@ use App\Http\Controllers\{
     AdminRecipeController
 };
 
-// ===================== RUTAS API MOBILE =====================
+// ====================================================
+//  AUTH API (tokens) – usado por Next y por mobile
+// ====================================================
+
+// Login que devuelve token (no usa cookies de sesión)
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/user', fn(Request $request) => $request->user());
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
-});
-
-
-// --------- Auth de SPA (cookie de sesión) -----------
-Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no-store'])
-    ->get('/user', fn(Request $request) => $request->user());
-Route::post('/auth/logout', [AuthController::class, 'logout']);
-
-
-Route::post('register', [AuthController::class, 'register']);
-
+// Para tipar el parámetro {recipe}
 Route::pattern('recipe', '[0-9]+');
 
+// ====================================================
+//  Rutas PROTEGIDAS por token Sanctum
+// ====================================================
 
-// ===================== RUTAS PROTEGIDAS =====================
-Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'no-store'])->group(function () {
+Route::middleware(['auth:sanctum', 'no-store'])->group(function () {
 
-    Route::apiResource('recipes', RecipeController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    // Usuario autenticado (para /me, etc.)
+    Route::get('/user', fn (Request $request) => $request->user());
+
+    // Logout de token (revoca el token actual)
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // ---------------- RECIPES ----------------
+    Route::apiResource('recipes', RecipeController::class)
+        ->only(['index', 'show', 'store', 'update', 'destroy']);
 
     Route::post('/recipes/{recipe}/image', [RecipeImageController::class, 'store'])
         ->whereNumber('recipe');
     Route::delete('/recipes/{recipe}/image', [RecipeImageController::class, 'destroy'])
         ->whereNumber('recipe');
 
-    Route::apiResource('ingredients', IngredientController::class)->only(['index', 'show', 'store']);
+    // ---------------- INGREDIENTS ----------------
+    Route::apiResource('ingredients', IngredientController::class)
+        ->only(['index', 'show', 'store']);
 
+    // ---------------- GOALS (plan / metas) ----------------
     Route::post('/me/goals', [GoalsController::class, 'store']);
     Route::get('/me/goals/latest', [GoalsController::class, 'latest']);
 
+    // ---------------- FAVORITES ----------------
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/recipes/{recipe}/favorite', [FavoriteController::class, 'store'])
         ->whereNumber('recipe');
     Route::delete('/recipes/{recipe}/favorite', [FavoriteController::class, 'destroy'])
         ->whereNumber('recipe');
 
-    Route::apiResource('meals', MealLogController::class)->only(['index', 'show', 'store']);
-    Route::apiResource('meal-details', MealDetailController::class)->only(['destroy', 'update']);
-    Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])->name('meal-logs.weekly');
+    // ---------------- MEALS & MEAL DETAILS ----------------
+    Route::apiResource('meals', MealLogController::class)
+        ->only(['index', 'show', 'store']);
 
+    Route::apiResource('meal-details', MealDetailController::class)
+        ->only(['update', 'destroy']);
+
+    Route::get('meal-logs/weekly', [MealLogController::class, 'weekly'])
+        ->name('meal-logs.weekly');
+
+    // ---------------- ACHIEVEMENTS ----------------
     Route::get('/me/achievements', [AchievementController::class, 'me']);
-});
 
-// ===================== RUTAS ADMIN =====================
-Route::middleware([EnsureFrontendRequestsAreStateful::class, 'auth:sanctum', 'role:admin', 'no-store'])->group(function () {
-    Route::get('/admin/stats', [AdminStatsController::class, 'index']);
+    // ---------------- ADMIN ----------------
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
 
-    Route::get('/admin/users', [AdminUserController::class, 'index']);
-    Route::post('/admin/users', [AdminUserController::class, 'store']);
-    Route::patch('/admin/users/{user}', [AdminUserController::class, 'update']);
-    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
+        Route::get('/stats', [AdminStatsController::class, 'index']);
 
-    Route::get('/admin/recipes', [AdminRecipeController::class, 'index']);
-    Route::patch('/admin/recipes/{recipe}', [AdminRecipeController::class, 'update']);
-    Route::delete('/admin/recipes/{recipe}', [AdminRecipeController::class, 'destroy']);
+        // Users
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::post('/users', [AdminUserController::class, 'store']);
+        Route::patch('/users/{user}', [AdminUserController::class, 'update']);
+        Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
+
+        // Recipes
+        Route::get('/recipes', [AdminRecipeController::class, 'index']);
+        Route::patch('/recipes/{recipe}', [AdminRecipeController::class, 'update']);
+        Route::delete('/recipes/{recipe}', [AdminRecipeController::class, 'destroy']);
+    });
 });

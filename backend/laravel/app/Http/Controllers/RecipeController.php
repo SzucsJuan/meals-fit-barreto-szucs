@@ -85,8 +85,7 @@ class RecipeController extends Controller
         $userId = optional($user)->id;
 
         $isOwner = $recipe->user_id === $userId;
-
-        $isAdmin = $user->role === 'admin'; 
+        $isAdmin = $user && ($user->role === 'admin');
 
         abort_unless(
             $recipe->visibility === 'public' || $isOwner || $isAdmin,
@@ -112,7 +111,7 @@ class RecipeController extends Controller
     {
         $achievementService = new AchievementService();
         $user = $request->user();
-        // Por seguridad de ignora el user_id en el request
+        // Por seguridad se ignora el user_id en el request
         $data = $request->safe()->except(['user_id']);
         
 

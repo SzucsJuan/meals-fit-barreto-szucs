@@ -15,7 +15,7 @@ const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setUser } = useAuth(); // 👈 usamos setUser del contexto
+  const { setUser } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,16 +39,13 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      // 👇 Login via token
       const { token, user } = await authApi.login({ email, password });
 
       // Guardar token en memoria + localStorage
       setAuthToken(token);
 
-      // Actualizar el contexto con el usuario autenticado
       setUser(user);
 
-      // Notificar a otras pestañas (si las hay)
       if (typeof window !== "undefined") {
         window.localStorage.setItem("mf-auth-event", Date.now().toString());
       }

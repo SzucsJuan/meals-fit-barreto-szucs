@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { api } from "@/lib/api";
 
 type WeeklyItem = {
   date: string;
@@ -10,12 +11,6 @@ type WeeklyItem = {
   carbs: number;
   fats: number;
 };
-
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
-  return m ? decodeURIComponent(m[2]) : null;
-}
 
 const DEFAULT_TZ =
   (typeof Intl !== "undefined" &&
@@ -27,41 +22,30 @@ export function useWeeklyMealLog(tz: string = DEFAULT_TZ) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
-
   const fetchWeekly = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const url = new URL(`${apiBase}/api/meal-logs/weekly`);
-      url.searchParams.set("tz", tz);
+      const params = new URLSearchParams();
+      params.set("tz", tz);
 
-      const xsrf = getCookie("XSRF-TOKEN");
+      const json = await api<WeeklyItem[] | null>(
+        `/api/meal-logs/weekly?${params.toString()}`
+      );
 
-      const res = await fetch(url.toString(), {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
-        },
-        cache: "no-store",
-      });
-
-      if (res.status === 204) {
-        setData([]);
-        return;
-      }
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-
-      const json: WeeklyItem[] = await res.json();
       setData(Array.isArray(json) ? json : []);
     } catch (e: any) {
-      setError(e?.message ?? "Unknown error");
+      const msg = e?.message ?? "Unknown error";
+
+      // Si el backend eventualmente devuelve 204/404, api() puede tirar error;
+      // en ese caso tratamos como "sin datos" si es 404.
+      if (msg.includes("404") || msg.includes("204")) {
+        setData([]);
+        setError(null);
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -69,6 +53,7 @@ export function useWeeklyMealLog(tz: string = DEFAULT_TZ) {
 
   useEffect(() => {
     fetchWeekly();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tz]);
 
   const barData = useMemo(
