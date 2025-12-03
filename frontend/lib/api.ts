@@ -1,28 +1,36 @@
+// lib/api.ts
+
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
+// Clave para guardar el token en localStorage
+const TOKEN_KEY = "mf_token";
 
-export async function ensureCsrf() {
-  await fetch(`${BASE}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
+let accessToken: string | null = null;
+
+// Cargar token inicial solo en cliente (browser)
+if (typeof window !== "undefined") {
+  accessToken = window.localStorage.getItem(TOKEN_KEY);
 }
 
-function isMutating(method?: string) {
-  const m = (method || "GET").toUpperCase();
-  return m === "POST" || m === "PUT" || m === "PATCH" || m === "DELETE";
-}
+/**
+ * Setea / limpia el token global y en localStorage.
+ * Usalo desde AuthContext y desde el login/logout.
+ */
+export function setAuthToken(token: string | null) {
+  accessToken = token;
 
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
-  return m ? decodeURIComponent(m[2]) : null;
-}
+  if (typeof window === "undefined") return;
 
+  if (token) {
+    window.localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    window.localStorage.removeItem(TOKEN_KEY);
+  }
+}
 
 function parseError(status: number, body: any): string {
   if (body?.message && !body?.errors) return body.message;
+
   if (body?.errors && typeof body.errors === "object") {
     const all = Object.entries(body.errors)
       .flatMap(([field, msgs]) =>
@@ -31,18 +39,18 @@ function parseError(status: number, body: any): string {
       .join(" | ");
     return all || `HTTP ${status}`;
   }
+
   return `HTTP ${status}`;
 }
 
-/** Cliente base con CSRF + cookies de sesión */
+/**
+ * Cliente base: siempre envía JSON, usa Authorization: Bearer <token> si existe,
+ * y NO usa cookies (credentials: "omit").
+ */
 export async function api<T>(
   path: string,
   init: RequestInit & { json?: any } = {}
 ): Promise<T> {
-  if (isMutating(init.method)) {
-    await ensureCsrf();
-  }
-
   const headers = new Headers(init.headers || {});
   headers.set("Accept", "application/json");
 
@@ -50,20 +58,20 @@ export async function api<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const xsrf = getCookie("XSRF-TOKEN");
-  if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+  // Si hay token, lo mandamos en Authorization
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
 
-  
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
   const res = await fetch(`${BASE}${normalizedPath}`, {
     ...init,
-    credentials: "include",
-    cache: "no-store",
     headers,
+    cache: "no-store",
+    credentials: "omit", // ya no usamos cookies para auth
     body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
   });
-
 
   if (res.status === 204) return {} as T;
 
@@ -71,7 +79,7 @@ export async function api<T>(
   try {
     body = await res.json();
   } catch {
-    // respuesta sin JSON
+    // Respuesta sin JSON
   }
 
   if (!res.ok) {
@@ -81,13 +89,48 @@ export async function api<T>(
   return body as T;
 }
 
+/* =========================
+   Tipos base
+   ========================= */
 
-// LLamada a Usuarios
+export type UserDTO = {
+  id: number;
+  name: string;
+  email: string;
+  role?: string;
+};
 
-export type UserDTO = { id: number; name: string; email: string };
+/* =========================
+   Auth API (token-based)
+   ========================= */
+
+/**
+ * Notas rutas:
+ * - /api/auth/login -> AuthController@login (mobile/web con tokens)
+ * - /api/user       -> usuario actual (auth:sanctum con token personal)
+ * - /api/auth/logout-> AuthController@logout
+ * - /api/register   -> registro SPA (puede o no devolver token)
+ */
 
 export const authApi = {
-  // /api/register  -> api.php
+  // LOGIN via token (web + mobile)
+  login: (payload: { email: string; password: string }) =>
+    api<{ token: string; user: UserDTO }>("/api/auth/login", {
+      method: "POST",
+      json: payload,
+    }),
+
+  // Usuario actual a partir del token
+  me: () => api<UserDTO>("/api/user", { method: "GET" }),
+
+  // LOGOUT con token
+  logout: () =>
+    api<{ message?: string }>("/api/auth/logout", {
+      method: "POST",
+    }),
+
+  // REGISTER: tu AuthController::register hoy no devuelve token,
+  // así que el tipo refleja que "token" es opcional.
   register: (payload: {
     name: string;
     email: string;
@@ -98,26 +141,11 @@ export const authApi = {
       method: "POST",
       json: payload,
     }),
-
-  // /login  -> web.php
-  login: (payload: { email: string; password: string }) =>
-    api<{ message?: string; user: UserDTO }>("/login", {
-      method: "POST",
-      json: payload,
-    }),
-
-  // /logout  -> web.php
-  logout: () =>
-    api<{ message?: string }>("/logout", {
-      method: "POST",
-    }),
-
-  // /api/user  -> api.php (Sanctum stateful)
-  me: () => api<UserDTO>("/api/user", { method: "GET" }),
 };
 
-
-// LLamada a Recetas
+/* =========================
+   Recipes API
+   ========================= */
 
 export type RecipeDTO = {
   id: number;
@@ -158,22 +186,52 @@ export type RecipeDTO = {
   }>;
 };
 
+export type Paginated<T> = {
+  data: T[];
+  current_page: number;
+  per_page: number;
+  total: number;
+};
+
 export const apiRecipes = {
+  index: (params?: Record<string, string | number | boolean | undefined>) => {
+    const qs = params
+      ? "?" +
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+          .join("&")
+      : "";
+
+    return api<Paginated<RecipeDTO>>(`/api/recipes${qs}`, {
+      method: "GET",
+    });
+  },
+
   create: (payload: any) =>
     api<RecipeDTO>("/api/recipes", {
       method: "POST",
       json: payload,
     }),
-  show: (id: number | string) => api<RecipeDTO>(`/api/recipes/${id}`),
+
+  show: (id: number | string) =>
+    api<RecipeDTO>(`/api/recipes/${id}`, { method: "GET" }),
+
   update: (id: number | string, payload: any) =>
     api<RecipeDTO>(`/api/recipes/${id}`, {
       method: "PUT",
       json: payload,
     }),
+
+  destroy: (id: number | string) =>
+    api<void>(`/api/recipes/${id}`, {
+      method: "DELETE",
+    }),
 };
 
-
-// Llamado a imagenes
+/* =========================
+   Recipe Images API
+   ========================= */
 
 export type UploadRecipeImageResponse = {
   image_url: string;
@@ -187,16 +245,22 @@ export const apiRecipeImages = {
   upload: (id: number | string, file: File) => {
     const form = new FormData();
     form.append("image", file);
+
     return api<UploadRecipeImageResponse>(`/api/recipes/${id}/image`, {
       method: "POST",
       body: form,
     });
   },
+
   remove: (id: number | string) =>
-    api<void>(`/api/recipes/${id}/image`, { method: "DELETE" }),
+    api<void>(`/api/recipes/${id}/image`, {
+      method: "DELETE",
+    }),
 };
 
-//Llamado a achievements
+/* =========================
+   Achievements API
+   ========================= */
 
 export type AchievementDTO = {
   id: number;
@@ -207,7 +271,9 @@ export type AchievementDTO = {
   awarded_at: string | null;
 };
 
-
 export const apiAchievements = {
-  me: () => api<AchievementDTO[]>("/api/me/achievements", { method: "GET" }),
+  me: () =>
+    api<AchievementDTO[]>("/api/me/achievements", {
+      method: "GET",
+    }),
 };

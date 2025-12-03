@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EggFried } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { setAuthToken } from "@/lib/api";
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -39,15 +40,18 @@ const onSubmit = async (e: React.FormEvent) => {
   try {
     setLoading(true);
 
-    await authApi.login({ email, password });
+    // 👇 ahora recibimos token + user
+    const { token, user } = await authApi.login({ email, password });
 
-    const u = await refresh();
+    setAuthToken(token); // guardamos token global + localStorage
+
+    const u = await refresh(); // recarga user desde /api/user
 
     if (typeof window !== "undefined") {
       window.localStorage.setItem("mf-auth-event", Date.now().toString());
     }
 
-    const role = u?.role;
+    const role = u?.role ?? user.role;
 
     if (role === "admin") {
       router.push("/admin");

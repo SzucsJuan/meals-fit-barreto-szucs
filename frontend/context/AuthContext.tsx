@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { authApi } from "@/lib/api";
+import { setAuthToken } from "@/lib/api"; 
 
 type User = any | null;
 type Status = "loading" | "authed" | "guest";
@@ -11,6 +12,7 @@ type AuthCtx = {
   status: Status;
   setUser: (u: User) => void;
   refresh: () => Promise<User | null>;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthCtx | null>(null);
@@ -18,7 +20,6 @@ const AuthContext = createContext<AuthCtx | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [status, setStatus] = useState<Status>("loading");
-
   const booted = useRef(false);
 
   const refresh = async (): Promise<User | null> => {
@@ -34,6 +35,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignoramos errores de logout
+    }
+    setAuthToken(null);
+    setUser(null);
+    setStatus("guest");
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("mf-auth-event", Date.now().toString());
+    }
+  };
+
   useEffect(() => {
     if (booted.current) return;
     booted.current = true;
@@ -45,13 +60,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refresh();
       }
     };
-
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, status, setUser, refresh }}>
+    <AuthContext.Provider value={{ user, status, setUser, refresh, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -59,8 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within <AuthProvider>");
-  }
+  if (!ctx) throw new Error("useAuth must be used within <AuthProvider>");
   return ctx;
 };
