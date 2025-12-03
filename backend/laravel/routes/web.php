@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\Http\Controllers\CsrfCookieController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +21,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/sanctum/csrf-cookie', [CsrfCookieController::class, 'show']);
 
 // Login/Logout
 Route::post('/login', [AuthController::class, 'login']);     // SIN auth
