@@ -8,15 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { EggFried } from "lucide-react";
-import { authApi } from "@/lib/api";
+import { authApi, setAuthToken } from "@/lib/api";   // 👈 OJO: importar setAuthToken
 import { useAuth } from "@/context/AuthContext";
-import { setAuthToken } from "@/lib/api";
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export default function LoginPage() {
   const router = useRouter();
-  const { refresh } = useAuth();
+  const { setUser } = useAuth(); // 👈 usamos setUser del contexto
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,39 +31,43 @@ export default function LoginPage() {
     return Object.keys(errs).length === 0;
   };
 
-const onSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setFormError(null);
-  if (!validate()) return;
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    if (!validate()) return;
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // 👇 ahora recibimos token + user
-    const { token, user } = await authApi.login({ email, password });
+      // 👇 Login via token
+      const { token, user } = await authApi.login({ email, password });
 
-    setAuthToken(token); // guardamos token global + localStorage
+      // Guardar token en memoria + localStorage
+      setAuthToken(token);
 
-    const u = await refresh(); // recarga user desde /api/user
+      // Actualizar el contexto con el usuario autenticado
+      setUser(user);
 
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("mf-auth-event", Date.now().toString());
+      // Notificar a otras pestañas (si las hay)
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("mf-auth-event", Date.now().toString());
+      }
+
+      const role = user.role;
+
+      // Redirigir según rol
+      if (role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/home");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setFormError(err.message || "Credenciales inválidas.");
+    } finally {
+      setLoading(false);
     }
-
-    const role = u?.role ?? user.role;
-
-    if (role === "admin") {
-      router.push("/admin");
-    } else {
-      router.push("/home");
-    }
-  } catch (err: any) {
-    console.error(err);
-    setFormError(err.message || "Credenciales inválidas.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
