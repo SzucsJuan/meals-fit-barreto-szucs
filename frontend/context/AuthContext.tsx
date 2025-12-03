@@ -33,7 +33,9 @@ async function ensureCsrfCookie() {
   await fetch(`${BACKEND_ROOT}/sanctum/csrf-cookie`, {
     credentials: "include",
     cache: "no-store",
-    headers: { "X-Requested-With": "XMLHttpRequest" },
+    headers: { "X-Requested-With": "XMLHttpRequest",
+     "ngrok-skip-browser-warning": "true",
+     },
   });
 }
 

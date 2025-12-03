@@ -19,6 +19,9 @@ export async function ensureCsrf() {
     method: "GET",
     credentials: "include",
     cache: "no-store",
+    headers: {
+      "ngrok-skip-browser-warning": "true",
+    },
   });
 }
 
@@ -56,6 +59,8 @@ export async function api<T>(
 
   const xsrf = getCookie("XSRF-TOKEN");
   if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+  
+  headers.set("ngrok-skip-browser-warning", "true");
 
   const isApi = path.startsWith("/api/");
   const base = isApi ? API_BASE : BACKEND_ROOT;
@@ -95,30 +100,21 @@ export const authApi = {
     password: string;
     password_confirmation: string;
   }) =>
-    api<{ user: UserDTO }>("/api/register", {
+    api<{ user: UserDTO }>("api/register", {
       method: "POST",
       json: payload,
-      credentials: "include",
     }),
 
   login: (payload: { email: string; password: string }) =>
     api<{ message: string; user: UserDTO }>("/login", {
+      credentials: "include",
       method: "POST",
       json: payload,
-      credentials: "include",
     }),
 
-  logout: () =>
-    api<{ message?: string }>("/logout", {
-      method: "POST",
-      credentials: "include",
-    }),
+  logout: () => api<{ message?: string }>("/logout", { method: "POST" }),
 
-  me: () =>
-    api<UserDTO>("/api/user", {
-      method: "GET",
-      credentials: "include",
-    }),
+  me: () => api<UserDTO>("/api/user", { method: "GET" }),
 };
 
 // ================== RECIPES ==================
