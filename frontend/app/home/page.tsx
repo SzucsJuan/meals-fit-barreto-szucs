@@ -1,8 +1,15 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import {
   ChefHat,
   Plus,
@@ -19,29 +26,11 @@ import {
   Gauge,
   FlameKindling,
 } from "lucide-react";
-import Link from "next/link";
+
 import Navigation from "@/components/navigation";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import RequireAuth from "@/components/RequireAuth";
 import { useMyFavorites } from "@/lib/useMyFavorites";
-import React, { useEffect, useState } from "react";
-
-//Helpers de Sanctum
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-async function ensureCsrf() {
-  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-  await fetch(`${BASE}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-}
+import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 type Plan = {
   id: number;
@@ -60,6 +49,32 @@ type Plan = {
 };
 
 export default function HomePage() {
+  const router = useRouter();
+  const { status } = useAuth(); // 👈 info de auth desde el contexto
+
+  // Redirección cliente si NO está logueado
+  useEffect(() => {
+    if (status === "guest") {
+      router.replace("/signin?from=/home");
+    }
+  }, [status, router]);
+
+  // Mientras carga el estado de auth
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  // Si no está authed, no renderizamos nada (ya lo redirige el effect)
+  if (status === "guest") {
+    return null;
+  }
+
+  // --- el resto de tu lógica de estado ---
+
   const [selectedRoutine, setSelectedRoutine] =
     React.useState<"maintain" | "lose" | "gain" | null>(null);
 
@@ -74,10 +89,15 @@ export default function HomePage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  // Plan actual
   const [latestPlan, setLatestPlan] = useState<Plan | null>(null);
   const [loadingPlan, setLoadingPlan] = useState<boolean>(true);
   const [planError, setPlanError] = useState<string | null>(null);
+
+  const {
+    data: favorites = [],
+    loading: favLoading,
+    error: favError,
+  } = useMyFavorites(3, 1);
 
   const routineTypes = {
     maintain: {
@@ -110,38 +130,25 @@ export default function HomePage() {
       fats: 93,
       color: "green",
     },
-  };
+  } as const;
 
   const currentRoutine = selectedRoutine ? routineTypes[selectedRoutine] : null;
-
   const canSave = !!selectedRoutine && !!experienceLevel;
-
-  const {
-    data: favorites = [],
-    loading: favLoading,
-    error: favError,
-  } = useMyFavorites(3, 1);
 
   function mapMode(m: "maintain" | "lose" | "gain"): "maintenance" | "loss" | "gain" {
     return m === "maintain" ? "maintenance" : m === "lose" ? "loss" : "gain";
   }
 
-  // Esto se encarga de que se muestre el plan actual
+  // Cargar último plan usando el cliente api() con token
   async function loadLatestPlan() {
     try {
       setLoadingPlan(true);
       setPlanError(null);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals/latest`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: { Accept: "application/json" },
-          cache: "no-store",
-        }
-      );
-      if (!res.ok) throw new Error("Failed to load plan");
-      const data = await res.json();
+
+      const data = await api<{ plan: Plan | null }>("/api/me/goals/latest", {
+        method: "GET",
+      });
+
       setLatestPlan(data?.plan ?? null);
     } catch (e: any) {
       setPlanError(e?.message || "Unexpected error");
@@ -170,42 +177,22 @@ export default function HomePage() {
     try {
       setSaving(true);
 
-      await ensureCsrf();
-      const xsrf = getCookie("XSRF-TOKEN") || "";
+      const data = await api<{ plan: Plan }>("/api/me/goals?source=ai", {
+        method: "POST",
+        json: {
+          mode: mapMode(selectedRoutine),
+          experience: experienceLevel,
+          activity_level: activityLevel,
+          age: Number(age),
+          weight: Number(weight),
+          height: Number(height),
+        },
+      });
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals?source=ai`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-XSRF-TOKEN": xsrf,
-          },
-          body: JSON.stringify({
-            mode: mapMode(selectedRoutine),
-            experience: experienceLevel,
-            activity_level: activityLevel,
-            age: Number(age),
-            weight: Number(weight),
-            height: Number(height),
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || "Failed to save goals");
-      }
-
-      const data = await res.json();
       setSaveMsg(
         "Profile & goals saved. Plan version " + (data?.plan?.version ?? "?")
       );
 
-      // Refresca una vez que el usuario selecciona por primera vez el plan y "desaparece" del home
       setLatestPlan(data?.plan ?? null);
     } catch (e: any) {
       setSaveMsg(e?.message || "Unexpected error");
@@ -224,11 +211,9 @@ export default function HomePage() {
       ? (Math.round(n * 10) / 10).toFixed(1)
       : "-";
 
-  // Entonces, si hay plan ocultamos
   const showPersonalInfo = !loadingPlan && !latestPlan;
 
   return (
-    <RequireAuth>
       <div className="min-h-screen bg-background">
         <Navigation />
 
@@ -942,6 +927,5 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-    </RequireAuth>
   );
 }

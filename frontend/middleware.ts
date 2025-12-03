@@ -1,16 +1,11 @@
+// middleware.ts
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-const PUBLIC_PATHS = new Set([
-  "/signin",
-  "/api/auth", 
-]);
-
-const PROTECTED_PREFIXES = ["/home", "/meals", "/recipes", "/discover"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Dejamos pasar TODO, solo ignoramos assets estáticos si querés
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
@@ -19,25 +14,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Rutas públicas exactas
-  if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
-
-  const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
-  if (!isProtected) return NextResponse.next();
-
-  const hasSession =
-    !!req.cookies.get("laravel_session")?.value;
-
-  if (!hasSession) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/signin";
-    url.searchParams.set("from", pathname);
-    return NextResponse.redirect(url);
-  }
-
+  // No hacemos ninguna redirección de auth aquí.
   return NextResponse.next();
 }
-
-export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)"],
-};
