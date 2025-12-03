@@ -22,7 +22,7 @@ WORKDIR /var/www/html
 COPY . .
 
 #Instalar dependencias de Laravel (incluyendo require-dev, útil para testing en CI)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+RUN composer install --optimize-autoloader --no-interaction --prefer-dist
 
 #IMPORTANTE: Usamos no-dev para producción y optimizar la instalación.
 #Si necesitas librerías de desarrollo (ej. Faker para seeding),
