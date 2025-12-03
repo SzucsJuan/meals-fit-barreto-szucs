@@ -9,7 +9,7 @@ export interface Me {
   role?: string | null;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
 
 export function useMe() {
   const [user, setUser] = useState<Me | null>(null);

@@ -13,7 +13,7 @@ export interface Ingredient {
 }
 
 const API =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
 
 export function useIngredients(search: string) {
   const [data, setData] = useState<Ingredient[]>([]);
