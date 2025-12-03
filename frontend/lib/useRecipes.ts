@@ -1,4 +1,6 @@
+// hooks/useRecipes.ts
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 export interface RecipeListItem {
   id: number;
@@ -24,6 +26,13 @@ export interface RecipeListItem {
   user?: { id: number; name: string };
 }
 
+type PaginatedRecipes = {
+  data?: RecipeListItem[];
+  current_page?: number;
+  last_page?: number;
+  total?: number;
+};
+
 export function useRecipes(search: string, order: string = "latest") {
   const [data, setData] = useState<RecipeListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,30 +40,49 @@ export function useRecipes(search: string, order: string = "latest") {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/recipes`);
-    if (search) url.searchParams.set("q", search);
-    if (order) url.searchParams.set("order", order);
-    url.searchParams.set("per_page", "24");
+    let cancelled = false;
 
-    setLoading(true);
-    setError(null);
+    const run = async () => {
+      setLoading(true);
+      setError(null);
 
-    fetch(url.toString(), {
-      signal: ctrl.signal,
-      credentials: "include",              
-      headers: { Accept: "application/json" },
-    })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const json = await r.json();
-        setData(json.data ?? json);      
-      })
-      .catch((e) => {
-        if (e.name !== "AbortError") setError(e.message);
-      })
-      .finally(() => setLoading(false));
+      try {
+        const params = new URLSearchParams();
+        if (search) params.set("q", search);
+        if (order) params.set("order", order);
+        params.set("per_page", "24");
 
-    return () => ctrl.abort();
+        const json = await api<PaginatedRecipes | RecipeListItem[]>(
+          `/api/recipes?${params.toString()}`,
+          {
+            method: "GET",
+            signal: ctrl.signal,
+          }
+        );
+
+        if (cancelled) return;
+
+        if (Array.isArray(json)) {
+          setData(json);
+        } else {
+          setData(json.data ?? []);
+        }
+      } catch (e: any) {
+        if (cancelled) return;
+        if (e.name !== "AbortError") {
+          setError(e.message || "Error al cargar recetas");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+      ctrl.abort();
+    };
   }, [search, order]);
 
   return { data, loading, error };
@@ -67,28 +95,46 @@ export function useRecipe(id: number | string | null) {
 
   useEffect(() => {
     if (!id) return;
+
     const ctrl = new AbortController();
-    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/recipes/${id}`;
+    let cancelled = false;
 
-    setLoading(true);
-    setError(null);
+    const run = async () => {
+      setLoading(true);
+      setError(null);
 
-    fetch(url, {
-      signal: ctrl.signal,
-      credentials: "include",              
-      headers: { Accept: "application/json" },
-    })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const json = await r.json();
-        setRecipe(json.data ?? json);
-      })
-      .catch((e) => {
-        if (e.name !== "AbortError") setError(e.message);
-      })
-      .finally(() => setLoading(false));
+      try {
+        const json = await api<RecipeListItem | { data: RecipeListItem }>(
+          `/api/recipes/${id}`,
+          {
+            method: "GET",
+            signal: ctrl.signal,
+          }
+        );
 
-    return () => ctrl.abort();
+        if (cancelled) return;
+
+        if ("data" in json) {
+          setRecipe(json.data);
+        } else {
+          setRecipe(json);
+        }
+      } catch (e: any) {
+        if (cancelled) return;
+        if (e.name !== "AbortError") {
+          setError(e.message || "Error al cargar la receta");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+      ctrl.abort();
+    };
   }, [id]);
 
   return { recipe, loading, error };

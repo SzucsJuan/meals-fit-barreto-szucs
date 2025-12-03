@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { EggFried } from "lucide-react";
-import { authApi, setAuthToken } from "@/lib/api";   // 👈 OJO: importar setAuthToken
+import { authApi, setAuthToken } from "@/lib/api"; 
 import { useAuth } from "@/context/AuthContext";
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);

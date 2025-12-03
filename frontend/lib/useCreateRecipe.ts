@@ -1,7 +1,10 @@
+// hooks/useCreateRecipe.ts
 "use client";
-import { useState } from "react";
 
-export type Unit = "g" | "ml" | "unit" | ""; 
+import { useState } from "react";
+import { api } from "@/lib/api";
+
+export type Unit = "g" | "ml" | "unit" | "";
 
 export type FormRow = {
   tempId: number;
@@ -10,23 +13,6 @@ export type FormRow = {
   unit: Unit | "";
   notes?: string;
 };
-
-const API = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
-
-function readCookie(name: string): string | null {
-  const m = document.cookie.match(
-    new RegExp("(?:^|; )" + name.replace(/([$?*|{}\]\\^])/g, "\\$1") + "=([^;]*)")
-  );
-  return m ? m[1] : null;
-}
-
-async function ensureCsrfCookie() {
-  await fetch(`${API}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-}
 
 export function useCreateRecipe() {
   const [loading, setLoading] = useState(false);
@@ -46,9 +32,6 @@ export function useCreateRecipe() {
     setError(null);
 
     try {
-      await ensureCsrfCookie();
-      const xsrf = readCookie("XSRF-TOKEN");
-
       const ingredients = payload.rows
         .filter((r) => r.ingredient_id && r.quantity && r.unit)
         .map((r) => ({
@@ -58,7 +41,10 @@ export function useCreateRecipe() {
           notes: r.notes?.trim() || undefined,
         }));
 
-      const steps = payload.stepsList.map((s) => s.trim()).filter(Boolean).join("\n");
+      const steps = payload.stepsList
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join("\n");
 
       const body = {
         title: payload.title,
@@ -71,28 +57,16 @@ export function useCreateRecipe() {
         ingredients,
       };
 
-      const res = await fetch(`${API}/api/recipes`, {
+      const json = await api<any>("/api/recipes", {
         method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-XSRF-TOKEN": xsrf ? decodeURIComponent(xsrf) : "",
-        },
-        body: JSON.stringify(body),
+        json: body,
       });
 
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try {
-          const e = await res.json();
-          if (e?.message) msg += ` - ${e.message}`;
-        } catch {}
-        setError(msg);
-        throw new Error(msg);
-      }
-
-      return await res.json();
+      return json;
+    } catch (e: any) {
+      const msg = e?.message || "Error al crear la receta";
+      setError(msg);
+      throw e;
     } finally {
       setLoading(false);
     }
