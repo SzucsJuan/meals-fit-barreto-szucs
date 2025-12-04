@@ -26,7 +26,6 @@ class RecipeImageController extends Controller
                 'image',
                 'mimes:jpeg,png,gif,webp',
                 'max:5120',
-                'dimensions:min_width=300,min_height=300,max_width=6000,max_height=6000',
             ],
         ]);
 
