@@ -16,21 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Target } from "lucide-react";
-
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-async function ensureCsrf() {
-  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-  await fetch(`${BASE}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-}
+import { api } from "@/lib/api";
 
 type Plan = {
   id: number;
@@ -75,7 +61,9 @@ function mapModeFromApi(m: "maintenance" | "loss" | "gain"): RoutineKey {
 /* ===== Page ===== */
 
 export default function ProfilePage() {
-  const [selectedRoutine, setSelectedRoutine] = useState<RoutineKey | null>(null);
+  const [selectedRoutine, setSelectedRoutine] = useState<RoutineKey | null>(
+    null
+  );
   const [experienceLevel, setExperienceLevel] =
     useState<"beginner" | "advanced" | "professional" | null>(null);
 
@@ -93,53 +81,57 @@ export default function ProfilePage() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const canSave = !!selectedRoutine && !!experienceLevel && !!weight && !!height && !!age;
+  const canSave =
+    !!selectedRoutine && !!experienceLevel && !!weight && !!height && !!age;
 
-useEffect(() => {
-  (async () => {
-    try {
-      setLoadingInitial(true);
-      setLoadError(null);
+  // Carga inicial del último plan/perfil
+  useEffect(() => {
+    let cancelled = false;
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals/latest`,
-        {
+    (async () => {
+      try {
+        setLoadingInitial(true);
+        setLoadError(null);
+
+        const data: any = await api<any>("/api/me/goals/latest", {
           method: "GET",
-          credentials: "include",
-          headers: { Accept: "application/json" },
-          cache: "no-store",
+        });
+
+        const plan: Plan | null = (data?.plan as Plan) ?? null;
+        const profile: ProfileDTO | null = (data?.profile as ProfileDTO) ?? null;
+
+        if (!cancelled) {
+          if (plan) {
+            setSelectedRoutine(mapModeFromApi(plan.mode));
+            setExperienceLevel(plan.experience);
+            setActivityLevel(plan.activity_level);
+          }
+
+          const w = profile?.weight;
+          const h = profile?.height;
+          const a = profile?.age;
+
+          setWeight(typeof w === "number" ? String(w) : "");
+          setHeight(typeof h === "number" ? String(h) : "");
+          setAge(typeof a === "number" ? String(a) : "");
         }
-      );
-
-      if (!res.ok) throw new Error("Failed to load profile");
-
-      const data: any = await res.json();
-
-      const plan: Plan | null = (data?.plan as Plan) ?? null;
-      const profile: ProfileDTO | null = (data?.profile as ProfileDTO) ?? null;
-
-      if (plan) {
-        setSelectedRoutine(mapModeFromApi(plan.mode)); 
-        setExperienceLevel(plan.experience);
-        setActivityLevel(plan.activity_level);
+      } catch (e: any) {
+        if (!cancelled) {
+          setLoadError(e?.message || "Unexpected error");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingInitial(false);
+        }
       }
+    })();
 
-      const w = profile?.weight;
-      const h = profile?.height;
-      const a = profile?.age;
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-      setWeight(typeof w === "number" ? String(w) : "");
-      setHeight(typeof h === "number" ? String(h) : "");
-      setAge(typeof a === "number" ? String(a) : "");
-    } catch (e: any) {
-      setLoadError(e?.message || "Unexpected error");
-    } finally {
-      setLoadingInitial(false);
-    }
-  })();
-}, []);
-
-  //Esto maneja el guardado del perfil del usuario
+  // Maneja el guardado del perfil del usuario + generación de plan
   async function handleSave() {
     setSaveMsg(null);
 
@@ -155,37 +147,18 @@ useEffect(() => {
     try {
       setSaving(true);
 
-      await ensureCsrf();
-      const xsrf = getCookie("XSRF-TOKEN") || "";
+      const data: any = await api<any>("/api/me/goals?source=ai", {
+        method: "POST",
+        json: {
+          mode: mapModeToApi(selectedRoutine),
+          experience: experienceLevel,
+          activity_level: activityLevel,
+          age: Number(age),
+          weight: Number(weight),
+          height: Number(height),
+        },
+      });
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me/goals?source=ai`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-XSRF-TOKEN": xsrf,
-          },
-          body: JSON.stringify({
-            mode: mapModeToApi(selectedRoutine),
-            experience: experienceLevel,
-            activity_level: activityLevel,
-            age: Number(age),
-            weight: Number(weight),
-            height: Number(height),
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || "Failed to save goals");
-      }
-
-      const data = await res.json();
       const plan: Plan | null = (data?.plan as Plan) ?? null;
 
       if (plan) {
@@ -194,7 +167,9 @@ useEffect(() => {
         setSelectedRoutine(mapModeFromApi(plan.mode));
       }
 
-      setSaveMsg("Profile & goals saved. Plan version " + (plan?.version ?? "?"));
+      setSaveMsg(
+        "Profile & goals saved. Plan version " + (plan?.version ?? "?")
+      );
     } catch (e: any) {
       setSaveMsg(e?.message || "Unexpected error");
     } finally {
@@ -469,7 +444,9 @@ useEffect(() => {
                     ].map((opt) => (
                       <button
                         key={opt.key}
-                        onClick={() => setActivityLevel(opt.key as any)}
+                        onClick={() =>
+                          setActivityLevel(opt.key as any)
+                        }
                         className={`p-4 rounded-lg border-2 transition-all text-left ${
                           activityLevel === opt.key
                             ? "border-primary bg-primary/10 shadow-md"
@@ -490,9 +467,12 @@ useEffect(() => {
                           {opt.key === "sedentary" &&
                             "Little to no exercise, desk job"}
                           {opt.key === "light" && "Exercise 1-3 days/week"}
-                          {opt.key === "moderate" && "Exercise 3-5 days/week"}
-                          {opt.key === "high" && "Exercise 6-7 days/week"}
-                          {opt.key === "athlete" && "Intense training 2x/day"}
+                          {opt.key === "moderate" &&
+                            "Exercise 3-5 days/week"}
+                          {opt.key === "high" &&
+                            "Exercise 6-7 days/week"}
+                          {opt.key === "athlete" &&
+                            "Intense training 2x/day"}
                         </p>
                       </button>
                     ))}
