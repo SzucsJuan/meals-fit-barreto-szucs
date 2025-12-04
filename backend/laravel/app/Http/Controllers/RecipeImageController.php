@@ -34,31 +34,22 @@ class RecipeImageController extends Controller
         try {
             // 2. Subir a Cloudinary
             // Guardamos el original (Cloudinary se encarga de optimizar en delivery)
-            $uploadResult = Cloudinary::upload(
+            $uploaded = Cloudinary::upload(
                 $uploadedFile->getRealPath(),
                 [
-                    'folder'     => self::CLOUDINARY_FOLDER,
-                    'public_id'  => 'recipe-' . $recipe->id . '-' . time(),
-                    'overwrite'  => true,
+                    'folder'    => self::CLOUDINARY_FOLDER,
+                    'public_id' => 'recipe-' . $recipe->id . '-' . time(),
+                    'overwrite' => true,
                     'resource_type' => 'image',
                 ]
             );
 
             // Importante: $uploadResult implementa ArrayAccess
-            $publicId = $uploadResult['public_id'] ?? null;
-            $w        = $uploadResult['width'] ?? null;
-            $h        = $uploadResult['height'] ?? null;
+            $publicId = $uploaded->getPublicId();
+            $w        = $uploaded->getWidth();
+            $h        = $uploaded->getHeight();
 
-            if (!$publicId) {
-                Log::error('Cloudinary upload did not return public_id', [
-                    'recipe_id' => $recipe->id,
-                ]);
-                return response()->json([
-                    'message' => 'No se pudo obtener el identificador de la imagen en Cloudinary.',
-                ], 500);
-            }
-
-        } catch (\Exception $e) {
+            } catch (\Exception $e) {
             Log::error('Cloudinary Upload Failed', [
                 'recipe_id' => $recipe->id,
                 'error'     => $e->getMessage(),
