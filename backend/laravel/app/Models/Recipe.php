@@ -170,34 +170,50 @@ class Recipe extends Model
 
     // Slugs
 
-    protected static function booted(): void
-    {
-        static::creating(function (Recipe $recipe) {
-            if (empty($recipe->slug))
-                $recipe->slug = static::makeUniqueSlug($recipe->title);
-        });
+ protected static function booted(): void
+{
+    static::creating(function (Recipe $recipe) {
+        if (empty($recipe->slug)) {
+            $recipe->slug = static::makeUniqueSlug($recipe->title);
+        }
+    });
 
-        static::updating(function (Recipe $recipe) {
-            $titleChanged = $recipe->isDirty('title');
-            $slugProvided = $recipe->isDirty('slug') && !empty($recipe->slug);
-            if ($titleChanged && !$slugProvided) {
-                $recipe->slug = static::makeUniqueSlug($recipe->title, $recipe->id);
-            }
-        });
+    static::updating(function (Recipe $recipe) {
+        $titleChanged = $recipe->isDirty('title');
+        $slugProvided = $recipe->isDirty('slug') && !empty($recipe->slug);
 
-        // Cuando se borra la receta, también se eliminan imágenes de storage
-        static::deleting(function (Recipe $recipe) {
-            if (!$recipe->image_disk)
-                return;
-            $disk = $recipe->image_disk;
-            foreach (['image_path', 'image_thumb_path', 'image_webp_path'] as $col) {
-                $p = $recipe->{$col};
-                if ($p && Storage::disk($disk)->exists($p)) {
-                    Storage::disk($disk)->delete($p);
-                }
+        if ($titleChanged && !$slugProvided) {
+            $recipe->slug = static::makeUniqueSlug($recipe->title, $recipe->id);
+        }
+    });
+
+    // Cuando se borra la receta, también se eliminan imágenes
+    static::deleting(function (Recipe $recipe) {
+        if (!$recipe->image_disk) {
+            return;
+        }
+
+        // Cloudinary: usamos la API, no Storage
+        if ($recipe->image_disk === 'cloudinary') {
+            try {
+                Cloudinary::destroy($recipe->image_path);
+            } catch (\Throwable $e) {
+                // no rompemos el delete si falla
             }
-        });
-    }
+            return;
+        }
+
+        // Legacy: imágenes en disco local / S3, etc.
+        $disk = $recipe->image_disk;
+
+        foreach (['image_path', 'image_thumb_path', 'image_webp_path'] as $col) {
+            $p = $recipe->{$col};
+            if ($p && Storage::disk($disk)->exists($p)) {
+                Storage::disk($disk)->delete($p);
+            }
+        }
+    });
+}
 
     protected static function makeUniqueSlug(string $title, ?int $ignoreId = null): string
     {
@@ -226,20 +242,61 @@ class Recipe extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        if (!$this->image_disk || !$this->image_path)
+        if (!$this->image_disk || !$this->image_path) {
             return null;
-        return \Storage::disk($this->image_disk)->url($this->image_path);
+        }
+
+        // Cuando viene de Cloudinary, usamos directamente el facade
+        if ($this->image_disk === 'cloudinary') {
+            return Cloudinary::getUrl($this->image_path, [
+                'quality'      => 'auto:good',
+                'fetch_format' => 'auto',
+            ]);
+        }
+
+        // Imágenes locales (legacy)
+        return Storage::disk($this->image_disk)->url($this->image_path);
     }
+
     public function getImageThumbUrlAttribute(): ?string
     {
-        if (!$this->image_disk || !$this->image_thumb_path)
+        if (!$this->image_disk || !$this->image_path) {
             return null;
-        return \Storage::disk($this->image_disk)->url($this->image_thumb_path);
+        }
+
+        if ($this->image_disk === 'cloudinary') {
+            return Cloudinary::getUrl($this->image_path, [
+                'width'        => 512,
+                'crop'         => 'limit',
+                'quality'      => 'auto:good',
+                'fetch_format' => 'auto',
+            ]);
+        }
+
+        if ($this->image_thumb_path) {
+            return Storage::disk($this->image_disk)->url($this->image_thumb_path);
+        }
+
+        // fallback razonable
+        return $this->image_url;
     }
+
     public function getImageWebpUrlAttribute(): ?string
     {
-        if (!$this->image_disk || !$this->image_webp_path)
+        if (!$this->image_disk || !$this->image_path) {
             return null;
-        return \Storage::disk($this->image_disk)->url($this->image_webp_path);
+        }
+
+        if ($this->image_disk === 'cloudinary') {
+            return Cloudinary::getUrl($this->image_path, [
+                'fetch_format' => 'webp',
+                'quality'      => 'auto:good',
+            ]);
+        }
+
+        if ($this->image_webp_path) {
+            return Storage::disk($this->image_disk)->url($this->image_webp_path);
+        }
+
+        return $this->image_url;
     }
-}
