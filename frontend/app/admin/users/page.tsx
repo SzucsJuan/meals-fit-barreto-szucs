@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Users,
   Search,
   Plus,
@@ -35,7 +35,15 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
-import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import RequireAuth from "@/components/RequireAuth";
+import { api } from "@/lib/api";
 
 type UserRow = {
   id: number;
@@ -50,26 +58,7 @@ type UserRow = {
   last_activity_date: string | null;
 };
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
-
-function getXsrfToken(): string {
-  if (typeof document === "undefined") return "";
-  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : "";
-}
-
-async function ensureCsrf() {
-  await fetch(`${API}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  });
-}
-
-export default function AdminUsersPage() {
+function AdminUsersContent() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,8 +76,12 @@ export default function AdminUsersPage() {
   const [creating, setCreating] = useState(false);
 
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
-  const [passwordDialogUserEmail, setPasswordDialogUserEmail] = useState<string | null>(null);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(
+    null
+  );
+  const [passwordDialogUserEmail, setPasswordDialogUserEmail] = useState<
+    string | null
+  >(null);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserRow | null>(null);
@@ -97,7 +90,10 @@ export default function AdminUsersPage() {
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Carga de usuarios
   useEffect(() => {
+    let cancelled = false;
+
     const fetchUsers = async () => {
       try {
         setLoading(true);
@@ -107,29 +103,27 @@ export default function AdminUsersPage() {
         if (filterRole !== "all") params.set("role", filterRole);
         if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
-        const res = await fetch(`${API}/api/admin/users?${params.toString()}`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        });
+        const qs = params.toString();
+        const path = qs ? `/api/admin/users?${qs}` : "/api/admin/users";
 
-        if (!res.ok) {
-          throw new Error(`Error al cargar usuarios (${res.status})`);
+        const data = await api<UserRow[]>(path, { method: "GET" });
+        if (!cancelled) {
+          setUsers(data);
         }
-
-        const data: UserRow[] = await res.json();
-        setUsers(data);
       } catch (err: any) {
+        if (cancelled) return;
         console.error("Error fetching users", err);
-        setError("No se pudieron cargar los usuarios");
+        setError(err?.message || "No se pudieron cargar los usuarios");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchUsers();
+
+    return () => {
+      cancelled = true;
+    };
   }, [filterRole, searchQuery]);
 
   const getRoleBadge = (role: string) => {
@@ -160,30 +154,17 @@ export default function AdminUsersPage() {
     if (!editingUser) return;
 
     try {
-      await ensureCsrf();
-      const token = getXsrfToken();
-
-      const res = await fetch(`${API}/api/admin/users/${editingUser.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": token,
-        },
-        body: JSON.stringify({
-          name: editingUser.name,
-          email: editingUser.email,
-          role: editingUser.role,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Error al actualizar usuario (${res.status})`);
-      }
-
-      const updated = await res.json();
+      const updated = await api<UserRow>(
+        `/api/admin/users/${editingUser.id}`,
+        {
+          method: "PATCH",
+          json: {
+            name: editingUser.name,
+            email: editingUser.email,
+            role: editingUser.role,
+          },
+        }
+      );
 
       setUsers((prev) =>
         prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u))
@@ -209,22 +190,10 @@ export default function AdminUsersPage() {
 
     try {
       setDeleting(true);
-      await ensureCsrf();
-      const token = getXsrfToken();
 
-      const res = await fetch(`${API}/api/admin/users/${userToDelete.id}`, {
+      await api<void>(`/api/admin/users/${userToDelete.id}`, {
         method: "DELETE",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": token,
-        },
       });
-
-      if (!res.ok && res.status !== 204) {
-        throw new Error(`Error al eliminar usuario (${res.status})`);
-      }
 
       setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
       setIsDeleteDialogOpen(false);
@@ -245,45 +214,28 @@ export default function AdminUsersPage() {
 
     try {
       setCreating(true);
-      await ensureCsrf();
-      const token = getXsrfToken();
 
-      const res = await fetch(`${API}/api/admin/users`, {
+      const data = await api<{
+        user: UserRow;
+        password?: string;
+      }>("/api/admin/users", {
         method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": token,
-        },
-        body: JSON.stringify({
+        json: {
           name: newName,
           email: newEmail,
           role: newRole,
-        }),
+        },
       });
-
-      if (!res.ok) {
-        throw new Error(`Error al crear usuario (${res.status})`);
-      }
-
-      const data = await res.json();
 
       try {
         const params = new URLSearchParams();
         if (filterRole !== "all") params.set("role", filterRole);
         if (searchQuery.trim()) params.set("search", searchQuery.trim());
+        const qs = params.toString();
+        const path = qs ? `/api/admin/users?${qs}` : "/api/admin/users";
 
-        const resList = await fetch(`${API}/api/admin/users?${params.toString()}`, {
-          method: "GET",
-          credentials: "include",
-          headers: { Accept: "application/json" },
-        });
-        if (resList.ok) {
-          const listData: UserRow[] = await resList.json();
-          setUsers(listData);
-        }
+        const listData = await api<UserRow[]>(path, { method: "GET" });
+        setUsers(listData);
       } catch (err) {
         console.error("Error reloading users after create", err);
       }
@@ -323,6 +275,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -336,12 +289,16 @@ export default function AdminUsersPage() {
                 <Users className="h-8 w-8" style={{ color: "#FF9800" }} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">User Management</h1>
+                <h1 className="text-2xl font-bold text-foreground">
+                  User Management
+                </h1>
                 <p className="text-muted-foreground">
                   Manage user accounts and permissions
                 </p>
               </div>
             </div>
+
+            {/* Create user dialog trigger */}
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
@@ -405,7 +362,9 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardHeader className="pt-4">
@@ -414,7 +373,9 @@ export default function AdminUsersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{totalUsers}</div>
+              <div className="text-2xl font-bold text-foreground">
+                {totalUsers}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -436,11 +397,14 @@ export default function AdminUsersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{totalAdmins}</div>
+              <div className="text-2xl font-bold text-foreground">
+                {totalAdmins}
+              </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Filters */}
         <div className="flex flex-col gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -476,10 +440,13 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
+        {/* Listado de usuarios */}
         <Card>
           <CardHeader className="pt-4">
             <CardTitle>Users ({filteredUsers.length})</CardTitle>
-            <CardDescription>Manage all user accounts on the platform</CardDescription>
+            <CardDescription>
+              Manage all user accounts on the platform
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
@@ -499,7 +466,9 @@ export default function AdminUsersPage() {
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-foreground">{user.name}</h3>
+                          <h3 className="font-semibold text-foreground">
+                            {user.name}
+                          </h3>
                           {getRoleBadge(user.role)}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -513,7 +482,9 @@ export default function AdminUsersPage() {
                           <span>•</span>
                           <span>{user.meals_logged_count} meals logged</span>
                           <span>•</span>
-                          <span>Last active {user.last_activity_date ?? "-"}</span>
+                          <span>
+                            Last active {user.last_activity_date ?? "-"}
+                          </span>
                         </div>
                       </div>
                       <div className="flex flex-wrap lg:flex-col gap-2">
@@ -544,6 +515,7 @@ export default function AdminUsersPage() {
         </Card>
       </div>
 
+      {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -593,17 +565,22 @@ export default function AdminUsersPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit}>
-              Save Changes
-            </Button>
+            <Button onClick={handleSaveEdit}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+      {/* Password dialog (al crear usuario) */}
+      <Dialog
+        open={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -646,6 +623,7 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -654,7 +632,8 @@ export default function AdminUsersPage() {
               Delete User
             </DialogTitle>
             <DialogDescription>
-              This action cannot be undone. The user and their data may be permanently removed.
+              This action cannot be undone. The user and their data may be
+              permanently removed.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -688,7 +667,11 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
+      {/* Success dialog (update / copy password) */}
+      <Dialog
+        open={isSuccessDialogOpen}
+        onOpenChange={setIsSuccessDialogOpen}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -703,5 +686,13 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <RequireAuth requireAdmin>
+      <AdminUsersContent />
+    </RequireAuth>
   );
 }

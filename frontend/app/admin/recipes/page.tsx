@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -41,9 +41,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+import RequireAuth from "@/components/RequireAuth";
 import { useIngredients as useIngredientsHook } from "@/lib/useIngredients";
 import { useCreateRecipe, type FormRow, type Unit } from "@/lib/useCreateRecipe";
-import { apiRecipeImages } from "@/lib/api";
+import { api, apiRecipeImages } from "@/lib/api";
 
 type RecipeRow = {
   id: number;
@@ -62,33 +63,17 @@ type RecipeRow = {
 
 type VisibilityFilter = "all" | "public" | "private";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
-// Helpers de sanctum
-function getXsrfToken(): string {
-  if (typeof document === "undefined") return "";
-  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : "";
-}
-
-async function ensureCsrf() {
-  await fetch(`${API}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    headers: { "X-Requested-With": "XMLHttpRequest" },
-  });
-}
-
-export default function AdminRecipesPage() {
+function AdminRecipesContent() {
   // ---------- LISTADO DE RECETAS ----------
   const [recipes, setRecipes] = useState<RecipeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [filterVisibility, setFilterVisibility] = useState<VisibilityFilter>("all");
+  const [filterVisibility, setFilterVisibility] =
+    useState<VisibilityFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ---------- EDIT RECETAS----------
+  // ---------- EDIT RECETAS ----------
   const [editingRecipe, setEditingRecipe] = useState<RecipeRow | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -96,11 +81,16 @@ export default function AdminRecipesPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const { data: ingredientOptions } = useIngredientsHook("");
-  const { createRecipe, loading: creating, error: createError } = useCreateRecipe();
+  const {
+    createRecipe,
+    loading: creating,
+    error: createError,
+  } = useCreateRecipe();
 
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
-  const [newVisibility, setNewVisibility] = useState<"public" | "private">("public");
+  const [newVisibility, setNewVisibility] =
+    useState<"public" | "private">("public");
   const [newPrepTime, setNewPrepTime] = useState("");
   const [newCookTime, setNewCookTime] = useState("");
   const [newServings, setNewServings] = useState("");
@@ -141,34 +131,25 @@ export default function AdminRecipesPage() {
     setDragOver(false);
   };
 
-  // ---------- fetch recipes ----------
+  // ---------- fetch recipes (admin) con api() ----------
   const fetchRecipes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       const params = new URLSearchParams();
-      if (filterVisibility !== "all") params.set("visibility", filterVisibility);
+      if (filterVisibility !== "all")
+        params.set("visibility", filterVisibility);
       if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
-      const res = await fetch(`${API}/api/admin/recipes?${params.toString()}`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      });
+      const qs = params.toString();
+      const path = qs ? `/api/admin/recipes?${qs}` : "/api/admin/recipes";
 
-      if (!res.ok) {
-        throw new Error(`Error al cargar recetas (${res.status})`);
-      }
-
-      const data: RecipeRow[] = await res.json();
+      const data = await api<RecipeRow[]>(path, { method: "GET" });
       setRecipes(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching recipes", err);
-      setError("No se pudieron cargar las recetas");
+      setError(err?.message || "No se pudieron cargar las recetas");
     } finally {
       setLoading(false);
     }
@@ -178,7 +159,7 @@ export default function AdminRecipesPage() {
     fetchRecipes();
   }, [fetchRecipes]);
 
-  // ---------- EDIT ----------
+  // ---------- helpers ----------
   const getVisibilityBadge = (visibility: "public" | "private" | string) => {
     if (visibility === "public") {
       return (
@@ -203,6 +184,7 @@ export default function AdminRecipesPage() {
     return null;
   };
 
+  // ---------- EDIT ----------
   const handleEdit = (recipe: RecipeRow) => {
     setEditingRecipe(recipe);
     setIsEditDialogOpen(true);
@@ -212,30 +194,17 @@ export default function AdminRecipesPage() {
     if (!editingRecipe) return;
 
     try {
-      await ensureCsrf();
-      const token = getXsrfToken();
-
-      const res = await fetch(`${API}/api/admin/recipes/${editingRecipe.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": token,
-        },
-        body: JSON.stringify({
-          name: editingRecipe.name,
-          description: editingRecipe.description,
-          visibility: editingRecipe.visibility,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Error al actualizar receta (${res.status})`);
-      }
-
-      const updated: RecipeRow = await res.json();
+      const updated = await api<RecipeRow>(
+        `/api/admin/recipes/${editingRecipe.id}`,
+        {
+          method: "PATCH",
+          json: {
+            name: editingRecipe.name,
+            description: editingRecipe.description,
+            visibility: editingRecipe.visibility,
+          },
+        }
+      );
 
       setRecipes((prev) =>
         prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
@@ -252,22 +221,9 @@ export default function AdminRecipesPage() {
     if (!confirm("Are you sure you want to delete this recipe?")) return;
 
     try {
-      await ensureCsrf();
-      const token = getXsrfToken();
-
-      const res = await fetch(`${API}/api/admin/recipes/${recipeId}`, {
+      await api<void>(`/api/admin/recipes/${recipeId}`, {
         method: "DELETE",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": token,
-        },
       });
-
-      if (!res.ok && res.status !== 204) {
-        throw new Error(`Error al eliminar receta (${res.status})`);
-      }
 
       setRecipes((prev) => prev.filter((r) => r.id !== recipeId));
     } catch (err) {
@@ -298,7 +254,9 @@ export default function AdminRecipesPage() {
   };
 
   const updateRow = (tempId: number, patch: Partial<FormRow>) => {
-    setNewRows(newRows.map((r) => (r.tempId === tempId ? { ...r, ...patch } : r)));
+    setNewRows(
+      newRows.map((r) => (r.tempId === tempId ? { ...r, ...patch } : r))
+    );
   };
 
   const addStep = () => {
@@ -366,7 +324,6 @@ export default function AdminRecipesPage() {
         }
       }
 
-      // Se refresca el listado del admin
       await fetchRecipes();
       clearAddForm();
       setIsAddDialogOpen(false);
@@ -377,6 +334,7 @@ export default function AdminRecipesPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* HEADER */}
       <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -399,6 +357,7 @@ export default function AdminRecipesPage() {
               </div>
             </div>
 
+            {/* Add Recipe Dialog */}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
@@ -415,6 +374,7 @@ export default function AdminRecipesPage() {
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
+                  {/* Datos básicos */}
                   <Card>
                     <CardContent className="space-y-4 pt-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -483,6 +443,7 @@ export default function AdminRecipesPage() {
                     </CardContent>
                   </Card>
 
+                  {/* Ingredients */}
                   <Card>
                     <CardHeader className="pt-4">
                       <div className="flex items-center justify-between">
@@ -608,6 +569,7 @@ export default function AdminRecipesPage() {
                     </CardContent>
                   </Card>
 
+                  {/* Steps */}
                   <Card>
                     <CardHeader className="pt-4">
                       <div className="flex items-center justify-between">
@@ -650,6 +612,7 @@ export default function AdminRecipesPage() {
                     </CardContent>
                   </Card>
 
+                  {/* Image */}
                   <Card>
                     <CardHeader className="pt-4">
                       <CardTitle>Recipe Image</CardTitle>
@@ -702,7 +665,9 @@ export default function AdminRecipesPage() {
                                   type="button"
                                   onClick={() =>
                                     document
-                                      .getElementById("admin-add-image-input")
+                                      .getElementById(
+                                        "admin-add-image-input"
+                                      )
                                       ?.click()
                                   }
                                   className="absolute inset-0 grid place-items-center text-center text-sm text-neutral-500 hover:text-neutral-700 dark:text-neutral-400"
@@ -755,14 +720,18 @@ export default function AdminRecipesPage() {
                                 className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium
                                   bg-orange-600 text-white hover:bg-orange-700"
                               >
-                                {imagePreview ? "Cambiar imagen" : "Subir imagen"}
+                                {imagePreview
+                                  ? "Cambiar imagen"
+                                  : "Subir imagen"}
                               </button>
 
                               {imagePreview && (
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (confirm("¿Quitar la imagen seleccionada?"))
+                                    if (
+                                      confirm("¿Quitar la imagen seleccionada?")
+                                    )
                                       clearImage();
                                   }}
                                   className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium
@@ -809,7 +778,9 @@ export default function AdminRecipesPage() {
         </div>
       </div>
 
+      {/* CONTENT */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardHeader className="pt-4">
@@ -849,6 +820,7 @@ export default function AdminRecipesPage() {
           </Card>
         </div>
 
+        {/* Filtros */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -884,6 +856,7 @@ export default function AdminRecipesPage() {
           </div>
         </div>
 
+        {/* Listado de recetas */}
         <Card>
           <CardHeader className="pt-4">
             <CardTitle>Recipes ({filteredRecipes.length})</CardTitle>
@@ -893,7 +866,9 @@ export default function AdminRecipesPage() {
           </CardHeader>
           <CardContent>
             {error && (
-              <p className="mb-4 text-sm text-red-500">{error}</p>
+              <p className="mb-4 text-sm text-red-500">
+                {error}
+              </p>
             )}
             {loading ? (
               <p className="text-sm text-muted-foreground">
@@ -972,6 +947,7 @@ export default function AdminRecipesPage() {
         </Card>
       </div>
 
+      {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -1030,13 +1006,24 @@ export default function AdminRecipesPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+            Cancel
             </Button>
             <Button onClick={handleSaveEdit}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AdminRecipesPage() {
+  return (
+    <RequireAuth requireAdmin>
+      <AdminRecipesContent />
+    </RequireAuth>
   );
 }

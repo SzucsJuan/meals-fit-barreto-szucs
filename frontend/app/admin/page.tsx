@@ -36,7 +36,8 @@ import {
   Cell,
 } from "recharts";
 import RequireAuth from "@/components/RequireAuth";
-import { authApi } from "@/lib/api";
+import { api, authApi, setAuthToken } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 type WeeklyPoint = {
   name: string;
@@ -68,7 +69,6 @@ type AdminStats = {
   recent_activity: RecentActivityItem[];
 };
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const CATEGORY_COLORS = ["#FFD54F", "#FF9800", "#388E3C", "#A5D6A7"];
 
 export default function AdminPage() {
@@ -85,42 +85,53 @@ function AdminDashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const { setUser } = useAuth();
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchStats = async () => {
       try {
         setLoadingStats(true);
         setError(null);
 
-        const res = await fetch(`${API}/api/admin/stats`, {
+        const data = await api<AdminStats>("/api/admin/stats", {
           method: "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
         });
 
-        if (!res.ok) {
-          throw new Error(`Error al cargar estadísticas (${res.status})`);
+        if (!cancelled) {
+          setStats(data);
         }
-
-        const data: AdminStats = await res.json();
-        setStats(data);
       } catch (err: any) {
+        if (cancelled) return;
         console.error("Error fetching admin stats", err);
-        setError("No se pudieron cargar las estadísticas");
+        setError(err?.message || "No se pudieron cargar las estadísticas");
       } finally {
-        setLoadingStats(false);
+        if (!cancelled) {
+          setLoadingStats(false);
+        }
       }
     };
 
     fetchStats();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleLogout = async () => {
     try {
       setLoggingOut(true);
       await authApi.logout();
+
+      // Acá limpiamos el token
+      setAuthToken(null);
+      setUser(null);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("mf-auth-event", Date.now().toString());
+      }
+
       router.push("/signin");
     } catch (e) {
       console.error(e);
@@ -181,9 +192,7 @@ function AdminDashboardContent() {
                 {loadingStats ? "..." : stats?.total_users ?? 0}
               </div>
               {error && (
-                <p className="mt-1 text-xs text-red-500">
-                  {error}
-                </p>
+                <p className="mt-1 text-xs text-red-500">{error}</p>
               )}
             </CardContent>
           </Card>
