@@ -9,82 +9,101 @@ use Illuminate\Support\Facades\Log;
 
 class RecipeImageController extends Controller
 {
-    
+    private const CLOUDINARY_FOLDER = 'meals-fit-recipes';
+
     /**
      * Sube una imagen a Cloudinary y actualiza la receta con el Public ID.
-     * Cloudinary manejará automáticamente la optimización, WebP, y las miniaturas a través de transformaciones en URL.
+     * Cloudinary manejará automáticamente las variantes (webp, thumbs) vía transformaciones en URL.
      */
     public function store(Request $request, Recipe $recipe)
     {
-        // 1. Validación (se mantiene)
+        // 1. Validación
+        // - max:5120 => ~5 MB
+        // - dimensions => evitamos imágenes minúsculas o absurdamente grandes
         $data = $request->validate([
-            // La extensión 'webp' se permite aunque Cloudinary la genera,
-            // pero mantenemos la validación de archivos de imagen comunes.
-            'image' => ['required','image','mimes:jpeg,png,gif','max:5120'],
+            'image' => [
+                'required',
+                'image',
+                'mimes:jpeg,png,gif,webp',
+                'max:5120',
+                'dimensions:min_width=300,min_height=300,max_width=6000,max_height=6000',
+            ],
         ]);
 
         $uploadedFile = $data['image'];
-        
+
         try {
             // 2. Subir a Cloudinary
-            // El método upload devuelve un array con todos los detalles
-            $uploadResult = Cloudinary::upload($uploadedFile->getRealPath(), [
-                'folder' => 'meals-fit-recipes', // Carpeta en Cloudinary
-                'public_id' => 'recipe-' . $recipe->id . '-' . time(), // Generar un ID predecible
-                'overwrite' => true, // Reemplazar si el ID ya existe (en caso de re-subida)
-            ]);
+            // Guardamos el original (Cloudinary se encarga de optimizar en delivery)
+            $uploadResult = Cloudinary::upload(
+                $uploadedFile->getRealPath(),
+                [
+                    'folder'     => self::CLOUDINARY_FOLDER,
+                    'public_id'  => 'recipe-' . $recipe->id . '-' . time(),
+                    'overwrite'  => true,
+                    'resource_type' => 'image',
+                ]
+            );
+
+            // Importante: $uploadResult implementa ArrayAccess
+            $publicId = $uploadResult['public_id'] ?? null;
+            $w        = $uploadResult['width'] ?? null;
+            $h        = $uploadResult['height'] ?? null;
+
+            if (!$publicId) {
+                Log::error('Cloudinary upload did not return public_id', [
+                    'recipe_id' => $recipe->id,
+                ]);
+                return response()->json([
+                    'message' => 'No se pudo obtener el identificador de la imagen en Cloudinary.',
+                ], 500);
+            }
 
         } catch (\Exception $e) {
-            Log::error('Cloudinary Upload Failed: ' . $e->getMessage());
-            return response()->json(['message' => 'Error al subir la imagen a Cloudinary.'], 500);
+            Log::error('Cloudinary Upload Failed', [
+                'recipe_id' => $recipe->id,
+                'error'     => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Error al subir la imagen a Cloudinary.',
+            ], 500);
         }
-        
-        // 3. Obtener datos de Cloudinary
-        // Accedemos a las propiedades usando notación de array para mayor compatibilidad
-        $publicId = $uploadResult['public_id'];
-        $w = $uploadResult['width'];
-        $h = $uploadResult['height'];
-        
-        // 4. Eliminar imagen anterior si existe
+
+        // 3. Eliminar imagen anterior si existe (basada en public_id previo)
         if ($recipe->image_path) {
-            // En el código original, image_path contenía la ruta local.
-            // Asumimos que ahora image_path contendrá el Public ID de Cloudinary.
             $this->deletePreviousCloudinaryImage($recipe->image_path);
         }
 
-        // 5. Actualizar la Receta
-        // Simplificamos los campos, ya que la miniatura y WebP son transformaciones.
-        // Usamos 'image_path' para guardar el Public ID (la referencia única).
+        // 4. Actualizar la Receta en BD
         $recipe->fill([
-            'image_disk'       => 'cloudinary', // Marcador para saber el driver
-            'image_path'       => $publicId, // Guardamos el Public ID
-            'image_thumb_path' => null, // Ya no se necesita almacenar path de miniatura
-            'image_webp_path'  => null, // Ya no se necesita almacenar path de webp
+            'image_disk'       => 'cloudinary',
+            'image_path'       => $publicId, // Guardamos el public_id
+            'image_thumb_path' => null,      // ya no se usan rutas físicas
+            'image_webp_path'  => null,
             'image_width'      => $w,
             'image_height'     => $h,
         ])->save();
-        
-        // 6. Generar URLs con Transformaciones para la respuesta
+
+        // 5. Generar URLs con transformaciones para la respuesta
         $baseUrl = $this->generateBaseUrl($publicId);
 
+        $thumbUrl = Cloudinary::cloudinaryApi()->url($publicId, [
+            'width'        => 512,
+            'crop'         => 'limit',
+            'quality'      => 'auto:good',
+            'fetch_format' => 'auto',
+        ]);
+
+        $webpUrl = Cloudinary::cloudinaryApi()->url($publicId, [
+            'fetch_format' => 'webp',
+            'quality'      => 'auto:good',
+        ]);
+
         return response()->json([
-            // URL principal (optimizada por defecto por Cloudinary)
             'image_url'       => $baseUrl,
-            
-            // URL de miniatura (transformación Cloudinary: w_512, c_limit, q_auto, f_auto)
-            'image_thumb_url' => Cloudinary::cloudinaryApi()->url($publicId, [
-                'width' => 512, 
-                'crop' => 'limit', 
-                'quality' => 'auto',
-                'fetch_format' => 'auto'
-            ]),
-            
-            // URL WebP (transformación Cloudinary: f_webp)
-            'image_webp_url'  => Cloudinary::cloudinaryApi()->url($publicId, [
-                'fetch_format' => 'webp', 
-                'quality' => 'auto'
-            ]),
-            
+            'image_thumb_url' => $thumbUrl,
+            'image_webp_url'  => $webpUrl,
             'width'           => $w,
             'height'          => $h,
         ], 201);
@@ -95,13 +114,10 @@ class RecipeImageController extends Controller
      */
     public function destroy(Recipe $recipe)
     {
-        // 1. Eliminar la imagen de Cloudinary
         if ($recipe->image_path) {
-            // Asumimos que image_path contiene el Public ID
             $this->deletePreviousCloudinaryImage($recipe->image_path);
         }
 
-        // 2. Limpiar la base de datos
         $recipe->update([
             'image_disk'       => null,
             'image_path'       => null,
@@ -113,29 +129,33 @@ class RecipeImageController extends Controller
 
         return response()->noContent();
     }
-    
+
     /**
-     * Función helper para eliminar una imagen de Cloudinary.
+     * Helper para eliminar una imagen de Cloudinary.
      */
     protected function deletePreviousCloudinaryImage(string $publicId): void
     {
         try {
-            Cloudinary::destroy($publicId);
+            Cloudinary::destroy($publicId, [
+                'invalidate' => true, // opcional para invalidar caché CDN
+            ]);
         } catch (\Exception $e) {
-            // Registrar el error pero no detener la ejecución si falla la eliminación
-            Log::warning("Cloudinary deletion failed for ID {$publicId}: " . $e->getMessage());
+            Log::warning("Cloudinary deletion failed", [
+                'public_id' => $publicId,
+                'error'     => $e->getMessage(),
+            ]);
         }
     }
-    
+
     /**
-     * Función helper para generar la URL base de la imagen.
+     * Genera la URL base optimizada de la imagen.
      */
     protected function generateBaseUrl(string $publicId): string
     {
-        // Genera la URL para la imagen original, con optimización automática.
+        // Versión "full" optimizada para uso principal (detalle de receta)
         return Cloudinary::cloudinaryApi()->url($publicId, [
-            'quality' => 'auto',
-            'fetch_format' => 'auto'
+            'quality'      => 'auto:good',
+            'fetch_format' => 'auto',
         ]);
     }
 }
