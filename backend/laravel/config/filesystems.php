@@ -54,9 +54,12 @@ return [
         ],
 
         'cloudinary' => [
-            'driver' => 'cloudinary',
+        'driver'     => 'cloudinary',
+        'cloud_name' => env('dwiflctuf'),
+        'api_key'    => env('913614982295124'),
+        'api_secret' => env('xl8j7lIgdFeRrYFcR3-rdDybceE'),
+        'url'        => env('cloudinary://913614982295124:xl8j7lIgdFeRrYFcR3-rdDybceE@dwiflctuf'),
         ],
-
     ],
 
     /*
