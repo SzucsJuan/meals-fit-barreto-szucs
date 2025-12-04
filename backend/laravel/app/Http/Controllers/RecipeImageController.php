@@ -76,19 +76,22 @@ class RecipeImageController extends Controller
         ])->save();
 
         // 5. Generar URLs con transformaciones para la respuesta
-        $baseUrl = $this->generateBaseUrl($publicId);
+        $baseUrl = Cloudinary::getUrl($publicId, [
+    'quality'      => 'auto:good',
+    'fetch_format' => 'auto',
+]);
 
-        $thumbUrl = Cloudinary::cloudinaryApi()->url($publicId, [
-            'width'        => 512,
-            'crop'         => 'limit',
-            'quality'      => 'auto:good',
-            'fetch_format' => 'auto',
-        ]);
+        $thumbUrl = Cloudinary::getUrl($publicId, [
+    'width'        => 512,
+    'crop'         => 'limit',
+    'quality'      => 'auto:good',
+    'fetch_format' => 'auto',
+]);
 
-        $webpUrl = Cloudinary::cloudinaryApi()->url($publicId, [
-            'fetch_format' => 'webp',
-            'quality'      => 'auto:good',
-        ]);
+        $webpUrl = Cloudinary::getUrl($publicId, [
+    'fetch_format' => 'webp',
+    'quality'      => 'auto:good',
+]);
 
         return response()->json([
             'image_url'       => $baseUrl,
@@ -143,9 +146,9 @@ class RecipeImageController extends Controller
     protected function generateBaseUrl(string $publicId): string
     {
         // Versión "full" optimizada para uso principal (detalle de receta)
-        return Cloudinary::cloudinaryApi()->url($publicId, [
-            'quality'      => 'auto:good',
-            'fetch_format' => 'auto',
+        return Cloudinary::getUrl($publicId, [
+        'quality'      => 'auto:good',
+        'fetch_format' => 'auto',
         ]);
     }
 }
