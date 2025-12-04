@@ -241,7 +241,7 @@ async function apiDeleteMealLog(mealLogId: number) {
   return true;
 }
 
-// Fallback: borrar todos los detalles de un meal
+// Fallback
 async function apiBulkDeleteDetails(detailIds: number[]) {
   for (const id of detailIds) {
     await apiDeleteMealDetail(id);
@@ -389,7 +389,7 @@ export default function MealsPage() {
     }
   }
 
-  // Deletear meal completo
+  // Deletear meal 
   function openDeleteLog(meal: MealCard) {
     setDeletingMeal(meal);
     setDeleteLogError(null);
@@ -486,7 +486,6 @@ export default function MealsPage() {
 
           {selectedView === "today" ? (
             <>
-              {/* Cards de macros */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card>
                   <CardHeader className="pb-2 pt-4">
@@ -533,7 +532,6 @@ export default function MealsPage() {
                 </Card>
               </div>
 
-              {/* Macro pie + calorie progress */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <Card>
                   <CardHeader className="pt-4">
@@ -744,52 +742,11 @@ export default function MealsPage() {
                   )}
                 </CardContent>
               </Card>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="pt-4">
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      Weekly Average
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {!wLoading && !wError ? (
-                      <div className="text-sm text-muted-foreground">
-                        {Math.round(
-                          weeklyData.reduce(
-                            (a, d) => a + (d.calories || 0),
-                            0
-                          ) / Math.max(weeklyData.length, 1)
-                        )}{" "}
-                        cal/día
-                      </div>
-                    ) : (
-                      "—"
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pt-4">
-                    <CardTitle>Goals Met</CardTitle>
-                  </CardHeader>
-                  <CardContent>Conectaremos luego</CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pt-4">
-                    <CardTitle>Streak</CardTitle>
-                  </CardHeader>
-                  <CardContent>Conectaremos luego</CardContent>
-                </Card>
-              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal edición detalle */}
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeEdit} />
@@ -850,7 +807,6 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* Modal delete detalle */}
       {deleteOpen && deletingDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeDelete} />
@@ -896,7 +852,6 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* Modal delete meal completo */}
       {deleteLogOpen && deletingMeal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={closeDeleteLog} />

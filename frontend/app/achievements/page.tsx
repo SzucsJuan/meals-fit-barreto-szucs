@@ -3,7 +3,13 @@
 import { useMyAchievements } from "@/lib/useMyAchievements";
 import Navigation from "@/components/navigation";
 import RequireAuth from "@/components/RequireAuth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
 import { format } from "date-fns";
@@ -29,7 +35,8 @@ export default function AchievementsPage() {
                   Achievements
                 </h1>
                 <p className="text-muted-foreground">
-                  Earn achievements by logging your meals, creating recipes, and more.
+                  Earn achievements by logging your meals, creating recipes,
+                  and more.
                 </p>
               </div>
             </div>
@@ -41,7 +48,8 @@ export default function AchievementsPage() {
                 <div>
                   <CardTitle className="text-lg">Tu progreso</CardTitle>
                   <CardDescription className="text-sm">
-                    Has desbloqueado {awardedCount} de {totalCount || 0} logros disponibles.
+                    Has desbloqueado {awardedCount} de {totalCount || 0} logros
+                    disponibles.
                   </CardDescription>
                 </div>
                 <Badge variant="secondary" className="self-start sm:self-auto">
@@ -88,7 +96,8 @@ export default function AchievementsPage() {
                                 awarded
                                   ? "border-green-500 bg-green-50/80 dark:bg-green-900/20"
                                   : "border-border bg-card"
-                              }`}>
+                              }`}
+                          >
                             <div className="absolute top-3 right-3">
                               <span
                                 className={`text-xs font-semibold px-3 py-1 rounded-full
@@ -96,7 +105,8 @@ export default function AchievementsPage() {
                                     awarded
                                       ? "bg-green-500 text-white"
                                       : "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100"
-                                  }`}>
+                                  }`}
+                              >
                                 {awarded ? "Desbloqueado" : "Bloqueado"}
                               </span>
                             </div>

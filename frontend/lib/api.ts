@@ -1,21 +1,16 @@
-// lib/api.ts
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-// Clave para guardar el token en localStorage
+// Pass para guardar el token
 const TOKEN_KEY = "mf_token";
 
 let accessToken: string | null = null;
 
-// Cargar token inicial solo en cliente (browser)
+// Cargar token 
 if (typeof window !== "undefined") {
   accessToken = window.localStorage.getItem(TOKEN_KEY);
 }
 
-/**
- * Setea / limpia el token global y en localStorage.
- * Usalo desde AuthContext y desde el login/logout.
- */
 export function setAuthToken(token: string | null) {
   accessToken = token;
 
@@ -43,10 +38,7 @@ function parseError(status: number, body: any): string {
   return `HTTP ${status}`;
 }
 
-/**
- * Cliente base: siempre envía JSON, usa Authorization: Bearer <token> si existe,
- * y NO usa cookies (credentials: "omit").
- */
+
 export async function api<T>(
   path: string,
   init: RequestInit & { json?: any } = {}
@@ -58,7 +50,7 @@ export async function api<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  // Si hay token, lo mandamos en Authorization
+  // Si token existe, lo mandamos en Authorization
   if (accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
@@ -69,7 +61,7 @@ export async function api<T>(
     ...init,
     headers,
     cache: "no-store",
-    credentials: "omit", // ya no usamos cookies para auth
+    credentials: "omit", 
     body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
   });
 
@@ -79,7 +71,6 @@ export async function api<T>(
   try {
     body = await res.json();
   } catch {
-    // Respuesta sin JSON
   }
 
   if (!res.ok) {
@@ -104,33 +95,23 @@ export type UserDTO = {
    Auth API (token-based)
    ========================= */
 
-/**
- * Notas rutas:
- * - /api/auth/login -> AuthController@login (mobile/web con tokens)
- * - /api/user       -> usuario actual (auth:sanctum con token personal)
- * - /api/auth/logout-> AuthController@logout
- * - /api/register   -> registro SPA (puede o no devolver token)
- */
-
 export const authApi = {
-  // LOGIN via token (web + mobile)
+  // LOGIN via token
   login: (payload: { email: string; password: string }) =>
     api<{ token: string; user: UserDTO }>("/api/auth/login", {
       method: "POST",
       json: payload,
     }),
 
-  // Usuario actual a partir del token
   me: () => api<UserDTO>("/api/user", { method: "GET" }),
 
-  // LOGOUT con token
+  // LOGOUT 
   logout: () =>
     api<{ message?: string }>("/api/auth/logout", {
       method: "POST",
     }),
 
-  // REGISTER: tu AuthController::register hoy no devuelve token,
-  // así que el tipo refleja que "token" es opcional.
+  // REGISTER
   register: (payload: {
     name: string;
     email: string;
@@ -143,9 +124,7 @@ export const authApi = {
     }),
 };
 
-/* =========================
-   Recipes API
-   ========================= */
+// Recipes API
 
 export type RecipeDTO = {
   id: number;
@@ -229,9 +208,7 @@ export const apiRecipes = {
     }),
 };
 
-/* =========================
-   Recipe Images API
-   ========================= */
+// Recipe Images API
 
 export type UploadRecipeImageResponse = {
   image_url: string;
@@ -258,9 +235,7 @@ export const apiRecipeImages = {
     }),
 };
 
-/* =========================
-   Achievements API
-   ========================= */
+// Achievements API
 
 export type AchievementDTO = {
   id: number;

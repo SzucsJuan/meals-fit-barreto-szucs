@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { apiAchievements, type AchievementDTO } from "./api";
 

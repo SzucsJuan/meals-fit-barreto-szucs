@@ -50,16 +50,15 @@ type Plan = {
 
 export default function HomePage() {
   const router = useRouter();
-  const { status } = useAuth(); // 👈 info de auth desde el contexto
+  const { status } = useAuth();
 
-  // Redirección cliente si NO está logueado
+  // Redirección en caso de que el user no esté autenticado
   useEffect(() => {
     if (status === "guest") {
       router.replace("/signin?from=/home");
     }
   }, [status, router]);
 
-  // Mientras carga el estado de auth
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -68,12 +67,10 @@ export default function HomePage() {
     );
   }
 
-  // Si no está authed, no renderizamos nada (ya lo redirige el effect)
   if (status === "guest") {
     return null;
   }
 
-  // --- el resto de tu lógica de estado ---
 
   const [selectedRoutine, setSelectedRoutine] =
     React.useState<"maintain" | "lose" | "gain" | null>(null);
@@ -139,7 +136,6 @@ export default function HomePage() {
     return m === "maintain" ? "maintenance" : m === "lose" ? "loss" : "gain";
   }
 
-  // Cargar último plan usando el cliente api() con token
   async function loadLatestPlan() {
     try {
       setLoadingPlan(true);
@@ -861,70 +857,6 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             </Link>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="pt-4">
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp
-                    className="h-6 w-6"
-                    style={{ color: "#FF9800" }}
-                  />
-                  Weekly Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Avg Daily Calories
-                    </span>
-                    <span className="font-medium">1,923</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Protein Goal Hit
-                    </span>
-                    <span className="font-medium">5/7 days</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Recipes Created
-                    </span>
-                    <span className="font-medium">3 this week</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pt-4">
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-sm">
-                      Added breakfast: Oatmeal with berries
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-accent rounded-full"></div>
-                    <span className="text-sm">
-                      Created recipe: Veggie Stir Fry
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-chart-3 rounded-full"></div>
-                    <span className="text-sm">
-                      Reached protein goal yesterday
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
