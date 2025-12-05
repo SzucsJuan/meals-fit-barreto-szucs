@@ -1,11 +1,10 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Favorite;
 use App\Models\Recipe;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
 
 class FavoriteController extends Controller
 {
@@ -13,13 +12,14 @@ class FavoriteController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        abort_unless($user, 401);
 
         $perPage = (int) $request->query('per_page', 12);
 
         $recipes = $user->favorites()
             ->select('recipes.*')
             ->with(['user:id,name'])
-            ->orderBy('favorites.created_at', 'desc') // OK
+            ->orderBy('favorites.created_at', 'desc')
             ->paginate($perPage);
 
         $recipes->getCollection()->transform(function ($r) {
@@ -31,35 +31,37 @@ class FavoriteController extends Controller
     }
 
     // POST /api/recipes/{recipe}/favorite
-    public function store(Recipe $recipe)
+    public function store(Request $request, Recipe $recipe)
     {
-        $user = auth()->user();
+        $user = $request->user();
+        abort_unless($user, 401);
 
         Favorite::firstOrCreate([
-            'user_id' => $user->id,
+            'user_id'   => $user->id,
             'recipe_id' => $recipe->id,
         ]);
 
         return response()->json([
-            'ok' => true,
-            'recipe_id' => $recipe->id,
+            'ok'           => true,
+            'recipe_id'    => $recipe->id,
             'is_favorited' => true,
         ], 201);
     }
 
     // DELETE /api/recipes/{recipe}/favorite
-    public function destroy(Recipe $recipe)
+    public function destroy(Request $request, Recipe $recipe)
     {
-        $user = auth()->user();
+        $user = $request->user();
+        abort_unless($user, 401);
 
         Favorite::where('user_id', $user->id)
             ->where('recipe_id', $recipe->id)
             ->delete();
 
         return response()->json([
-            'ok' => true,
-            'recipe_id' => $recipe->id,
+            'ok'           => true,
+            'recipe_id'    => $recipe->id,
             'is_favorited' => false,
-        ]);
+        ], 200);
     }
 }

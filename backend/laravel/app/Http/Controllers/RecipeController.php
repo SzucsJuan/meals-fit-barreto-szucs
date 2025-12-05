@@ -25,8 +25,8 @@ class RecipeController extends Controller
         $user    = $request->user();
         $userId  = optional($user)->id;
 
-        $mine     = $request->boolean('mine');      // /api/recipes?mine=1 → solo mías
-        $discover = $request->boolean('discover'); // /api/recipes?discover=1 → solo públicas
+        $mine     = $request->boolean('mine');    
+        $discover = $request->boolean('discover'); 
 
         $query = Recipe::query()
             ->with(['user:id,name', 'ingredients:id,name'])
