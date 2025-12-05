@@ -101,11 +101,14 @@ export default function RecipeDetailPage() {
       <div className="min-h-screen bg-background">
         <Navigation />
 
+        
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6 flex flex-wrap gap-2">
+            {!isAdmin && (
             <Link href="/recipes">
               <Button variant="outline">Back to Recipes</Button>
             </Link>
+            )}
 
             {isAdmin && (
               <Link href="/admin/recipes">

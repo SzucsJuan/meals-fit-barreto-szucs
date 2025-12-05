@@ -271,7 +271,7 @@ function AdminDashboardContent() {
             </Card>
           </Link>
 
-          <Link href="/home" className="block">
+          <Link href="/discover" className="block">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="pt-2">
                 <div className="flex items-center gap-3">
@@ -282,9 +282,9 @@ function AdminDashboardContent() {
                     />
                   </div>
                   <div>
-                    <CardTitle className="text-base">Back to App</CardTitle>
+                    <CardTitle className="text-base">Go to Discover</CardTitle>
                     <CardDescription className="text-xs">
-                      Back to the app
+                      Discover
                     </CardDescription>
                   </div>
                 </div>

@@ -212,12 +212,17 @@ export default function Navigation() {
     }
 
     if (user) {
-      return (
-        <div
-          className={`${
-            mobile ? "flex flex-col gap-2" : "flex items-center gap-2"
-          }`}
-        >
+      const nameNode =
+        user.role === "admin" ? (
+          <span
+            className={`flex items-center text-sm text-muted-foreground ${
+              mobile ? "px-2" : ""
+            }`}
+          >
+            <Shield className="h-3 w-3 mr-1" />
+            {user.name}
+          </span>
+        ) : (
           <Link href="/profile" onClick={onLinkClick}>
             <span
               className={`text-sm text-muted-foreground hover:underline cursor-pointer ${
@@ -227,6 +232,15 @@ export default function Navigation() {
               {user.name}
             </span>
           </Link>
+        );
+
+      return (
+        <div
+          className={`${
+            mobile ? "flex flex-col gap-2" : "flex items-center gap-2"
+          }`}
+        >
+          {nameNode}
           <Button
             variant="outline"
             size="sm"
