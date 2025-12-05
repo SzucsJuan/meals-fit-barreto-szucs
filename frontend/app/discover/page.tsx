@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -26,14 +26,17 @@ function useDebouncedValue<T>(value: T, delay = 400) {
   return debounced;
 }
 
+type SortKey = "recent" | "name" | "rating" | "calories";
+
 export default function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"recent" | "name">("recent");
+  const [sortBy, setSortBy] = useState<SortKey>("recent");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recipes, setRecipes] = useState<DiscoverRecipe[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
 
   const debouncedQuery = useDebouncedValue(searchQuery, 450);
 
@@ -41,37 +44,42 @@ export default function DiscoverPage() {
     switch (sortBy) {
       case "name":
         return "name";
+      case "rating":
+        return "rating";
+      case "calories":
+        return "calories";
       case "recent":
       default:
         return "latest";
     }
   }, [sortBy]);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+
     try {
+      const normalizedQuery = debouncedQuery.trim();
+      // Si el texto es muy corto, no filtramos por q para evitar hits inútiles
+      const effectiveQuery =
+        normalizedQuery.length >= 2 ? normalizedQuery : undefined;
+
       const json = await fetchDiscover({
-        q: debouncedQuery || undefined,
+        q: effectiveQuery,
         order,
         page,
         per_page: 12,
       });
 
       setRecipes(json.data ?? []);
-      if ((json as any).meta?.last_page) {
-        setTotalPages((json as any).meta.last_page);
-      } else if ((json as any).last_page) {
-        setTotalPages((json as any).last_page);
-      } else {
-        setTotalPages(1);
-      }
+      setTotalPages(json.meta?.last_page ?? 1);
+      setTotalResults(json.meta?.total ?? (json.data?.length ?? 0));
     } catch (e: any) {
       setError(e.message || "Error loading recipes");
     } finally {
       setLoading(false);
     }
-  }
+  }, [debouncedQuery, order, page]);
 
   useEffect(() => {
     setPage(1);
@@ -79,7 +87,9 @@ export default function DiscoverPage() {
 
   useEffect(() => {
     load();
-  }, [page, order, debouncedQuery]);
+  }, [load]);
+
+  const hasActiveSearch = debouncedQuery.trim().length >= 2;
 
   return (
     <RequireAuth>
@@ -108,7 +118,8 @@ export default function DiscoverPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -117,23 +128,49 @@ export default function DiscoverPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </button>
+              )}
             </div>
 
+            {/* Sort select */}
             <select
               value={sortBy}
-              onChange={(e) =>
-                setSortBy(e.target.value as "recent" | "name")
-              }
+              onChange={(e) => setSortBy(e.target.value as SortKey)}
               className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm"
             >
               <option value="recent">Recently Added</option>
               <option value="name">Name A-Z</option>
+              <option value="rating">Best Rated</option>
+              <option value="calories">Calories (High → Low)</option>
             </select>
           </div>
 
-          {error && (
-            <div className="text-red-600 text-sm mb-4">{error}</div>
-          )}
+          {/* Info de resultados */}
+          <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
+            <div>
+              {loading
+                ? "Loading recipes..."
+                : `Showing ${recipes.length} of ${totalResults} recipes`}
+              {hasActiveSearch && !loading && (
+                <span>
+                  {" "}
+                  for <span className="font-medium">"{debouncedQuery}"</span>
+                </span>
+              )}
+            </div>
+            {error && (
+              <div className="text-red-600 text-xs">
+                {error}
+              </div>
+            )}
+          </div>
 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -169,7 +206,9 @@ export default function DiscoverPage() {
                     </div>
 
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">{r.title}</CardTitle>
+                      <CardTitle className="text-lg line-clamp-1">
+                        {r.title}
+                      </CardTitle>
                       <CardDescription className="text-sm line-clamp-2">
                         {r.description}
                       </CardDescription>
@@ -271,7 +310,7 @@ export default function DiscoverPage() {
                   No recipes found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {debouncedQuery
+                  {hasActiveSearch
                     ? "Try adjusting your search"
                     : "Be the first to share a public recipe!"}
                 </p>
