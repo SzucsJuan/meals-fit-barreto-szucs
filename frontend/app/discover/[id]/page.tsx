@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Clock, Users } from "lucide-react";
 
 import { detailRecipe } from "@/lib/detailRecipe";
+import { useMe } from "@/lib/useMe";
 
 function splitSteps(steps?: string | null) {
   if (!steps) return [];
@@ -20,8 +21,10 @@ function splitSteps(steps?: string | null) {
 export default function DiscoverRecipeDetailPage({ params }: { params: { id: string } }) {
   const { data: r, loading, error } = detailRecipe(params.id);
 
+  const { user: me } = useMe();
   const totalMinutes = (r?.prep_time_minutes ?? 0) + (r?.cook_time_minutes ?? 0);
   const steps = splitSteps(r?.steps);
+  const isAdmin = me?.role === "admin";
 
   return (
     <RequireAuth>
@@ -50,12 +53,14 @@ export default function DiscoverRecipeDetailPage({ params }: { params: { id: str
                     alt={r.title}
                     className="w-full h-80 object-cover rounded-lg"
                   />
+                  {!isAdmin && (
                   <FavoriteButton
                     key={`${r.id}-${(r as any).is_favorited ? "1" : "0"}`}
                     recipeId={r.id}
                     initialFavorited={Boolean((r as any).is_favorited)}
                     className="absolute top-3 right-3 bg-white/80 hover:bg-white"
                   />
+                  )}
                 </div>
 
                 <div className="space-y-4">
