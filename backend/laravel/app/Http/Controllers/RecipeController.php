@@ -35,13 +35,10 @@ class RecipeController extends Controller
             ->withCount(['votes', 'favoredBy']);
 
         if ($mine && $user) {
-            // Mis recetas (públicas + privadas) para el usuario logueado
             $query->where('user_id', $user->id);
         } elseif ($discover) {
-            // Descubrir: solo recetas públicas de todos
             $query->where('visibility', 'public');
         } else {
-            // Listado general: públicas de todos + mis privadas
             $query->where(function ($w) use ($user) {
                 $w->where('visibility', 'public');
                 if ($user) {
@@ -51,14 +48,18 @@ class RecipeController extends Controller
         }
 
         if ($q !== '') {
-            $query->where(function ($sub) use ($q) {
-                $sub->where('title', 'like', "%{$q}%")
-                    ->orWhere('description', 'like', "%{$q}%")
-                    ->orWhereHas('ingredients', function ($qIng) use ($q) {
-                        $qIng->where('name', 'like', "%{$q}%");
+            $normalizedQ = mb_strtolower($q, 'UTF-8');
+
+            $query->where(function ($sub) use ($normalizedQ) {
+                $sub
+                    ->whereRaw('LOWER(title) LIKE ?', ["%{$normalizedQ}%"])
+                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$normalizedQ}%"])
+                    ->orWhereHas('ingredients', function ($qIng) use ($normalizedQ) {
+                        $qIng->whereRaw('LOWER(name) LIKE ?', ["%{$normalizedQ}%"]);
                     });
             });
         }
+
 
         switch ($order) {
             case 'rating':
@@ -89,7 +90,7 @@ class RecipeController extends Controller
         $isOwner = $recipe->user_id === $userId;
         $isAdmin = $user && ($user->role === 'admin');
 
-        // Si es privada, solo dueño o admin; si es pública, cualquiera
+        // Si es privada, solo puede ver recetas dueño o admin
         abort_unless(
             $recipe->visibility === 'public' || $isOwner || $isAdmin,
             404
@@ -114,17 +115,14 @@ class RecipeController extends Controller
     {
         $user = $request->user();
 
-        // Por seguridad se ignora el user_id en el request
         $data = $request->safe()->except(['user_id']);
 
-        // Default de visibilidad si no viene nada → public
         if (empty($data['visibility'])) {
             $data['visibility'] = 'public';
         }
 
         $recipe = $user->recipes()->create($data);
 
-        // Ingredientes y macros
         if (!empty($data['ingredients'])) {
             $this->recipes->syncIngredientsAndRecompute(
                 $recipe,

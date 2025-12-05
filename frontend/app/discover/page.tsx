@@ -26,7 +26,7 @@ function useDebouncedValue<T>(value: T, delay = 400) {
   return debounced;
 }
 
-type SortKey = "recent" | "name" | "rating" | "calories";
+type SortKey = "recent" | "name" | "calories";
 
 export default function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,8 +44,6 @@ export default function DiscoverPage() {
     switch (sortBy) {
       case "name":
         return "name";
-      case "rating":
-        return "rating";
       case "calories":
         return "calories";
       case "recent":
@@ -60,7 +58,6 @@ export default function DiscoverPage() {
 
     try {
       const normalizedQuery = debouncedQuery.trim();
-      // Si el texto es muy corto, no filtramos por q para evitar hits inútiles
       const effectiveQuery =
         normalizedQuery.length >= 2 ? normalizedQuery : undefined;
 
@@ -147,7 +144,6 @@ export default function DiscoverPage() {
             >
               <option value="recent">Recently Added</option>
               <option value="name">Name A-Z</option>
-              <option value="rating">Best Rated</option>
               <option value="calories">Calories (High → Low)</option>
             </select>
           </div>
