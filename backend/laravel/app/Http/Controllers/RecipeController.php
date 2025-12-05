@@ -175,7 +175,7 @@ class RecipeController extends Controller
         $user = $request->user();
 
         abort_unless(
-            $user && ($user->id === $recipe->user_id || $user->is_admin()),
+            $user && ($user->id === $recipe->user_id || $user->isAdmin()),
             403
         );
 

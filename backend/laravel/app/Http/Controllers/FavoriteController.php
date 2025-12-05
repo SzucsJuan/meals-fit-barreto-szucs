@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Favorite;
 use App\Models\Recipe;
 use Illuminate\Http\Request;
 
@@ -36,10 +35,7 @@ class FavoriteController extends Controller
         $user = $request->user();
         abort_unless($user, 401);
 
-        Favorite::firstOrCreate([
-            'user_id'   => $user->id,
-            'recipe_id' => $recipe->id,
-        ]);
+        $user->favorites()->syncWithoutDetaching([$recipe->id]);
 
         return response()->json([
             'ok'           => true,
@@ -54,9 +50,7 @@ class FavoriteController extends Controller
         $user = $request->user();
         abort_unless($user, 401);
 
-        Favorite::where('user_id', $user->id)
-            ->where('recipe_id', $recipe->id)
-            ->delete();
+        $user->favorites()->detach($recipe->id);
 
         return response()->json([
             'ok'           => true,
