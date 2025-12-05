@@ -151,12 +151,14 @@ export default function RecipeDetailPage() {
                         </p>
                       )}
                     </div>
-
+                    
+                    {!isAdmin && (
                     <FavoriteButton
                       recipeId={r.id}
                       initialFavorited={!!r.is_favorited}
                       onChange={() => {}}
                     />
+                    )}
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -190,11 +192,13 @@ export default function RecipeDetailPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    {!isAdmin && (
                     <Button asChild className="flex-1 min-w-[160px]">
                       <Link href={`/recipes/${r.id}/edit`}>
                         <Edit className="h-4 w-4 mr-2" /> Edit Recipe
                       </Link>
                     </Button>
+                    )}
 
                     {isOwner && (
                       <div className="flex items-center gap-1">

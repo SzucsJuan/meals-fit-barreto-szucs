@@ -16,6 +16,7 @@ import Navigation from "@/components/navigation";
 import RequireAuth from "@/components/RequireAuth";
 import FavoriteButton from "@/components/FavoriteButton";
 import { fetchDiscover, type DiscoverRecipe } from "@/lib/discover";
+import { useMe } from "@/lib/useMe";
 
 function useDebouncedValue<T>(value: T, delay = 400) {
   const [debounced, setDebounced] = useState(value);
@@ -39,6 +40,10 @@ export default function DiscoverPage() {
   const [totalResults, setTotalResults] = useState(0);
 
   const debouncedQuery = useDebouncedValue(searchQuery, 450);
+
+  // Nos traemos al usuario para chequear si es admin o no
+  const { user: me } = useMe();
+  const isAdmin = me?.role === "admin";
 
   const order = useMemo(() => {
     switch (sortBy) {
@@ -107,16 +112,18 @@ export default function DiscoverPage() {
                   </p>
                 </div>
               </div>
-              <Link href="/recipes">
-                <Button variant="outline">Back to Recipes</Button>
-              </Link>
+
+              {!isAdmin && (
+                <Link href="/recipes">
+                  <Button variant="outline">Back to Recipes</Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -136,7 +143,6 @@ export default function DiscoverPage() {
               )}
             </div>
 
-            {/* Sort select */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
@@ -148,7 +154,6 @@ export default function DiscoverPage() {
             </select>
           </div>
 
-          {/* Info de resultados */}
           <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
             <div>
               {loading
@@ -161,11 +166,7 @@ export default function DiscoverPage() {
                 </span>
               )}
             </div>
-            {error && (
-              <div className="text-red-600 text-xs">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-red-600 text-xs">{error}</div>}
           </div>
 
           {loading ? (
@@ -192,13 +193,16 @@ export default function DiscoverPage() {
                         alt={r.title}
                         className="w-full h-48 object-cover"
                       />
-                      <div className="absolute top-2 right-2">
-                        <FavoriteButton
-                          recipeId={r.id}
-                          initialFavorited={!!(r as any).is_favorited}
-                          onChange={() => {}}
-                        />
-                      </div>
+
+                      {!isAdmin && (
+                        <div className="absolute top-2 right-2">
+                          <FavoriteButton
+                            recipeId={r.id}
+                            initialFavorited={!!(r as any).is_favorited}
+                            onChange={() => {}}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <CardHeader className="pb-3">
@@ -260,12 +264,15 @@ export default function DiscoverPage() {
                             View Recipe
                           </Button>
                         </Link>
-                        <Link href={`/meals/add?recipeId=${r.id}`}>
-                          <Button size="sm">
-                            <Plus className="h-4 w-4 mr-1" />
-                            Log
-                          </Button>
-                        </Link>
+
+                        {!isAdmin && (
+                          <Link href={`/meals/add?recipeId=${r.id}`}>
+                            <Button size="sm">
+                              <Plus className="h-4 w-4 mr-1" />
+                              Log
+                            </Button>
+                          </Link>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
