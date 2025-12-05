@@ -18,7 +18,6 @@ import {
   Binoculars,
   Shield,
   Trophy,
-  User,
 } from "lucide-react";
 
 type UserDTO = {
@@ -79,89 +78,112 @@ export default function Navigation() {
   }: {
     mobile?: boolean;
     onLinkClick?: () => void;
-  }) => (
-    <>
-      <Link href="/home" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/home") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${
-            mobile ? "w-full justify-start" : ""
-          }`}
-        >
-          <Home className="h-4 w-4" />
-          Home
-        </Button>
-      </Link>
-      <Link href="/meals" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/meals") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${
-            mobile ? "w-full justify-start" : ""
-          }`}
-        >
-          <Target className="h-4 w-4" />
-          Meals
-        </Button>
-      </Link>
-      <Link href="/recipes" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/recipes") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${
-            mobile ? "w-full justify-start" : ""
-          }`}
-        >
-          <ChefHat className="h-4 w-4" />
-          My Recipes
-        </Button>
-      </Link>
-      <Link href="/discover" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/discover") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${
-            mobile ? "w-full justify-start" : ""
-          }`}
-        >
-          <Binoculars className="h-4 w-4" />
-          Discover
-        </Button>
-      </Link>
-      {/* Solo usuarios pueden ver achievements */}
-      {user?.role === "user" && (
-      <Link href="/achievements" onClick={onLinkClick}>
-        <Button
-          variant={isActive("/achievements") ? "default" : "ghost"}
-          size="sm"
-          className={`flex items-center gap-2 ${
-            mobile ? "w-full justify-start" : ""
-          }`}
-        >
-          <Trophy className="h-4 w-4" />
-          Achievements
-        </Button>
-      </Link>
-      )}
+  }) => {
+    // Admin: rol operativo por ende solo ve discover + su panel correspondiente
+    if (user?.role === "admin") {
+      return (
+        <>
+          <Link href="/discover" onClick={onLinkClick}>
+            <Button
+              variant={isActive("/discover") ? "default" : "ghost"}
+              size="sm"
+              className={`flex items-center gap-2 ${
+                mobile ? "w-full justify-start" : ""
+              }`}
+            >
+              <Binoculars className="h-4 w-4" />
+              Discover
+            </Button>
+          </Link>
 
-      {/* Solo va al panel del Admin si el user es admin  */}
-      {user?.role === "admin" && (
-        <Link href="/admin" onClick={onLinkClick}>
+          <Link href="/admin" onClick={onLinkClick}>
+            <Button
+              variant={isActive("/admin") ? "default" : "outline"}
+              size="sm"
+              className={`flex items-center gap-2 ${
+                mobile ? "w-full justify-start" : ""
+              }`}
+            >
+              <Shield className="h-4 w-4" />
+              Admin Panel
+            </Button>
+          </Link>
+        </>
+      );
+    }
+
+    // Menú de lo que puede ver un usuario
+    return (
+      <>
+        <Link href="/home" onClick={onLinkClick}>
           <Button
-            variant={isActive("/admin") ? "default" : "outline"}
+            variant={isActive("/home") ? "default" : "ghost"}
             size="sm"
             className={`flex items-center gap-2 ${
               mobile ? "w-full justify-start" : ""
             }`}
           >
-            <Shield className="h-4 w-4" />
-            Admin Panel
+            <Home className="h-4 w-4" />
+            Home
           </Button>
         </Link>
-      )}
-    </>
-  );
+
+        <Link href="/meals" onClick={onLinkClick}>
+          <Button
+            variant={isActive("/meals") ? "default" : "ghost"}
+            size="sm"
+            className={`flex items-center gap-2 ${
+              mobile ? "w-full justify-start" : ""
+            }`}
+          >
+            <Target className="h-4 w-4" />
+            Meals
+          </Button>
+        </Link>
+
+        <Link href="/recipes" onClick={onLinkClick}>
+          <Button
+            variant={isActive("/recipes") ? "default" : "ghost"}
+            size="sm"
+            className={`flex items-center gap-2 ${
+              mobile ? "w-full justify-start" : ""
+            }`}
+          >
+            <ChefHat className="h-4 w-4" />
+            My Recipes
+          </Button>
+        </Link>
+
+        <Link href="/discover" onClick={onLinkClick}>
+          <Button
+            variant={isActive("/discover") ? "default" : "ghost"}
+            size="sm"
+            className={`flex items-center gap-2 ${
+              mobile ? "w-full justify-start" : ""
+            }`}
+          >
+            <Binoculars className="h-4 w-4" />
+            Discover
+          </Button>
+        </Link>
+
+        {user?.role === "user" && (
+          <Link href="/achievements" onClick={onLinkClick}>
+            <Button
+              variant={isActive("/achievements") ? "default" : "ghost"}
+              size="sm"
+              className={`flex items-center gap-2 ${
+                mobile ? "w-full justify-start" : ""
+              }`}
+            >
+              <Trophy className="h-4 w-4" />
+              Achievements
+            </Button>
+          </Link>
+        )}
+      </>
+    );
+  };
 
   const AuthButtons = ({
     mobile = false,
@@ -245,20 +267,20 @@ export default function Navigation() {
     );
   };
 
+  const mainHref = user?.role === "admin" ? "/admin" : "/home";
+
   return (
     <nav className="border-b border-border bg-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/home" className="flex items-center gap-2">
+          <Link href={mainHref} className="flex items-center gap-2">
             <Image
               src="/icon/logo.png"
               alt="MealsFit Logo"
               width={32}
               height={32}
             />
-            <h1 className="text-xl font-bold text-foreground">
-              Meals&Fit
-            </h1>
+            <h1 className="text-xl font-bold text-foreground">Meals&Fit</h1>
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">
@@ -270,10 +292,7 @@ export default function Navigation() {
           </div>
 
           <div className="flex md:hidden">
-            <Sheet
-              open={mobileMenuOpen}
-              onOpenChange={setMobileMenuOpen}
-            >
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm">
                   <Menu className="h-5 w-5" />
