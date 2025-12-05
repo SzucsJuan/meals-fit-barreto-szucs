@@ -1,4 +1,3 @@
-// lib/discover.ts
 import { api } from "@/lib/api";
 import type { RecipeDTO } from "@/lib/api";
 
@@ -24,11 +23,12 @@ type RawPaginated<T> = {
   total?: number;
 };
 
-
 export async function fetchDiscover(
   params: DiscoverParams
 ): Promise<{ data: DiscoverRecipe[]; meta: DiscoverMeta }> {
   const qs = new URLSearchParams();
+
+  qs.set("discover", "1");
 
   if (params.q) qs.set("q", params.q);
   if (params.order) qs.set("order", params.order);

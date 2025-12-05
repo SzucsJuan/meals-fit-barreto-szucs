@@ -19,14 +19,14 @@ class RecipeController extends Controller
 
     public function index(Request $request)
     {
-        $q = trim((string) $request->query('q', ''));
+        $q       = trim((string) $request->query('q', ''));
         $perPage = (int) $request->query('per_page', 15);
-        $order = $request->query('order', 'latest');
-        $user = $request->user();
-        $userId = optional($user)->id;
+        $order   = $request->query('order', 'latest');
+        $user    = $request->user();
+        $userId  = optional($user)->id;
 
-        $mine = $request->boolean('mine');          
-        $discover = $request->boolean('discover'); 
+        $mine     = $request->boolean('mine');      // /api/recipes?mine=1 → solo mías
+        $discover = $request->boolean('discover'); // /api/recipes?discover=1 → solo públicas
 
         $query = Recipe::query()
             ->with(['user:id,name', 'ingredients:id,name'])
@@ -35,10 +35,13 @@ class RecipeController extends Controller
             ->withCount(['votes', 'favoredBy']);
 
         if ($mine && $user) {
+            // Mis recetas (públicas + privadas) para el usuario logueado
             $query->where('user_id', $user->id);
         } elseif ($discover) {
+            // Descubrir: solo recetas públicas de todos
             $query->where('visibility', 'public');
         } else {
+            // Listado general: públicas de todos + mis privadas
             $query->where(function ($w) use ($user) {
                 $w->where('visibility', 'public');
                 if ($user) {
@@ -77,8 +80,7 @@ class RecipeController extends Controller
         return $query->paginate($perPage);
     }
 
-
-    // GET
+    // GET /api/recipes/{recipe}
     public function show(Recipe $recipe, Request $request)
     {
         $user   = $request->user();
@@ -87,6 +89,7 @@ class RecipeController extends Controller
         $isOwner = $recipe->user_id === $userId;
         $isAdmin = $user && ($user->role === 'admin');
 
+        // Si es privada, solo dueño o admin; si es pública, cualquiera
         abort_unless(
             $recipe->visibility === 'public' || $isOwner || $isAdmin,
             404
@@ -106,16 +109,20 @@ class RecipeController extends Controller
         return response()->json($recipe);
     }
 
-    // POST
+    // POST /api/recipes
     public function store(RecipeStoreRequest $request)
     {
-        $achievementService = new AchievementService();
         $user = $request->user();
+
         // Por seguridad se ignora el user_id en el request
         $data = $request->safe()->except(['user_id']);
-        
 
-        $recipe = $request->user()->recipes()->create($data);
+        // Default de visibilidad si no viene nada → public
+        if (empty($data['visibility'])) {
+            $data['visibility'] = 'public';
+        }
+
+        $recipe = $user->recipes()->create($data);
 
         // Ingredientes y macros
         if (!empty($data['ingredients'])) {
@@ -125,20 +132,38 @@ class RecipeController extends Controller
                 ignoreUnitMismatch: false
             );
         } else {
-            $recipe->fill(['calories' => 0, 'protein' => 0, 'carbs' => 0, 'fat' => 0])->save();
+            $recipe->fill([
+                'calories' => 0,
+                'protein'  => 0,
+                'carbs'    => 0,
+                'fat'      => 0,
+            ])->save();
         }
 
-        return response()->json($recipe->fresh()->load('ingredients:id,name'), 201);
+        return response()->json(
+            $recipe->fresh()->load('ingredients:id,name'),
+            201
+        );
     }
-    // PUT
+
+    // PUT/PATCH /api/recipes/{recipe}
     public function update(RecipeUpdateRequest $request, Recipe $recipe)
     {
         $data = $request->validated();
 
+        // Si viene visibility vacía, la normalizamos a 'public'
+        if (array_key_exists('visibility', $data) && empty($data['visibility'])) {
+            $data['visibility'] = 'public';
+        }
+
         $recipe->update($data);
 
         if (array_key_exists('ingredients', $data)) {
-            $this->recipes->syncIngredientsAndRecompute($recipe, $data['ingredients'], ignoreUnitMismatch: false);
+            $this->recipes->syncIngredientsAndRecompute(
+                $recipe,
+                $data['ingredients'],
+                ignoreUnitMismatch: false
+            );
         } else {
             $recipe->recomputeMacrosAndSave(true);
         }
@@ -146,17 +171,18 @@ class RecipeController extends Controller
         return $recipe->load('ingredients:id,name');
     }
 
-    // DELETE
+    // DELETE /api/recipes/{recipe}
     public function destroy(Request $request, Recipe $recipe)
     {
-
         $user = $request->user();
 
-        abort_unless($user && ($user->id === $recipe->user_id || $user->is_admin()), 403);
+        abort_unless(
+            $user && ($user->id === $recipe->user_id || $user->is_admin()),
+            403
+        );
 
         $recipe->delete();
 
         return response()->noContent();
-
     }
 }

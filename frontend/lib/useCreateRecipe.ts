@@ -1,4 +1,3 @@
-// hooks/useCreateRecipe.ts
 "use client";
 
 import { useState } from "react";
@@ -22,7 +21,7 @@ export function useCreateRecipe() {
     title: string;
     description: string;
     stepsList: string[];
-    visibility: "public" | "unlisted" | "private";
+    visibility: "public" | "private";
     servings: string;
     prepTime: string;
     cookTime: string;

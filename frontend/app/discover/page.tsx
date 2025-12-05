@@ -1,4 +1,3 @@
-// app/discover/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -53,15 +52,20 @@ export default function DiscoverPage() {
     setError(null);
     try {
       const json = await fetchDiscover({
-        q: debouncedQuery,
+        q: debouncedQuery || undefined,
         order,
         page,
         per_page: 12,
       });
 
       setRecipes(json.data ?? []);
-      if (json.meta?.last_page) setTotalPages(json.meta.last_page);
-      else setTotalPages(1);
+      if ((json as any).meta?.last_page) {
+        setTotalPages((json as any).meta.last_page);
+      } else if ((json as any).last_page) {
+        setTotalPages((json as any).last_page);
+      } else {
+        setTotalPages(1);
+      }
     } catch (e: any) {
       setError(e.message || "Error loading recipes");
     } finally {
@@ -239,9 +243,7 @@ export default function DiscoverPage() {
                     variant="outline"
                     size="sm"
                     disabled={page <= 1}
-                    onClick={() =>
-                      setPage((p) => Math.max(1, p - 1))
-                    }
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
                     Prev
                   </Button>
