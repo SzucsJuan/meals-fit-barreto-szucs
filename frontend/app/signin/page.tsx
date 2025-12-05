@@ -8,14 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { EggFried } from "lucide-react";
-import { authApi, setAuthToken } from "@/lib/api"; 
 import { useAuth } from "@/context/AuthContext";
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setUser } = useAuth();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,20 +38,10 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const { token, user } = await authApi.login({ email, password });
+      const user = await login({ email, password });
 
-      // Guardar token en memoria + localStorage
-      setAuthToken(token);
+      const role = user?.role;
 
-      setUser(user);
-
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("mf-auth-event", Date.now().toString());
-      }
-
-      const role = user.role;
-
-      // Redirigir según rol
       if (role === "admin") {
         router.push("/admin");
       } else {

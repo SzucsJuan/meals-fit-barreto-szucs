@@ -65,7 +65,6 @@ export default function RecipeDetailPage() {
     try {
       setUpdatingVis(true);
 
-      // ahora usamos el cliente de API con token
       const updated = await apiRecipes.update(r.id, { visibility: nextVis });
 
       if (updated.visibility === "public" || updated.visibility === "private") {
@@ -200,7 +199,7 @@ export default function RecipeDetailPage() {
                     </Button>
                     )}
 
-                    {isOwner && (
+                    {isOwner && !isAdmin && (
                       <div className="flex items-center gap-1">
                         <Button
                           variant={visibility === "public" ? "default" : "outline"}
@@ -223,6 +222,7 @@ export default function RecipeDetailPage() {
 
                     {canDelete && (
                       <>
+                      {!isAdmin && (
                         <Button
                           onClick={() => setShowConfirm(true)}
                           className="bg-red-600 text-white hover:bg-red-700"
@@ -230,6 +230,7 @@ export default function RecipeDetailPage() {
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </Button>
+                      )}
 
                         <DeleteModalRecipe
                           open={showConfirm}
